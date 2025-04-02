@@ -56,13 +56,56 @@ merged_df <- merged_df %>%
   select(-ends_with(".y")) %>%
   select(-ends_with(".x")) 
 
+#visualisering af data
 glimpse(merged_df) # viser alle kolonner og deres datatype
 
+
+#gemme filen som rds
 saveRDS(merged_df, "merged_df.rds") # gemmer filen som rds fil 
 
-merged_df <- merged_df %>% drop_na() # fjerner NA værdier  
 
+# fjerne na værdier 
+ 
+merged_df <- drop_na(merged_df)# fjerner NA værdier
 
-glimpse(merged_df)
+#Fjerne variabler der var med anonyme data
+merged_df <- merged_df %>%
+  select (-z_companies_1_Firmanavn_1) 
 
-merged_df <- drop_na(merged_df)
+merged_df <- merged_df %>%
+  select (-z_contacts_1_Email_1) 
+
+# Omdøber kolonner 
+colnames(merged_df) <- c(
+  "BusinessCouncilMember",
+  "CompanyDateStamp",
+  "CompanyId",
+  "CompanyType",
+  "CVR",
+  "Employees",
+  "PostalCode",
+  "CompanyTypeName",
+  "PNumber",
+  "Country",
+  "NACECode",
+  "CompanyStatus",
+  "AdvertisingProtected",
+  "ContactId",
+  "CompanyOwnerId",
+  "ContactLastUpdated",
+  "TitleChanged",
+  "LocationChanged",
+  "CreatedBy",
+  "MeetingLength",
+  "Firstname",
+  "UserRole",
+  "Initials",
+  "EventExternalId",
+  "EventPublicId",
+  "Description",
+  "LocationId",
+  "MaxParticipants",
+  "EventLength",
+  "EventId"
+)
+
