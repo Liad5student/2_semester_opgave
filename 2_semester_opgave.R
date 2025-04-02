@@ -124,6 +124,47 @@ merged_df <- drop_na(merged_df)
 # Indlæser merged_df igen, før NA-værdier er fjernet
 merged_df <- readRDS("merged_df.rds")
 
+# Fjerner variabler der var med anonyme data
+merged_df <- merged_df %>%
+  select (-z_companies_1_Firmanavn_1) 
+
+merged_df <- merged_df %>%
+  select (-z_contacts_1_Email_1) 
+
+# Omdøber kolonner 
+colnames(merged_df) <- c(
+  "BusinessCouncilMember",
+  "CompanyDateStamp",
+  "CompanyId",
+  "CompanyType",
+  "CVR",
+  "Employees",
+  "PostalCode",
+  "CompanyTypeName",
+  "PNumber",
+  "Country",
+  "NACECode",
+  "CompanyStatus",
+  "AdvertisingProtected",
+  "ContactId",
+  "CompanyOwnerId",
+  "ContactLastUpdated",
+  "TitleChanged",
+  "LocationChanged",
+  "CreatedBy",
+  "MeetingLength",
+  "Firstname",
+  "UserRole",
+  "Initials",
+  "EventExternalId",
+  "EventPublicId",
+  "Description",
+  "LocationId",
+  "MaxParticipants",
+  "EventLength",
+  "EventId"
+)
+
 # Gør så ingen CVR nr. går igen vha. unikt p-nummer
 merged_unique <- merged_df %>%
   distinct(PNumber, .keep_all = TRUE)
