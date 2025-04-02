@@ -56,31 +56,26 @@ pacman::p_load("tidyverse", "tinytex")
 
 \begin{titlepage}
 \begin{center}
-\vspace*{2cm}
 
-{\Huge \textbf{Forudsigelse af VIP-gæsters fremmøde}}
+\includegraphics[width=18cm]{images/churn_cover.png}
 
 \vspace{0.5cm}
-
-{\Large En datadrevet prædiktionsmodel}
-
-\vspace{1.5cm}
 
 {\large \textbf{Forfattere:}}\\
 Line A. Adolph, Maria B. A. Hitz, Maria Cristiana Maxim, Martin Bindner, Abdikadir A. M. H. Omar
 
-\vspace{1cm}
+\vspace{0.5cm}
 
 {\large \textbf{1. interne eksamensprojekt}} \\
-Vejleder: Lotte S. Kronbæk
+Vejleder: Simon Bjerrum Eilersen
 
-\vspace{2cm}
+\vspace{0.5cm}
 
-{\large \textbf{Dato: 6. januar 2025}}
+{\large \textbf{Dato: 9. maj 2025}}
 
 \vfill
 
-{\large \textbf{Antal tegn: 27.454}}
+{\large \textbf{Antal tegn: xx.xxx}}
 
 \end{center}
 \end{titlepage}
