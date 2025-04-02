@@ -119,7 +119,7 @@ merged_df <- drop_na(merged_df)
 
 # Hvis vi fokuserer på PNumber (produktionsenhedsnummer = unikke adresser hvor CVR nr. har aktivitet),
 # så undgår vi, at der er mange CVR nr. der går igen i merged_df og kun har de unikke virksomheder, som de har registreret.
-# Med den metode har 2966 observationer som er unikke at arbejde videre med.
+# Med den metode har vi 2966 observationer, som er unikke at arbejde videre med.
 
 # Indlæser merged_df igen, før NA-værdier er fjernet
 merged_df <- readRDS("merged_df.rds")
@@ -186,4 +186,3 @@ colSums(is.na(merged_unique))
 
 # Fjerner NA-værdier
 merged_unique <- na.omit(merged_unique)
-
