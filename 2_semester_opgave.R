@@ -66,3 +66,5 @@ merged_df <- merged_df %>% drop_na() # fjerner NA værdier
 glimpse(merged_df)
 
 merged_df <- drop_na(merged_df)
+
+# Martin tester
