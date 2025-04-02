@@ -1,0 +1,138 @@
+---
+title: ""
+subtitle: ""
+
+date: "06-01-2025"
+author:
+  - "Line A. Adolph"
+  - "Maria B. A. Hitz"
+  - "Maria Cristiana Maxim"
+  - "Martin Bindner"
+  - "Abdikadir A. M. H. Omar"
+  
+format: 
+  pdf:
+    toc: false
+    toc-title: Indholdsfortegnelse
+    toc-depth: 4
+    number-sections: true
+    number-depth: 4
+    fontsize: 12pt
+    mainfont: Times New Roman
+    linestretch: 1.5
+    geometry:
+      - top=30mm
+      - left=20mm
+      - right=20mm
+      - bottom=30mm
+      - heightrounded
+---
+
+\renewcommand{\contentsname}{Indholdsfortegnelse}
+\newpage
+
+```{r}
+#| label: setup
+#| include: false
+#| warning: false
+#| 
+
+# eval: false prevents code from being evaluated. (And obviously if the code is not run, no results will be generated). This is useful for displaying example code, or for disabling a large block of code without commenting each line.
+
+# include: false runs the code, but doesn’t show the code or results in the final document. Use this for setup code that you don’t want cluttering your report.
+
+# echo: false prevents code, but not the results from appearing in the finished file. Use this when writing reports aimed at people who don’t want to see the underlying R code.
+
+# Du kan lave code chunks med crtl/alt/I. 
+# Angiv en label som ovenfor til hver chunk. 
+# Brug evt. include, eval, echo eller en anden parameter til at få det ønskede output
+
+pacman::p_load("tidyverse", "tinytex")
+# tinytex::install_tinytex()
+# tinytex::pdflatex('test.tex')
+
+# Tilføj selv flere pakker
+```
+
+\begin{titlepage}
+\begin{center}
+\vspace*{2cm}
+
+{\Huge \textbf{Forudsigelse af VIP-gæsters fremmøde}}
+
+\vspace{0.5cm}
+
+{\Large En datadrevet prædiktionsmodel}
+
+\vspace{1.5cm}
+
+{\large \textbf{Forfattere:}}\\
+Line A. Adolph, Maria B. A. Hitz, Maria Cristiana Maxim, Martin Bindner, Abdikadir A. M. H. Omar
+
+\vspace{1cm}
+
+{\large \textbf{1. interne eksamensprojekt}} \\
+Vejleder: Lotte S. Kronbæk
+
+\vspace{2cm}
+
+{\large \textbf{Dato: 6. januar 2025}}
+
+\vfill
+
+{\large \textbf{Antal tegn: 27.454}}
+
+\end{center}
+\end{titlepage}
+
+\newpage
+
+\tableofcontents
+\newpage
+
+# Resumé
+
+# Indledning
+
+# Problemformulering
+
+# Afgrænsning
+
+## AI Chatbots
+
+# Definitioner
+
+# Analyse
+
+# Anbefaling
+
+# Konklusion
+
+# 
+
+\newpage
+
+# Literaturliste
+
+**AI**
+
+OpenAI. (2025). ChatGPT (4.0). <https://chatgpt.com/>
+
+**Bøger**
+
+**WWW-dokumenter**
+
+**Undervisningsmaterialer**
+
+\newpage
+
+# Bilagsoversigt
+
+-   Bilag 1: x
+-   Bilag 2: x
+-   Bilag 3: x
+-   Bilag 4: x
+-   Bilag 5: x
+-   Bilag 6: x
+
+\newpage
