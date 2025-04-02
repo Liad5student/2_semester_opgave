@@ -109,3 +109,5 @@ colnames(merged_df) <- c(
   "EventId"
 )
 
+merged_df <- drop_na(merged_df)
+
