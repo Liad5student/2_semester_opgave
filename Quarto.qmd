@@ -7,7 +7,7 @@ author:
   - "Line A. Adolph"
   - "Maria B. A. Hitz"
   - "Maria Cristiana Maxim"
-  - "Martin Eckberg Bindner"
+  - "Martin E. Bindner"
   - "Abdikadir A. M. H. Omar"
   
 format: 
