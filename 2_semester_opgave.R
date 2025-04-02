@@ -6,12 +6,12 @@ library(tidyr)
 
 
 #indlæser data
-meetings <- readRDS("")
-events <- readRDS("")
-event_participants <- readRDS("")
-company_contacts <- readRDS("")
-all_contact <- readRDS("")
-all_companies <- readRDS("")
+meetings <- readRDS("data/meetings.rds")
+events <- readRDS("data/events.rds")
+event_participants <- readRDS("data/event_participants.rds")
+company_contacts <- readRDS("data/company_contacts.rds")
+all_contact <- readRDS("data/all_contact.rds")
+all_companies <- readRDS("data/all_companies.rds")
 
 
 #merger dataframes
@@ -110,4 +110,39 @@ colnames(merged_df) <- c(
 )
 
 merged_df <- drop_na(merged_df)
+
+
+
+
+
+
+
+# Hvis vi fokuserer på PNumber (produktionsenhedsnummer = unikke adresser hvor CVR nr. har aktivitet),
+# så undgår vi, at der er mange CVR nr. der går igen i merged_df og kun har de unikke virksomheder, som de har registreret.
+# Med den metode har 2966 observationer som er unikke at arbejde videre med.
+
+# Indlæser merged_df igen, før NA-værdier er fjernet
+merged_df <- readRDS("merged_df.rds")
+
+# Gør så ingen CVR nr. går igen vha. unikt p-nummer
+merged_unique <- merged_df %>%
+  distinct(PNumber, .keep_all = TRUE)
+
+# Fjerner de variabler med NA-værdier, som ikke er så relevante for om de churner
+merged_unique <- merged_unique |> 
+  dplyr::select(-TitleChanged, -LocationChanged, -NACECode, -CreatedBy, -Firstname, -UserRole, -Initials, -ContactLastUpdated) |>
+# Erstatter NA-værdi med "Ingen event" i kolonnerne angående event
+  mutate(across(
+    c(MeetingLength, EventExternalId, EventPublicId, Description, 
+      LocationId, MaxParticipants, EventLength, EventId),
+    ~ if_else(is.na(.), "Ingen event", as.character(.))
+  )) |>
+# Erstatter NA-værdi med "Ukendt" i Employees kolonnen
+  mutate(Employees = if_else(is.na(Employees), "Ukendt", as.character(Employees)))
+
+# Tjekker for NA-værdier
+colSums(is.na(merged_unique))
+
+# Fjerner NA-værdier
+merged_unique <- na.omit(merged_unique)
 
