@@ -1,12 +1,11 @@
-#JOIN tabeller 
-
-# Bruger dplyr til at merge dataframes
+# Indlæser nødvendige pakker med pacman (installerer automatisk hvis mangler)
 pacman::p_load(
-  dplyr,
-  tidyr,
-  stringr)
+  dplyr,     # til datamanipulation
+  tidyr,     # til fx split af kolonner
+  stringr    # til teksthåndtering
+)
 
-#indlæser data
+# Indlæser alle nødvendige datasæt
 meetings <- readRDS("data/meetings.rds")
 events <- readRDS("data/events.rds")
 event_participants <- readRDS("data/event_participants.rds")
@@ -15,64 +14,66 @@ all_contact <- readRDS("data/all_contact.rds")
 all_companies <- readRDS("data/all_companies.rds")
 old_projects <- readRDS("data/old_projects.rds")
 
-#merger dataframes
-merged_df <- all_companies %>%
-  left_join(company_contacts, by = "CompanyId") %>%
-  select(-ends_with(".y")) %>% # fjerner kolonner med .y
-  select(-ends_with(".x"))  #fjerner kolonner med .x
+# ------------------------------------------------------------------------------
+# JOIN af tabeller
+# ------------------------------------------------------------------------------
 
+# Starter med at merge 'all_companies' og 'company_contacts' på 'CompanyId'
+# Fjerner derefter dubletter fra join (kolonner med .x og .y)
+merged_df <- all_companies |> 
+  left_join(company_contacts, by = "CompanyId") |> 
+  select(-ends_with(".y")) |> 
+  select(-ends_with(".x"))
 
-merged_df <- merged_df %>%
-  left_join(all_contact, by = "contactId") %>%
-  select(-ends_with(".y")) %>%
-  select(-ends_with(".x")) 
+# Merger videre med kontaktdata fra 'all_contact' (via contactId)
+merged_df <- merged_df |> 
+  left_join(all_contact, by = "contactId") |> 
+  select(-ends_with(".y")) |> 
+  select(-ends_with(".x"))
 
+# Fjerner dubletter i 'meetings' og beholder kun første registrering per virksomhed
+meetings_unique <- meetings |> 
+  group_by(CompanyId) |> 
+  summarise(across(everything(), first))
 
-meetings_unique <- meetings %>% # bruger det fordi vi har duplicates værdier 
-  group_by(CompanyId) %>%
-  summarise(across(everything(), first))  # first row of each group
+# Merger mødedata på 'CompanyId'
+merged_df <- merged_df |> 
+  left_join(meetings_unique, by = "CompanyId") |> 
+  select(-ends_with(".y")) |> 
+  select(-ends_with(".x"))
 
-merged_df <- merged_df %>%
-  left_join(meetings_unique, by = "CompanyId")%>%
-  select(-ends_with(".y")) %>%
-  select(-ends_with(".x")) 
-
+# Omdøber kolonnen med CVR-nummer for konsistens
 merged_df <- rename(merged_df, c("Cvr" = "z_companies_1_CVR-nummer_1"))
 
-events_unique <- events %>% # bruger det fordi vi har duplicates værdier 
-  group_by(Cvr) %>%
-  summarise(across(everything(), first))  # first row of each group
+# Fjerner dubletter i 'events' og merger på 'Cvr'
+events_unique <- events |> 
+  group_by(Cvr)  |> 
+  summarise(across(everything(), first))
 
-merged_df <- merged_df %>%
-  left_join(events_unique, by = "Cvr") %>%
-  select(-ends_with(".y")) %>%
-  select(-ends_with(".x")) 
+merged_df <- merged_df |>
+  left_join(events_unique, by = "Cvr") |>
+  select(-ends_with(".y")) |>
+  select(-ends_with(".x"))
 
-event_participants_unique <- event_participants %>% # bruger det fordi vi har duplicates værdier 
-  group_by(Cvr) %>%
-  summarise(across(everything(), first))  # first row of each group
+# Fjerner dubletter i 'event_participants' og merger på 'Cvr'
+event_participants_unique <- event_participants |>
+  group_by(Cvr) |>
+  summarise(across(everything(), first))
 
-merged_df <- merged_df %>%
-  left_join(event_participants_unique, by = "Cvr") %>%
-  select(-ends_with(".y")) %>%
-  select(-ends_with(".x")) 
+merged_df <- merged_df |>
+  left_join(event_participants_unique, by = "Cvr") |>
+  select(-ends_with(".y")) |>
+  select(-ends_with(".x"))
 
-#visualisering af data
-glimpse(merged_df) # viser alle kolonner og deres datatype
+# Viser overblik over datasættet og datatyper
+glimpse(merged_df)
 
+# Fokus: Unikke virksomheder via PNumber (produktionsenhedsnummer)
+# Det giver os 2966 unikke observationer
+merged_df <- merged_df |>
+  select(-z_companies_1_Firmanavn_1, -z_contacts_1_Email_1)  # Fjerner anonymiserede data
 
-# Hvis vi fokuserer på PNumber (produktionsenhedsnummer = unikke adresser hvor CVR nr. har aktivitet),
-# så undgår vi, at der er mange CVR nr. der går igen i merged_df og kun har de unikke virksomheder, som de har registreret.
-# Med den metode har vi 2966 observationer, som er unikke at arbejde videre med.
-
-# Fjerner variabler der var med anonyme data
-merged_df <- merged_df %>%
-  select (-z_companies_1_Firmanavn_1) 
-
-merged_df <- merged_df %>%
-  select (-z_contacts_1_Email_1) 
-
-# Omdøber kolonner 
+# Omdøber kolonner for at forenkle og standardisere navne
 colnames(merged_df) <- c(
   "BusinessCouncilMember",
   "CompanyDateStamp",
@@ -82,8 +83,7 @@ colnames(merged_df) <- c(
   "Employees",
   "PostalCode",
   "CompanyTypeName",
-  "PNumber",
-  "Country",
+  "PNumber", "Country",
   "NACECode",
   "CompanyStatus",
   "AdvertisingProtected",
@@ -106,48 +106,51 @@ colnames(merged_df) <- c(
   "EventId"
 )
 
-# Gør så ingen CVR nr. går igen vha. unikt p-nummer
-merged_unique <- merged_df %>%
+# Beholder kun én række pr. produktionsenhed (PNumber)
+merged_unique <- merged_df |>
   distinct(PNumber, .keep_all = TRUE)
 
-# Indsæt NACECode
-# Opdel med branchekode og navn
+# ------------------------------------------------------------------------------
+# Dataklargøring og datarensning starter her
+# ------------------------------------------------------------------------------
 
-# Fjerner de variabler med NA-værdier, som ikke er så relevante for om de churner
-merged_unique <- merged_unique |> 
-  dplyr::select(-TitleChanged, -LocationChanged, -CreatedBy, -Firstname, -UserRole, -Initials, -ContactLastUpdated) |>
-# Erstatter NA-værdi med "Ingen event" i kolonnerne angående event
+# Fjerner variabler som ikke vurderes relevante for churn-analyse
+merged_unique <- merged_unique |>
+  select(-TitleChanged, -LocationChanged, -CreatedBy, -Firstname,
+         -UserRole, -Initials, -ContactLastUpdated)
+
+# Erstatter NA-værdier i event-relaterede kolonner med "Ingen event"
+merged_unique <- merged_unique |>
   mutate(across(
     c(MeetingLength, EventExternalId, EventPublicId, Description, 
       LocationId, MaxParticipants, EventLength, EventId),
     ~ if_else(is.na(.), "Ingen event", as.character(.))
-  )) |>
-# Erstatter NA-værdi med "Ukendt" i Employees kolonnen
+  ))
+
+# Erstatter NA i antal ansatte med "Ukendt"
+merged_unique <- merged_unique |>
   mutate(Employees = if_else(is.na(Employees), "Ukendt", as.character(Employees)))
 
-# Erstatter NA-værdi med "Ukendt" i Employees kolonnen
-merged_unique <- merged_unique |> 
-mutate(NACECode = if_else(is.na(NACECode), "Ukendt", as.character(NACECode)))
+# Erstatter NA i NACECode med "Ukendt"
+merged_unique <- merged_unique |>
+  mutate(NACECode = if_else(is.na(NACECode), "Ukendt", as.character(NACECode)))
 
-
-
-
-
-merged_unique <- merged_unique %>%
+# Splitter NACECode i to: kode og branche – og håndterer "Ukendt" særskilt
+merged_unique <- merged_unique |>
   mutate(
     Nacecode = if_else(NACECode == "Ukendt", "Ukendt", str_extract(NACECode, "^[0-9]+")),
     Nacebranche = if_else(NACECode == "Ukendt", "Ukendt", str_remove(NACECode, "^[0-9]+\\s*"))
   )
 
+# Fjerner den oprindelige NACECode-kolonne, da vi har splittet den op
+merged_unique <- merged_unique |>
+  select(-NACECode)
 
-
-merged_unique <- merged_unique |> 
-  dplyr::select(-NACECode)
-
-# Tjekker for NA-værdier
+# Tjekker hvor der stadig er NA-værdier tilbage i datasættet
 colSums(is.na(merged_unique))
 
-# Fjerner NA-værdier
+# Fjerner rækker med NA-værdier (kan også overvejes at håndteres individuelt)
 merged_unique <- na.omit(merged_unique)
 
+# Gemmer det rensede og unikke datasæt til senere brug
 saveRDS(merged_unique, "merged_unique.rds")
