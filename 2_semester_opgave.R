@@ -154,3 +154,34 @@ merged_unique <- na.omit(merged_unique)
 
 # Gemmer det rensede og unikke datasæt til senere brug
 saveRDS(merged_unique, "merged_unique.rds")
+
+
+
+# ------------------------------------------------------------------------------
+# Hvis vi vil have old_projects merged med i den samlede merge
+# ------------------------------------------------------------------------------
+
+# Omdøb SMVContactId til ContactId
+old_projects <- old_projects %>%
+  rename(ContactId = SMVContactId)
+
+# Gem kolonnenavne fra old_projects (ekskl. ContactId), før de merges og evt. slettes
+old_project_cols <- setdiff(names(old_projects), "ContactId")
+
+# Merge old_projects ind i merged_unique via ContactId
+merged_unique_old_projects <- merged_unique %>%
+  left_join(old_projects, by = "ContactId")
+
+# Fjern unødvendige kolonner
+merged_unique_old_projects <- merged_unique_old_projects %>%
+  select(-Id, -SMVCompanyId, -SharedWith)
+
+# Fjern uønskede kolonnenavne fra old_project_cols
+cols_to_fill <- setdiff(old_project_cols, c("Id", "SMVCompanyId", "SharedWith"))
+
+# Brug de rensede kolonnenavne i across()
+merged_unique_old_projects <- merged_unique_old_projects %>%
+  mutate(across(all_of(cols_to_fill), ~ if_else(is.na(.), "Tom", as.character(.))))
+
+# Tjekker om der er NA-værdier i datasættet
+colSums(is.na(merged_unique_old_projects))
