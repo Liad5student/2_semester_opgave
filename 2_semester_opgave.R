@@ -1,9 +1,10 @@
 #JOIN tabeller 
 
 # Bruger dplyr til at merge dataframes
-library(dplyr)
-library(tidyr)
-
+pacman::p_load(
+  dplyr,
+  tidyr,
+  stringr)
 
 #indlæser data
 meetings <- readRDS("data/meetings.rds")
@@ -12,7 +13,7 @@ event_participants <- readRDS("data/event_participants.rds")
 company_contacts <- readRDS("data/company_contacts.rds")
 all_contact <- readRDS("data/all_contact.rds")
 all_companies <- readRDS("data/all_companies.rds")
-
+old_projects <- readRDS("data/old_projects.rds")
 
 #merger dataframes
 merged_df <- all_companies %>%
@@ -60,69 +61,9 @@ merged_df <- merged_df %>%
 glimpse(merged_df) # viser alle kolonner og deres datatype
 
 
-#gemme filen som rds
-saveRDS(merged_df, "merged_df.rds") # gemmer filen som rds fil 
-
-
-# fjerne na værdier 
- 
-merged_df <- drop_na(merged_df)# fjerner NA værdier
-
-#Fjerne variabler der var med anonyme data
-merged_df <- merged_df %>%
-  select (-z_companies_1_Firmanavn_1) 
-
-merged_df <- merged_df %>%
-  select (-z_contacts_1_Email_1) 
-
-# Omdøber kolonner 
-colnames(merged_df) <- c(
-  "BusinessCouncilMember",
-  "CompanyDateStamp",
-  "CompanyId",
-  "CompanyType",
-  "CVR",
-  "Employees",
-  "PostalCode",
-  "CompanyTypeName",
-  "PNumber",
-  "Country",
-  "NACECode",
-  "CompanyStatus",
-  "AdvertisingProtected",
-  "ContactId",
-  "CompanyOwnerId",
-  "ContactLastUpdated",
-  "TitleChanged",
-  "LocationChanged",
-  "CreatedBy",
-  "MeetingLength",
-  "Firstname",
-  "UserRole",
-  "Initials",
-  "EventExternalId",
-  "EventPublicId",
-  "Description",
-  "LocationId",
-  "MaxParticipants",
-  "EventLength",
-  "EventId"
-)
-
-merged_df <- drop_na(merged_df)
-
-
-
-
-
-
-
 # Hvis vi fokuserer på PNumber (produktionsenhedsnummer = unikke adresser hvor CVR nr. har aktivitet),
 # så undgår vi, at der er mange CVR nr. der går igen i merged_df og kun har de unikke virksomheder, som de har registreret.
 # Med den metode har vi 2966 observationer, som er unikke at arbejde videre med.
-
-# Indlæser merged_df igen, før NA-værdier er fjernet
-merged_df <- readRDS("merged_df.rds")
 
 # Fjerner variabler der var med anonyme data
 merged_df <- merged_df %>%
@@ -169,9 +110,12 @@ colnames(merged_df) <- c(
 merged_unique <- merged_df %>%
   distinct(PNumber, .keep_all = TRUE)
 
+# Indsæt NACECode
+# Opdel med branchekode og navn
+
 # Fjerner de variabler med NA-værdier, som ikke er så relevante for om de churner
 merged_unique <- merged_unique |> 
-  dplyr::select(-TitleChanged, -LocationChanged, -NACECode, -CreatedBy, -Firstname, -UserRole, -Initials, -ContactLastUpdated) |>
+  dplyr::select(-TitleChanged, -LocationChanged, -CreatedBy, -Firstname, -UserRole, -Initials, -ContactLastUpdated) |>
 # Erstatter NA-værdi med "Ingen event" i kolonnerne angående event
   mutate(across(
     c(MeetingLength, EventExternalId, EventPublicId, Description, 
@@ -181,8 +125,29 @@ merged_unique <- merged_unique |>
 # Erstatter NA-værdi med "Ukendt" i Employees kolonnen
   mutate(Employees = if_else(is.na(Employees), "Ukendt", as.character(Employees)))
 
+# Erstatter NA-værdi med "Ukendt" i Employees kolonnen
+merged_unique <- merged_unique |> 
+mutate(NACECode = if_else(is.na(NACECode), "Ukendt", as.character(NACECode)))
+
+
+
+
+
+merged_unique <- merged_unique %>%
+  mutate(
+    Nacecode = if_else(NACECode == "Ukendt", "Ukendt", str_extract(NACECode, "^[0-9]+")),
+    Nacebranche = if_else(NACECode == "Ukendt", "Ukendt", str_remove(NACECode, "^[0-9]+\\s*"))
+  )
+
+
+
+merged_unique <- merged_unique |> 
+  dplyr::select(-NACECode)
+
 # Tjekker for NA-værdier
 colSums(is.na(merged_unique))
 
 # Fjerner NA-værdier
 merged_unique <- na.omit(merged_unique)
+
+saveRDS(merged_unique, "merged_unique.rds")
