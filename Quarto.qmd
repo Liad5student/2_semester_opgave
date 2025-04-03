@@ -120,6 +120,7 @@ Hvilke juridiske krav (fx GDPR) og etiske overvejelser bør indgå i udviklingen
 # Afgrænsning
 
 ## AI Chatbots
+# I forbindelse med udarbejdelsen af projektet er ChatGPT 4.0 blevet anvendt som et værktøj til grammatisk og sproglig korrektur, idéudvikling samt forbedring af det sproglige udtryk. Modellen har udelukkende fungeret som et hjælpemiddel i arbejdet med tekstbaserede opgaver og har hverken erstattet selvstændig analyse, kritisk refleksion eller været brugt til direkte besvarelse af problemformuleringen
 
 # Definitioner
 
