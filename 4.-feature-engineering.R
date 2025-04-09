@@ -59,8 +59,8 @@ pacman::p_load(
     
 )
 
-readRDS("data/clean_data.rds")
 readRDS("data/merge_datasets.rds")
+readRDS("data/clean_data.rds")
 
 # ------------------------------------------------------------------------------
 # 4. Feature Engineering
