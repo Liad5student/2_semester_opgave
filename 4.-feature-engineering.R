@@ -59,6 +59,8 @@ pacman::p_load(
     
 )
 
+# Husk at sætte working directory
+
 # Helper-funktion: Henter de opdaterede .rds-filer fra de andre branches
 
 source("load_all_data.R")
@@ -67,7 +69,7 @@ source("load_all_data.R")
 # 4. Feature Engineering
 # ------------------------------------------------------------------------------
 
-
+merge <- readRDS("data/merge_datasets.rds")
 
 
 
