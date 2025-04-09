@@ -170,9 +170,6 @@ glimpse(merged_df)
 #     "EventId"
 # )
 # 
-# # Beholder kun én række pr. produktionsenhed (PNumber)
-# merged_unique <- merged_df |>
-#     distinct(PNumber, .keep_all = TRUE)
 
 # Jeg har sat denne del over i branchet clean data (Martin)
 # Ret endelig hvis i ikke er enige (har udkommenteret delen i dette branch indtil videre)
@@ -235,8 +232,14 @@ old_projects <- old_projects %>%
 # Gem kolonnenavne fra old_projects (ekskl. ContactId), før de merges og evt. slettes
 old_project_cols <- setdiff(names(old_projects), "ContactId")
 
+colnames(merged_df)
+
+# Omdøb contactid til ContactId
+merged_df <- merged_df %>%
+  rename(ContactId = contactId)
+
 # Merge old_projects ind i merged_unique via ContactId
-merged_unique_old_projects <- merged_unique %>%
+merged_unique_old_projects <- merged_df %>%
     left_join(old_projects, by = "ContactId")
 
 # Fjern unødvendige kolonner
@@ -252,8 +255,6 @@ merged_unique_old_projects <- merged_unique_old_projects %>%
 
 # Tjekker om der er NA-værdier i datasættet
 colSums(is.na(merged_unique_old_projects))
-
-
 
 # ------------------------------------------------------------------------------
 # End
