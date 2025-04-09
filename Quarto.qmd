@@ -47,11 +47,48 @@ format:
 # Angiv en label som ovenfor til hver chunk. 
 # Brug evt. include, eval, echo eller en anden parameter til at få det ønskede output
 
-pacman::p_load("tidyverse", "tinytex")
-# tinytex::install_tinytex()
-# tinytex::pdflatex('test.tex')
-
-# Tilføj selv flere pakker
+pacman::p_load(
+    dplyr,         # til datamanipulation
+    tidyr,         # til fx split af kolonner
+    stringr,        # til teksthåndtering
+    tidyverse,     # samlet pakke til dataanalyse (inkl. ggplot2, tibble, mm.)
+    skimr,         # oversigtsstatistik
+    readxl,        # læsning af Excel-filer
+    hms,           # håndtering af tid
+    ggpubr,        # ggplot med publikationstema
+    ggfortify,     # autoplot til modeller
+    GGally,        # udvidelse af ggplot, fx ggpairs
+    gridExtra,     # arrangering af plots
+    hrbrthemes,    # moderne ggplot-temaer
+    table1,        # flot tabel 1 output
+    tidymodels,    # samlet ML-framework
+    themis,        # håndtering af ubalancerede data
+    broom,         # konvertering af modeller til tidy-format
+    caret,         # klassisk ML-framework
+    discrim,       # diskriminantanalyse
+    glmnet,        # regulerede regressioner
+    kknn,          # k-NN klassifikation/regression
+    naivebayes,    # naive bayes modeller
+    kernlab,       # kernelbaserede metoder inkl. SVM
+    xgboost,       # gradient boosting
+    ranger,        # hurtig random forest
+    gbm,           # gradient boosting machines
+    randomForest,  # klassisk random forest
+    rpart,         # beslutningstræer
+    leaps,         # modelselektionsmetoder
+    car,           # diagnostik for lineære modeller
+    PerformanceAnalytics, # performance-metrics (især finans)
+    rvest,         # web scraping
+    httr,          # HTTP requests
+    jsonlite,      # arbejde med JSON
+    rjson,         # alternativ JSON-pakke
+    rlist,         # listehåndtering
+    Rcrawler,      # web crawling
+    rmarkdown,     # rapportgenerering
+    knitr,         # knit Rmd-dokumenter
+    future         # parallelisering og asynkron kodning
+    
+)
 ```
 
 \begin{titlepage}
