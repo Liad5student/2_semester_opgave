@@ -19,7 +19,7 @@
 pacman::p_load(
   dplyr,         # til datamanipulation
   tidyr,         # til fx split af kolonner
-  stringr,        # til teksthåndtering
+  stringr,       # til teksthåndtering
   tidyverse,     # samlet pakke til dataanalyse (inkl. ggplot2, tibble, mm.)
   skimr,         # oversigtsstatistik
   readxl,        # læsning af Excel-filer
