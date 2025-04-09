@@ -8,7 +8,7 @@ pacman::p_load(
 # ------------------------------------------------------------------------------
 # 2. Merge datasets
 # ------------------------------------------------------------------------------
-loadRDS("data/load_data.rds")
+readRDS("data/load_data.rds")
 
 
 # Indlæser alle nødvendige datasæt
