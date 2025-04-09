@@ -77,12 +77,12 @@ merge_datasets
 # ------------------------------------------------------------------------------
 
 # Fjerner variabler som ikke vurderes relevante for churn-analyse
-merged_unique <- merged_unique |>
+merge_datasets <- merge_datasets |>
   select(-TitleChanged, -LocationChanged, -CreatedBy, -Firstname,
          -UserRole, -Initials, -ContactLastUpdated)
 
 # Erstatter NA-værdier i event-relaterede kolonner med "Ingen event"
-merged_unique <- merged_unique |>
+merge_datasets <- merge_datasets |>
   mutate(across(
     c(MeetingLength, EventExternalId, EventPublicId, Description, 
       LocationId, MaxParticipants, EventLength, EventId),
@@ -90,29 +90,29 @@ merged_unique <- merged_unique |>
   ))
 
 # Erstatter NA i antal ansatte med "Ukendt"
-merged_unique <- merged_unique |>
+merge_datasets <- merge_datasets |>
   mutate(Employees = if_else(is.na(Employees), "Ukendt", as.character(Employees)))
 
 # Erstatter NA i NACECode med "Ukendt"
-merged_unique <- merged_unique |>
+merge_datasets <- merge_datasets |>
   mutate(NACECode = if_else(is.na(NACECode), "Ukendt", as.character(NACECode)))
 
 # Splitter NACECode i to: kode og branche – og håndterer "Ukendt" særskilt
-merged_unique <- merged_unique |>
+merge_datasets <- merge_datasets |>
   mutate(
     Nacecode = if_else(NACECode == "Ukendt", "Ukendt", str_extract(NACECode, "^[0-9]+")),
     Nacebranche = if_else(NACECode == "Ukendt", "Ukendt", str_remove(NACECode, "^[0-9]+\\s*"))
   )
 
 # Fjerner den oprindelige NACECode-kolonne, da vi har splittet den op
-merged_unique <- merged_unique |>
+merge_datasets <- merge_datasets |>
   select(-NACECode)
 
 # Tjekker hvor der stadig er NA-værdier tilbage i datasættet
-colSums(is.na(merged_unique))
+colSums(is.na(merge_datasets))
 
 # Fjerner rækker med NA-værdier (kan også overvejes at håndteres individuelt)
-merged_unique <- na.omit(merged_unique)
+merge_datasets <- na.omit(merge_datasets)
 
 
 
