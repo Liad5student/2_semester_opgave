@@ -174,50 +174,53 @@ colnames(merged_df) <- c(
 merged_unique <- merged_df |>
     distinct(PNumber, .keep_all = TRUE)
 
-# ------------------------------------------------------------------------------
-# Dataklargøring og datarensning starter her
-# ------------------------------------------------------------------------------
+# Jeg har sat denne del over i branchet clean data (Martin)
+# Ret endelig hvis i ikke er enige (har udkommenteret delen i dette branch indtil videre)
 
-# Fjerner variabler som ikke vurderes relevante for churn-analyse
-merged_unique <- merged_unique |>
-    select(-TitleChanged, -LocationChanged, -CreatedBy, -Firstname,
-           -UserRole, -Initials, -ContactLastUpdated)
-
-# Erstatter NA-værdier i event-relaterede kolonner med "Ingen event"
-merged_unique <- merged_unique |>
-    mutate(across(
-        c(MeetingLength, EventExternalId, EventPublicId, Description, 
-          LocationId, MaxParticipants, EventLength, EventId),
-        ~ if_else(is.na(.), "Ingen event", as.character(.))
-    ))
-
-# Erstatter NA i antal ansatte med "Ukendt"
-merged_unique <- merged_unique |>
-    mutate(Employees = if_else(is.na(Employees), "Ukendt", as.character(Employees)))
-
-# Erstatter NA i NACECode med "Ukendt"
-merged_unique <- merged_unique |>
-    mutate(NACECode = if_else(is.na(NACECode), "Ukendt", as.character(NACECode)))
-
-# Splitter NACECode i to: kode og branche – og håndterer "Ukendt" særskilt
-merged_unique <- merged_unique |>
-    mutate(
-        Nacecode = if_else(NACECode == "Ukendt", "Ukendt", str_extract(NACECode, "^[0-9]+")),
-        Nacebranche = if_else(NACECode == "Ukendt", "Ukendt", str_remove(NACECode, "^[0-9]+\\s*"))
-    )
-
-# Fjerner den oprindelige NACECode-kolonne, da vi har splittet den op
-merged_unique <- merged_unique |>
-    select(-NACECode)
-
-# Tjekker hvor der stadig er NA-værdier tilbage i datasættet
-colSums(is.na(merged_unique))
-
-# Fjerner rækker med NA-værdier (kan også overvejes at håndteres individuelt)
-merged_unique <- na.omit(merged_unique)
-
-# Gemmer det rensede og unikke datasæt til senere brug
-saveRDS(merged_unique, "merged_unique.rds")
+# # ------------------------------------------------------------------------------
+# # Dataklargøring og datarensning starter her
+# # ------------------------------------------------------------------------------
+# 
+# # Fjerner variabler som ikke vurderes relevante for churn-analyse
+# merged_unique <- merged_unique |>
+#     select(-TitleChanged, -LocationChanged, -CreatedBy, -Firstname,
+#            -UserRole, -Initials, -ContactLastUpdated)
+# 
+# # Erstatter NA-værdier i event-relaterede kolonner med "Ingen event"
+# merged_unique <- merged_unique |>
+#     mutate(across(
+#         c(MeetingLength, EventExternalId, EventPublicId, Description, 
+#           LocationId, MaxParticipants, EventLength, EventId),
+#         ~ if_else(is.na(.), "Ingen event", as.character(.))
+#     ))
+# 
+# # Erstatter NA i antal ansatte med "Ukendt"
+# merged_unique <- merged_unique |>
+#     mutate(Employees = if_else(is.na(Employees), "Ukendt", as.character(Employees)))
+# 
+# # Erstatter NA i NACECode med "Ukendt"
+# merged_unique <- merged_unique |>
+#     mutate(NACECode = if_else(is.na(NACECode), "Ukendt", as.character(NACECode)))
+# 
+# # Splitter NACECode i to: kode og branche – og håndterer "Ukendt" særskilt
+# merged_unique <- merged_unique |>
+#     mutate(
+#         Nacecode = if_else(NACECode == "Ukendt", "Ukendt", str_extract(NACECode, "^[0-9]+")),
+#         Nacebranche = if_else(NACECode == "Ukendt", "Ukendt", str_remove(NACECode, "^[0-9]+\\s*"))
+#     )
+# 
+# # Fjerner den oprindelige NACECode-kolonne, da vi har splittet den op
+# merged_unique <- merged_unique |>
+#     select(-NACECode)
+# 
+# # Tjekker hvor der stadig er NA-værdier tilbage i datasættet
+# colSums(is.na(merged_unique))
+# 
+# # Fjerner rækker med NA-værdier (kan også overvejes at håndteres individuelt)
+# merged_unique <- na.omit(merged_unique)
+# 
+# # Gemmer det rensede og unikke datasæt til senere brug
+# saveRDS(merged_unique, "merged_unique.rds")
 
 
 
