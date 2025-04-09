@@ -1,8 +1,8 @@
----
+09-
 title: ""
 subtitle: ""
 
-date: "06-01-2025"
+date: "09-05-2025"
 author:
   - "Line A. Adolph"
   - "Maria B. A. Hitz"
@@ -99,6 +99,8 @@ Derfor skal der udvikles et datadrevet værktøj, som kombinerer teknisk analyse
 # Problemformulering
 
 Hvordan kan Business Viborg analysere og anvende medlemsdata til at udvikle et beslutningsunderstøttende dashboard, der forudsiger churn og forklarer centrale risikofaktorer baseret på relevante maskinlæringsmetoder og med inddragelse af etiske og juridiske overvejelser?
+
+## Underspørgsmål
 
 **Eksplorativ analyse (EDA)**
 
