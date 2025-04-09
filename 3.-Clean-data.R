@@ -73,6 +73,50 @@ merge_datasets <- readRDS("data/merge_datasets.rds")
 
 merge_datasets
 
+# Klippet fra 'joins_modeller' og indsat her i clean data delen (Martin)
+
+# Fokus: Unikke virksomheder via PNumber (produktionsenhedsnummer)
+# Det giver os 2966 unikke observationer
+merged_df <- merged_df |>
+  select(-z_companies_1_Firmanavn_1, -z_contacts_1_Email_1)  # Fjerner anonymiserede data
+
+# Omdøber kolonner for at forenkle og standardisere navne
+colnames(merged_df) <- c(
+  "BusinessCouncilMember",
+  "CompanyDateStamp",
+  "CompanyId",
+  "CompanyType",
+  "CVR",
+  "Employees",
+  "PostalCode",
+  "CompanyTypeName",
+  "PNumber", "Country",
+  "NACECode",
+  "CompanyStatus",
+  "AdvertisingProtected",
+  "ContactId",
+  "CompanyOwnerId",
+  "ContactLastUpdated",
+  "TitleChanged",
+  "LocationChanged",
+  "CreatedBy",
+  "MeetingLength",
+  "Firstname",
+  "UserRole",
+  "Initials",
+  "EventExternalId",
+  "EventPublicId",
+  "Description",
+  "LocationId",
+  "MaxParticipants",
+  "EventLength",
+  "EventId"
+)
+
+# Beholder kun én række pr. produktionsenhed (PNumber)
+merged_unique <- merged_df |>
+  distinct(PNumber, .keep_all = TRUE)
+
 # ------------------------------------------------------------------------------
 # Dataklargøring og datarensning starter her
 # Klippet fra 'joins_modeller' og indsat her i clean data delen (Martin)
