@@ -66,6 +66,9 @@ source("load_all_data.R")
 # 7. Modelling
 # ------------------------------------------------------------------------------
 
+preprocessing <- readRDS("data/preprocessing.rds")
+
+# Fra BJarne - skal rettes til:
 
 # ------------------------------------------------------------------
 # 1. Pakker, dataindlæsning og forberedelse
@@ -346,6 +349,8 @@ predict(final_model, new_data = new_vff)
 
 
 
-
+# ------------------------------------------------------------------
+# End
+# ------------------------------------------------------------------
 
 saveRDS(modelling, "data/modelling.rds")
