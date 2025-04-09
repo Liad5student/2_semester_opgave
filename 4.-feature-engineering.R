@@ -69,11 +69,8 @@ source("load_all_data.R")
 # 4. Feature Engineering
 # ------------------------------------------------------------------------------
 
-merge <- readRDS("data/merge_datasets.rds")
-
-
-
-feature_engineering <- 2
+# Load data frame fra branch 3. Clean data
+clean_data <- readRDS("data/clean_data.rds")
 
 
 # ------------------------------------------------------------------------------
