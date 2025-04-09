@@ -59,6 +59,8 @@ pacman::p_load(
   
 )
 
+# Husk setWD()
+
 # Henter og opdaterer alle .rds-filer fra alle branches
 source("load_all_data.R")
 
@@ -116,7 +118,7 @@ merge_datasets <- na.omit(merge_datasets)
 
 merge_datasets_unique <- merge_datasets |> 
   distinct(PNumber, .keep_all = TRUE)
-
+names(merge_datasets_unique)
 length(unique(merge_datasets$PNumber))
 
 
