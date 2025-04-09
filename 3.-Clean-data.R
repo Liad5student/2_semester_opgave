@@ -59,13 +59,17 @@ pacman::p_load(
   
 )
 
+# Henter og opdaterer alle .rds-filer fra alle branches
 source("load_all_data.R")
+
+# Indlæser .rds-filen fra branch 2.: Merge datasets
+merge_datasets <- readRDS("data/merge_datasets.rds")
 
 # ------------------------------------------------------------------------------
 # 3. Clean data
 # ------------------------------------------------------------------------------
 
-merge_datasets <- readRDS("data/merge_datasets.rds")
+merge_datasets
 
 
 
