@@ -120,7 +120,22 @@ Hvilke juridiske krav (fx GDPR) og etiske overvejelser bør indgå i udviklingen
 # Afgrænsning
 
 ## AI Chatbots
-# I forbindelse med udarbejdelsen af projektet er ChatGPT 4.0 blevet anvendt som et værktøj til grammatisk og sproglig korrektur, idéudvikling samt forbedring af det sproglige udtryk. Modellen har udelukkende fungeret som et hjælpemiddel i arbejdet med tekstbaserede opgaver og har hverken erstattet selvstændig analyse, kritisk refleksion eller været brugt til direkte besvarelse af problemformuleringen
+I forbindelse med udarbejdelsen af projektet er ChatGPT 4.0 blevet anvendt som et værktøj til grammatisk og sproglig korrektur, idéudvikling samt forbedring af det sproglige udtryk. Modellen har udelukkende fungeret som et hjælpemiddel i arbejdet med tekstbaserede opgaver og har hverken erstattet selvstændig analyse, kritisk refleksion eller været brugt til direkte besvarelse af problemformuleringen
+
+I dette projekt fokuserer vi på at udvikle en webbaseret applikation, der kan forudsige medlems-churn og visualisere centrale churn-drivere for Business Viborg. Projektet indebærer derfor flere afgrænsninger.
+
+## Data
+Vi anvender udelukkende datasættet, som er udleveret af Business Viborg. Datasættet indeholder information om medlemskab, virksomhedsstørrelse, branche, engagementsniveau, kontaktfrekvens og deltagelse i arrangementer. Dataene er anonymiserede og begrænset til et specifikt tidsrum, hvilket kan påvirke modellens generaliserbarhed.
+
+## Modeller
+Projektet fokuserer på udvikling og afprøvning af machine learning-modeller til churn-prediktion, herunder blandt andet Random Forest, XGBoost og Lasso. Vi anvender bootstrapping som resampling-metode og benytter AUC og accuracy som de primære evalueringsmål. Fokus er på modellens forklaringskraft og praktiske anvendelighed frem for at optimere for den højest mulige præcision.
+
+## Webapplikation
+Applikationen er en prototype og er ikke integreret med Business Viborgs IT-systemer eller databaser. Den kan uploades og anvendes lokalt eller via RStudio Cloud.
+
+## Etik og jura
+Vi behandler kort de etiske og juridiske aspekter ved brugen af persondata i overensstemmelse med GDPR, men foretager ikke en fuld juridisk gennemgang. Implementering af samtykke- og adgangsstyring indgår ikke som en del af denne prototype.
+
 
 # Definitioner
 
