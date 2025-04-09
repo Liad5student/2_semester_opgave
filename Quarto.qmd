@@ -240,7 +240,7 @@ OpenAI. (2025). ChatGPT (4.0). <https://chatgpt.com/>
 
 6. Preprocessing
 ```{r}
-# Precessing
+# Preprocessing
 ```
 
 7. Modelling
