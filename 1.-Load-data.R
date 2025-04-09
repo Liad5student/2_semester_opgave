@@ -50,11 +50,20 @@ source("load_all_data.R")
 # 1. Load data
 # ------------------------------------------------------------------------------
 
+# Indlæser alle nødvendige datasæt
+meetings <- readRDS("data/meetings.rds")
+events <- readRDS("data/events.rds")
+event_participants <- readRDS("data/event_participants.rds")
+company_contacts <- readRDS("data/company_contacts.rds")
+all_contact <- readRDS("data/all_contact.rds")
+all_companies <- readRDS("data/all_companies.rds")
+old_projects <- readRDS("data/old_projects.rds")
 
 
 
 
-
-
+# ------------------------------------------------------------------------------
+# 1. End
+# ------------------------------------------------------------------------------
 
 saveRDS(loaded_data, "data/loaded_data.rds")
