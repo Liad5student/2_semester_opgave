@@ -59,6 +59,8 @@ pacman::p_load(
   
 )
 
+# Husk at sætte working directory
+
 # Helper-funktion: Hent og læs en .rds-fil fra en anden branch
 
 source("load_all_data.R")
