@@ -59,10 +59,12 @@ pacman::p_load(
     
 )
 
+readRDS("data/clean_data.rds")
+readRDS("data/merge_datasets.rds")
+
 # ------------------------------------------------------------------------------
 # 4. Feature Engineering
 # ------------------------------------------------------------------------------
-readRDS("data/clean_data.rds")
 
 
 
@@ -70,5 +72,7 @@ readRDS("data/clean_data.rds")
 
 
 
+
+# ------------------------------------------------------------------------------
 
 saveRDS(feature_enginering, "data/feature_engineering.rds")
