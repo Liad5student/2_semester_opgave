@@ -114,10 +114,15 @@ colSums(is.na(merge_datasets))
 # Fjerner rækker med NA-værdier (kan også overvejes at håndteres individuelt)
 merge_datasets <- na.omit(merge_datasets)
 
+merge_datasets_unique <- merge_datasets |> 
+  distinct(PNumber, .keep_all = TRUE)
+
+length(unique(merge_datasets$PNumber))
+
 
 
 # ------------------------------------------------------------------------------
 # End
 # ------------------------------------------------------------------------------
 
-saveRDS(merged_unique, "data/clean_data.rds")
+saveRDS(merge_dataset_unique, "data/clean_data.rds")
