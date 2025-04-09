@@ -60,14 +60,14 @@ pacman::p_load(
 )
 
 # Helper-funktion: Henter og opdaterer .rds-filer fra de andre branches
-
 source("load_all_data.R")
+
+# Læser .rds ind fra branchet Modelling:
+modelling <- readRDS("data/modelling.rds")
 
 # ------------------------------------------------------------------------------
 # 8. Evaluate metrics
 # ------------------------------------------------------------------------------
-
-modelling <- readRDS("data/modelling.rds")
 
 # En vurdering af hvor godt modellerne med forskellige tuning parameters
 # klarer sig.
