@@ -62,90 +62,48 @@ pacman::p_load(
 # Helper-funktion: Henter og opdaterer .rds-filer fra de andre branches
 source("load_all_data.R")
 
+# Henter .rds-filen fra branchet preprocessing
+preprocessing <- readRDS("data/preprocessing.rds")
+
 # ------------------------------------------------------------------------------
 # 7. Modelling
 # ------------------------------------------------------------------------------
 
-preprocessing <- readRDS("data/preprocessing.rds")
-
 # Fra BJarne - skal rettes til:
 
-# ------------------------------------------------------------------
-# Modeldefinitioner
-# ------------------------------------------------------------------
+logistic_spec <- logistic_reg(penalty = tune(), mixture = tune()) |> 
+  set_engine("glmnet") |> 
+  set_mode("classification")
 
-# 3.1. Lineær model
-linear_model <- linear_reg() %>% 
-  set_engine("lm") %>% 
-  set_mode("regression")
+rf_spec <- rand_forest(mtry = tune(), trees = 500, min_n = tune()) |> 
+  set_engine("ranger") |> 
+  set_mode("classification")
 
-# 3.2. Lasso model
-lasso_model <- linear_reg(penalty = tune(), mixture = 1) %>% 
-  set_engine("glmnet") %>% 
-  set_mode("regression")
+xgb_spec <- boost_tree(mtry = tune(), trees = 1000, learn_rate = tune(), tree_depth = tune()) |> 
+  set_engine("xgboost") |> 
+  set_mode("classification")
 
-# 3.3. Ridge model
-ridge_model <- linear_reg(penalty = tune(), mixture = 0) %>% 
-  set_engine("glmnet") %>% 
-  set_mode("regression")
-
-# 3.4. Elastic Net model
-elastic_net_model <- linear_reg(penalty = tune(), mixture = tune()) %>% 
-  set_engine("glmnet") %>% 
-  set_mode("regression")
-
-# 3.5. Random Forest model med ranger
-rf_ranger_model <- rand_forest(mtry = tune(), trees = tune(), min_n = tune()) %>% 
-  set_engine("ranger") %>% 
-  set_mode("regression") 
-
-# 3.6. XGBoost-model med mtry
-xgb_model <- boost_tree(mtry = tune(), trees = 1000, tree_depth = tune(), learn_rate = tune()) %>%
-  set_engine("xgboost") %>%
-  set_mode("regression")
-
-# ------------------------------------------------------------------
-# Workflow for modeller (uden XGBoost)
-# ------------------------------------------------------------------
-# Vi bruger igen workflow set, som kan inkludere flere modeller og 
-# flere recipes.
-wf_set <- workflow_set(
-  preproc = list(scaled = recipe_scaled, reduceret = recipe_reduceret),
-  models = list(
-    linear      = linear_model, 
-    lasso       = lasso_model, 
-    ridge       = ridge_model, 
-    elastic_net = elastic_net_model, 
-    rf          = rf_ranger_model,
-    xgbst       = xgb_model
-  ),
-  cross = TRUE # Betyder at hver model anvendes på hver recipe,
-  # der bliver 6*2=12 modeller.
+churn_models <- workflow_set(
+  preproc = list(churn = churn_recipe),
+  models = list(logistic = logistic_spec, rf = rf_spec, xgb = xgb_spec)
 )
 
-# Valg betrikker
-vff_metrics <- metric_set(rmse, mae, rsq)
+churn_metrics <- metric_set(accuracy, roc_auc, f_meas, sens, spec)
 
-# ------------------------------------------------------------------
-# Tuning af workflow_set 
-# ------------------------------------------------------------------
-
-# Så bliver der givet gas:
-plan(multisession, workers = parallel::detectCores() - 1)
-strt.time <- Sys.time()
-
-fit_workflows <- wf_set %>%  
+plan(multisession)
+churn_results <- churn_models |> 
   workflow_map(
-    seed      = 42, # For reproducerbarhed, da nogle af modellerne 
-    # bruger fx tilfældige variabler i hvert split, og seed giver
-    # mulighed for at reproducere resultaterne
-    grid      = 10,       # 10 grid-værdier til hver tuning.
-    resamples = vff_boost,
-    metrics = vff_metrics
+    seed = 2024,
+    resamples = churn_folds,
+    grid = 7,
+    control = control_grid(
+      verbose = TRUE,
+      save_pred = TRUE,
+      parallel_over = "everything",
+      save_workflow = TRUE
+    ),
+    metrics = churn_metrics
   )
-
-print(Sys.time() - strt.time)
-# Der lettes på gashåndtaget
 plan(sequential)
 
 
