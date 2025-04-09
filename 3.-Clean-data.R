@@ -73,7 +73,7 @@ merge_datasets
 
 # ------------------------------------------------------------------------------
 # Dataklargøring og datarensning starter her
-# Klippet fra 'joins_modeller'
+# Klippet fra 'joins_modeller' og indsat her i clean data delen (Martin)
 # ------------------------------------------------------------------------------
 
 # Fjerner variabler som ikke vurderes relevante for churn-analyse
