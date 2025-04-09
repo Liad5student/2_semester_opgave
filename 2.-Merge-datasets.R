@@ -59,54 +59,9 @@ pacman::p_load(
   
 )
 
-source("load_all_data.R")
-
-# ------------------------------------------------------------------------------
 # Helper-funktion: Hent og læs en .rds-fil fra en anden branch
-# ------------------------------------------------------------------------------
 
-get_rds_from_branch <- function(branch, file) {
-    filepath <- file.path("data", file)
-    cmd <- paste("git checkout", branch, "--", filepath)
-    
-    message("\n🔄 Henter '", file, "' fra branch '", branch, "' ...")
-    result <- system(cmd, intern = TRUE)
-    
-    if (!file.exists(filepath)) {
-        stop("❌ Filen blev ikke hentet. Tjek at den eksisterer i den angivne branch.")
-    }
-    
-    message("✅ Fil hentet og klar til brug: ", filepath)
-    readRDS(filepath)
-}
-
-# Indlæs nødvendige data fra tidligere branches til data folder
-
-# 1. Load data
-loaded_data <- get_rds_from_branch("1.-Load-data", "loaded_data.rds")
-
-# 2. Merge datasets
-merged_data <- get_rds_from_branch("2.-Merge-datasets", "merge_datasets.rds")
-
-# 3. Clean data
-cleaned_data <- get_rds_from_branch("3.-Clean-data", "clean_data.rds")
-
-# 4. Feature Engineering
-features <- get_rds_from_branch("4.-Feature-Engineering", "feature_engineering.rds")
-
-# 5. EDA
-eda_output <- get_rds_from_branch("5.-EDA", "eda_summary.rds")
-
-# 6. Preprocessing
-preprocessed_data <- get_rds_from_branch("6.-Preprocessing", "preprocessed_data.rds")
-
-# 7. Modelling
-model_results <- get_rds_from_branch("7.-Modelling", "model_results.rds")
-
-# 8. Evaluate metrics
-metrics <- get_rds_from_branch("8.-Evaluate-metrics", "evaluation_metrics.rds")
-
-
+source("load_all_data.R")
 
 # ------------------------------------------------------------------------------
 # 2. Merge datasets
