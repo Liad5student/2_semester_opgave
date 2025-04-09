@@ -77,7 +77,7 @@ merge_datasets
 
 # Fokus: Unikke virksomheder via PNumber (produktionsenhedsnummer)
 # Det giver os 2966 unikke observationer
-merged_df <- merged_df |>
+merged_df <- merge_datasets |>
   select(-z_companies_1_Firmanavn_1, -z_contacts_1_Email_1)  # Fjerner anonymiserede data
 
 # Omdøber kolonner for at forenkle og standardisere navne
@@ -166,7 +166,6 @@ merge_datasets <- merge_datasets |>
 
 # Maria C. Koder: ---------------------------------------------------------
 
-
 glimpse(merge_datasets)
 
 # Tjekker for NA værdier 
@@ -226,7 +225,16 @@ clean_data <- clean_data %>%
 # Konverter 'Employees' til numerisk
 
 clean_data$Employees = as.numeric(clean_data$Employees)
-
+CompanyDateStamp = as.Date(clean_data$CompanyDateStamp, format = "%Y-%m-%d")
+PostalCode = as.numeric(clean_data$PostalCode)
+MaxParticipants = as.numeric(clean_data$MaxParticipants) %>%
+  na_if("Ukendt") %>%
+  na_if("Ingen event")
+EventLength = as.numeric(clean_data$EventLength) %>%
+  na_if("Ukendt") %>%
+  na_if("Ingen event")
+Nacecode = as.numeric(clean_data$Nacecode)
+Kontaktdato  = as.Date(clean_data$Kontaktdato, format = "%Y-%m-%d")
 glimpse(clean_data)
 
 # Vi skal konverterer flere kolonner til den rigtige format fordi der 
@@ -235,7 +243,6 @@ glimpse(clean_data)
 
 # Hvad skal vi laver med denne variabler? Jeg har prøvet at fjerne alle der har Tom
 # ingen event og ukendt og det kun er 60 observationer tilbage :(
-
 
 
 # ------------------------------------------------------------------------------
