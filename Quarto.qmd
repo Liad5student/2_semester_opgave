@@ -158,3 +158,43 @@ OpenAI. (2025). ChatGPT (4.0). <https://chatgpt.com/>
 -   Bilag 6: x
 
 \newpage
+
+1. Data load
+```{r}
+# Data load
+```
+
+2. Merge datasets
+```{r}
+# Merge datasets
+```
+
+3. Clean data
+```{r}
+# Clean data
+```
+
+4. Feature Engineering
+```{r}
+# Feature Engineering
+```
+
+5. EDA
+```{r}
+# EDA
+```
+
+6. Preprocessing
+```{r}
+# Precessing
+```
+
+7. Modelling
+```{r}
+# Modelling
+```
+
+8. Evaluate metrics
+```{r}
+# Evaluate metrics
+```
