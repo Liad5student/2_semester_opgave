@@ -72,6 +72,23 @@ source("load_all_data.R")
 # Load data frame fra branch 3. Clean data
 clean_data <- readRDS("data/clean_data.rds")
 
+glimpse(clean_data) #Bruger glimpse til at få et hurtigt overblik over data
+
+# Feature engineering
+
+# Antal events virksomheden har deltaget i
+
+feature_engineering <- clean_data %>%
+    group_by(customer_id) %>%
+    summarise(
+        event_count = n(),
+        last_event_date = max(event_date),
+        first_event_date = min(event_date),
+        days_since_last_event = as.numeric(Sys.Date() - last_event_date),
+        days_since_first_event = as.numeric(Sys.Date() - first_event_date)
+    ) %>%
+    ungroup()
+
 
 # ------------------------------------------------------------------------------
 # End
