@@ -113,7 +113,7 @@ names(merge_datasets)
 # Fjern ID’er og target (som ikke skal bruges som features)
 
 clean_data <- merge_datasets %>%
-  select(-CompanyId, -ContactId, -CompanyOwnerId, -CVR, -PNumber,-EventId,
+  select(-ContactId, -CompanyOwnerId,-EventId,
          -EventExternalId,-EventPublicId,-LocationId, -Tekstfelt, -CompanyType)
 
 # Fjern "Tom", "Ukendt", "Ingen event" og lav til NA 
