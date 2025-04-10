@@ -74,8 +74,6 @@ merge_datasets <- readRDS("data/merge_datasets.rds")
 merge_datasets
 
 
-
-
 # Maria C. Koder: ---------------------------------------------------------
 
 glimpse(merge_datasets)
@@ -96,13 +94,8 @@ duplicates_count <- merge_datasets %>%
   summarise(duplicates = n()) %>%
   filter(duplicates > 1)
 
-# Fjerne duplicates
-
-clean_data <- merge_datasets %>%
-  distinct(CompanyId, .keep_all = TRUE)
-
 # Antag at dit datasæt hedder df
-names(clean_data) <- names(clean_data) %>%
+names(merge_datasets) <- names(merge_datasets) %>%
   # Fjern indledende ID'er (f.eks. "26481_1")
   str_remove("^[0-9]+_1*\\s*") %>%
   # Erstat mellemrum, /, - og lign. med _
@@ -114,24 +107,19 @@ names(clean_data) <- names(clean_data) %>%
   # Trim whitespace og lav til lowercase
   str_trim()
 
-
 # Tjek de nye navne
-names(clean_data)
+names(merge_datasets)
 
 # Fjern ID’er og target (som ikke skal bruges som features)
 
-clean_data <- clean_data %>%
+clean_data <- merge_datasets %>%
   select(-CompanyId, -ContactId, -CompanyOwnerId, -CVR, -PNumber,-EventId,
          -EventExternalId,-EventPublicId,-LocationId, -Tekstfelt, -CompanyType)
 
 # Fjern "Tom", "Ukendt", "Ingen event" og lav til NA 
 
 clean_data <- clean_data %>%
-  mutate(across(where(is.character), ~na_if(.x, "Ukendt")))
-
-# Fjerner NA værdier 
-
-clean_data <- clean_data %>%
+  mutate(across(where(is.character), ~na_if(.x, "Ukendt"))) %>%
   drop_na()
 
 # Konverter 'Employees' til numerisk
@@ -139,26 +127,13 @@ clean_data <- clean_data %>%
 clean_data$Employees = as.numeric(clean_data$Employees)
 CompanyDateStamp = as.Date(clean_data$CompanyDateStamp, format = "%Y-%m-%d")
 PostalCode = as.numeric(clean_data$PostalCode)
-MaxParticipants = as.numeric(clean_data$MaxParticipants) %>%
-  na_if("Ukendt") %>%
-  na_if("Ingen event")
-EventLength = as.numeric(clean_data$EventLength) %>%
-  na_if("Ukendt") %>%
-  na_if("Ingen event")
 Nacecode = as.numeric(clean_data$Nacecode)
 Kontaktdato  = as.Date(clean_data$Kontaktdato, format = "%Y-%m-%d")
+
 glimpse(clean_data)
-
-# Vi skal konverterer flere kolonner til den rigtige format fordi der 
-# er flere der er chr i stedet for numerisk mens vi har stadig "ingen event" i variabler
-# der skal være numerisk såsom meetinglength, max participants, EventLength 
-
-# Hvad skal vi laver med denne variabler? Jeg har prøvet at fjerne alle der har Tom
-# ingen event og ukendt og det kun er 60 observationer tilbage :(
-
 
 # ------------------------------------------------------------------------------
 # End
 # ------------------------------------------------------------------------------
 
-saveRDS(merge_datasets, "data/clean_data.rds")
+saveRDS(clean_data, "data/clean_data.rds")
