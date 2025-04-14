@@ -97,7 +97,7 @@ names(merge_datasets)
 # Fjern ID’er og target (som ikke skal bruges som variabler) 
 clean_data <- merge_datasets |>
   dplyr::select(-ContactId, -CompanyOwnerId, -EventId,
-                -EventExternalId, -EventPublicId, -LocationId, 
+                -EventPublicId, -LocationId, 
                 -Tekstfelt, -CompanyType)
 
 # Konverterer udvalgte variabler til rigtig datatype - fra tekst til numerisk:
