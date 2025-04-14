@@ -100,17 +100,6 @@ clean_data <- merge_datasets |>
                 -EventExternalId, -EventPublicId, -LocationId, 
                 -Tekstfelt, -CompanyType)
 
-# Fjerner NA-værdier og erstatter
-clean_data <- clean_data |> 
-  mutate(across(
-    where(is.character),
-    ~ replace_na(.x, "Ukendt")
-  )) |> 
-  mutate(across(
-    where(is.numeric),
-    ~ replace_na(.x, 0)
-  ))
-
 # Konverterer udvalgte variabler til rigtig datatype - fra tekst til numerisk:
 # - Erstatter tomme strenge og irrelevante værdier med NA
 # - Derefter konverteres til numeriske værdier 
@@ -121,6 +110,17 @@ clean_data <- clean_data |>
                          NA, .x))) |>
   mutate(across(c(CVR, Nacecode, PostalCode, PNumber, 
                   MaxParticipants, EventLength, Employees), as.numeric))
+
+# Fjerner NA-værdier og erstatter
+clean_data <- clean_data |> 
+  mutate(across(
+    where(is.character),
+    ~ replace_na(.x, "Ukendt")
+  )) |> 
+  mutate(across(
+    where(is.numeric),
+    ~ replace_na(.x, 0)
+  ))
 
 # Konverterer til tid format 
 CompanyDateStamp = as.Date(clean_data$CompanyDateStamp, format = "%Y-%m-%d")
