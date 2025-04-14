@@ -100,10 +100,16 @@ clean_data <- merge_datasets |>
                 -EventExternalId, -EventPublicId, -LocationId, 
                 -Tekstfelt, -CompanyType)
 
-# Fjern "Ukendt" og lav til NA for variabel Employees
-clean_data <- clean_data |>
-  dplyr::mutate(across(where(is.character), ~ na_if(.x, "Ukendt"))) |>
-  tidyr::drop_na()
+# Fjerner NA-værdier og erstatter
+clean_data <- clean_data |> 
+  mutate(across(
+    where(is.character),
+    ~ replace_na(.x, "Ukendt")
+  )) |> 
+  mutate(across(
+    where(is.numeric),
+    ~ replace_na(.x, 0)
+  ))
 
 # Konverterer udvalgte variabler til rigtig datatype - fra tekst til numerisk:
 # - Erstatter tomme strenge og irrelevante værdier med NA
