@@ -217,7 +217,9 @@ feature_engineering <- feature_engineering |>
 # Tjek resultatet
 glimpse(feature_engineering)
 
-
+# Beholder kun igangværende virksomheder
+feature_engineering <- feature_engineering %>%
+  filter(CompanyStatus %in% c("Aktiv", "NORMAL"))
 # ------------------------------------------------------------------------------
 # End
 # ------------------------------------------------------------------------------
