@@ -78,23 +78,23 @@ glimpse(clean_data) #Bruger glimpse til at få et hurtigt overblik over data
 
 # CompanyDateStamp – opret en ny feature: Virksomhedens alder
 
-feature_engineering <- clean_data %>%
+feature_engineering <- clean_data |>
   mutate(
-    company_age_years = as.numeric(difftime(Sys.Date(), as.Date(CompanyDateStamp), units = "days")) %/% 365
+    company_age_years = as.numeric(difftime(Sys.Date(), as.Date(CompanyDateStamp), units = "days")) |> 365
   )
 
 
 # Antal events pr. år 
 
-events_per_year <- feature_engineering %>%
-  filter(EventLength != "Ingen event") %>%                     # Kun deltagelser
-  mutate(event_year = year(CompanyDateStamp)) %>%              # Træk årstal ud
-  group_by(CompanyId, event_year) %>%                          
+events_per_year <- feature_engineering |>
+  filter(EventLength != "Ingen event") |>                   # Kun deltagelser
+  mutate(event_year = year(CompanyDateStamp)) |>             # Træk årstal ud
+  group_by(CompanyId, event_year) |>                          
   summarise(events = n(), .groups = "drop")                    # Tæl events
 
 # Employees – antal ansatte (efter konvertering til numerisk)
 
-feature_engineering <- feature_engineering %>%
+feature_engineering <- feature_engineering |>
   mutate(
     Employees = as.numeric(str_replace_all(Employees, "\\.", "")), # Fjern punktummer
     Employees = as.numeric(str_replace_all(Employees, "\\s+", "")) # Fjern mellemrum
@@ -102,7 +102,7 @@ feature_engineering <- feature_engineering %>%
 
 # CompanyTypeName – A/S, ApS, osv.
 
-feature_engineering <- feature_engineering %>%
+feature_engineering <- feature_engineering |>
   mutate(
     CompanyTypeName = str_replace_all(CompanyTypeName, "A/S", "Aktieselskab"),
     CompanyTypeName = str_replace_all(CompanyTypeName, "ApS", "Anpartsselskab"),
@@ -130,7 +130,7 @@ feature_engineering <- feature_engineering |>
 
 # Virksomhedens besøg – opret en ny feature: Har haft kontakt
 
-feature_engineering <- feature_engineering %>%
+feature_engineering <- feature_engineering |>
   mutate(
     har_haft_kontakt = if_else(
       Virksomhedsbesøg != "Tom" | 
@@ -144,26 +144,26 @@ feature_engineering <- feature_engineering %>%
 
 # Deltaget i event – opret en ny feature: Har deltaget i event
 
-feature_engineering  <- feature_engineering  %>%
+feature_engineering  <- feature_engineering |>
   mutate(deltaget_i_event = if_else(EventLength != "Ingen event", "Ja", "Nej"))
 
 # Gennemsnit af deltagere – opret en ny feature: Gennemsnitligt antal deltagere
 
-feature_engineering  <- feature_engineering %>%
+feature_engineering  <- feature_engineering |>
   mutate(MaxParticipants_num = as.numeric(MaxParticipants))
 
-max_participants_stats <- feature_engineering %>%
-  filter(!is.na(MaxParticipants_num)) %>%
-  group_by(CompanyId) %>%
+max_participants_stats <- feature_engineering |>
+  filter(!is.na(MaxParticipants_num)) |>
+  group_by(CompanyId) |>
   summarise(gennemsnit_max_deltagere = mean(MaxParticipants_num))
 
 # Skeber kategorier for at samle alle de variabler med true og false fra 
 # områder hvor virksomheder søger hjælp 
 
 
-feature_engineering <- feature_engineering %>%
+feature_engineering <- feature_engineering |>
   # Sørg for at konvertere kolonnerne til logiske værdier (TRUE/FALSE)
-  mutate(across(matches("^\\d+_1"), ~ .x != "FALSE" & .x != "Tom")) %>%
+  mutate(across(matches("^\\d+_1"), ~ .x != "FALSE" & .x != "Tom")) |>
   mutate(
     # Opretter en enkelt variabel, der kategoriserer virksomheden baseret på de 8 områder
     hjælp_kategori = case_when(
@@ -192,7 +192,7 @@ feature_engineering <- feature_engineering %>%
       
       TRUE ~ "Ingen specifik hjælp"
     )
-  ) %>%
+  ) |>
   # Fjern de gamle variabler, som ikke længere er nødvendige
   select(-c(
     Kundeportefølje, Forretningsmodel, Forretningsidé, Produktportefølje,
