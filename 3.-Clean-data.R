@@ -71,65 +71,57 @@ merge_datasets <- readRDS("data/merge_datasets.rds")
 # 3. Clean data
 # ------------------------------------------------------------------------------
 
-merge_datasets
-
-
-# Maria C. Koder: ---------------------------------------------------------
-
+# Tjekker datastrukturen
 glimpse(merge_datasets)
 
-# Tjekker for NA værdier 
 
-na_count <- merge_datasets %>%
-  summarise(across(everything(), ~ sum(is.na(.)))) %>%
-  pivot_longer(cols = everything(), names_to = "variable", values_to = "na_count")
+# Tjekker for NA værdier 
+na_count <- merge_datasets |> 
+  summarise(across(everything(), ~ sum(is.na(.)))) |> 
+  pivot_longer(everything(), names_to = "variable", values_to = "na_count")
 
 # Det er ikke noget problem med NA værdier i dataene, 
 # så vi kan gå videre til næste trin
 
-# Tjekker for duplicates
-
-duplicates_count <- merge_datasets %>%
-  group_by(CompanyId) %>%
-  summarise(duplicates = n()) %>%
-  filter(duplicates > 1)
-
-# Antag at dit datasæt hedder df
-names(merge_datasets) <- names(merge_datasets) %>%
-  # Fjern indledende ID'er (f.eks. "26481_1")
-  str_remove("^[0-9]+_1*\\s*") %>%
-  # Erstat mellemrum, /, - og lign. med _
-  str_replace_all("[ /\\-]+", "_") %>%
-  # Fjern dobbelte underscores
-  str_replace_all("_+", "_") %>%
-  # Fjern evt. afsluttende underscore
-  str_remove("_$") %>%
-  # Trim whitespace og lav til lowercase
+# Fjernelse af irrelevante tegn og tal fra variabelnavne
+names(merge_datasets) <- names(merge_datasets) |>
+  str_remove("^[0-9]+_1*\\s*") |>
+  str_replace_all("[ /\\-]+", "_") |>
+  str_replace_all("_+", "_") |>
+  str_remove("_$") |>
   str_trim()
 
-# Tjek de nye navne
+# Tjeker navne 
 names(merge_datasets)
 
 # Fjern ID’er og target (som ikke skal bruges som features)
 
-clean_data <- merge_datasets %>%
-  select(-ContactId, -CompanyOwnerId,-EventId,
-         -EventExternalId,-EventPublicId,-LocationId, -Tekstfelt, -CompanyType)
+clean_data <- merge_datasets |>
+  dplyr::select(-ContactId, -CompanyOwnerId, -EventId,
+                -EventExternalId, -EventPublicId, -LocationId, 
+                -Tekstfelt, -CompanyType)
 
-# Fjern "Tom", "Ukendt", "Ingen event" og lav til NA 
+# Fjern "Ukendt" og lav til NA for variabel Employees
 
-clean_data <- clean_data %>%
-  mutate(across(where(is.character), ~na_if(.x, "Ukendt"))) %>%
-  drop_na()
+clean_data <- clean_data |>
+  dplyr::mutate(across(where(is.character), ~ na_if(.x, "Ukendt"))) |>
+  tidyr::drop_na()
 
-# Konverter 'Employees' til numerisk
+# Konverter variabler til de rigtige datatyper
 
-clean_data$Employees = as.numeric(clean_data$Employees)
+clean_data <- clean_data |>
+  mutate(across(c(CVR, Nacecode, PostalCode, PNumber, 
+                  MaxParticipants, EventLength, Employees),
+                ~ ifelse(.x %in% c(" ", "", "Tom", "Ukendt", "Ingen event"), 
+                         NA, .x))) |>
+  mutate(across(c(CVR, Nacecode, PostalCode, PNumber, 
+                  MaxParticipants, EventLength, Employees), as.numeric))
+
+# Konverterer til tid format 
 CompanyDateStamp = as.Date(clean_data$CompanyDateStamp, format = "%Y-%m-%d")
-PostalCode = as.numeric(clean_data$PostalCode)
-Nacecode = as.numeric(clean_data$Nacecode)
 Kontaktdato  = as.Date(clean_data$Kontaktdato, format = "%Y-%m-%d")
 
+# Tjekker datasæt struktur
 glimpse(clean_data)
 
 # ------------------------------------------------------------------------------
