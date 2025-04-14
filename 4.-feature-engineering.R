@@ -65,38 +65,31 @@ pacman::p_load(
 
 source("load_all_data.R")
 
+# Load data frame fra branch 3. Clean data
+clean_data <- readRDS("data/clean_data.rds")
+
 # ------------------------------------------------------------------------------
 # 4. Feature Engineering
 # ------------------------------------------------------------------------------
 
-# Load data frame fra branch 3. Clean data
-clean_data <- readRDS("data/clean_data.rds")
-
 glimpse(clean_data) #Bruger glimpse til at få et hurtigt overblik over data
 
-# Feature engineering
-
-# CompanyDateStamp – opret en ny feature: Virksomhedens alder
-
+# Opret en ny feature: Medlem i antal år
 feature_engineering <- clean_data |>
-  mutate(
-    company_age_years = round(
-      as.numeric(difftime(Sys.Date(), as.Date(CompanyDateStamp), 
-                          units = "days")) / 365, 
-      0
-    )
-  )
+  group_by(PNumber) |> 
+  count(EventExternalId)
 
+# Opret en ny feature: Deltaget i antal events
 
-
-# Antal events pr. år 
-# 
-# events_per_year <- feature_engineering |>
-#   filter(EventLength != "Ingen event") |>                   # Kun deltagelser
+Antal_events_total <- feature_engineering |>
+  filter(EventLength != "Ingen event") |>                   # Kun deltagelser
 #   mutate(event_year = year(CompanyDateStamp)) |>             # Træk årstal ud
 #   group_by(PNumber, event_year) |>                          
 #   summarise(events = n(), .groups = "drop")                    # Tæl events
 
+str(feature_engineering)  
+  
+  
 # Employees – antal ansatte (efter konvertering til numerisk)
 
 feature_engineering <- feature_engineering |>
