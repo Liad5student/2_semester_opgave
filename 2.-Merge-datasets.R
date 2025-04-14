@@ -95,7 +95,8 @@ merged_df <- merged_df |>
   select(-ends_with(".y")) |> 
   select(-ends_with(".x"))
 
-# Fjerner dubletter i 'meetings' og beholder kun første registrering per virksomhed
+# Fjerner dubletter i 'meetings' og beholder kun første registrering 
+# per virksomhed
 meetings_unique <- meetings |> 
   group_by(CompanyId) |> 
   summarise(across(everything(), first))
@@ -135,7 +136,8 @@ glimpse(merged_df)
 # Fokus: Unikke virksomheder via PNumber (produktionsenhedsnummer)
 # Det giver os 2966 unikke observationer
 merged_df <- merged_df |>
-  select(-z_companies_1_Firmanavn_1, -z_contacts_1_Email_1)  # Fjerner anonymiserede data
+  select(-z_companies_1_Firmanavn_1, -z_contacts_1_Email_1)  # Fjerner 
+# anonymiserede data
 
 # Omdøber kolonner for at forenkle og standardisere navne
 colnames(merged_df) <- c(
