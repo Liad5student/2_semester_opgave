@@ -76,18 +76,23 @@ glimpse(clean_data) #Bruger glimpse til at få et hurtigt overblik over data
 
 # Opret en ny feature: Medlem i antal år
 feature_engineering <- clean_data |>
-  group_by(PNumber) |> 
-  count(EventExternalId)
+  mutate(
+    medlem_antal_år = round(
+      as.numeric(difftime(Sys.Date(), as.Date(CompanyDateStamp), 
+                          units = "days")) / 365, 
+      0
+    )
+  )
 
 # Opret en ny feature: Deltaget i antal events
 
-Antal_events_total <- feature_engineering |>
-  filter(EventLength != "Ingen event") |>                   # Kun deltagelser
-#   mutate(event_year = year(CompanyDateStamp)) |>             # Træk årstal ud
-#   group_by(PNumber, event_year) |>                          
-#   summarise(events = n(), .groups = "drop")                    # Tæl events
+feature_engineering <- feature_engineering |> 
+  group_by(PNumber) |> 
+  mutate(Antal_events = n_distinct(EventId)) |> 
+  ungroup() |> 
+  relocate(Antal_events, .after = EventLength)
 
-str(feature_engineering)  
+names(feature_engineering)  
   
   
 # Employees – antal ansatte (efter konvertering til numerisk)
