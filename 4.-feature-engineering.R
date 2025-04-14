@@ -80,35 +80,42 @@ glimpse(clean_data) #Bruger glimpse til at få et hurtigt overblik over data
 
 feature_engineering <- clean_data |>
   mutate(
-    company_age_years = as.numeric(difftime(Sys.Date(), as.Date(CompanyDateStamp), units = "days")) |> 365
+    company_age_years = round(
+      as.numeric(difftime(Sys.Date(), as.Date(CompanyDateStamp), 
+                          units = "days")) / 365, 
+      0
+    )
   )
 
 
-# Antal events pr. år 
 
-events_per_year <- feature_engineering |>
-  filter(EventLength != "Ingen event") |>                   # Kun deltagelser
-  mutate(event_year = year(CompanyDateStamp)) |>             # Træk årstal ud
-  group_by(CompanyId, event_year) |>                          
-  summarise(events = n(), .groups = "drop")                    # Tæl events
+# Antal events pr. år 
+# 
+# events_per_year <- feature_engineering |>
+#   filter(EventLength != "Ingen event") |>                   # Kun deltagelser
+#   mutate(event_year = year(CompanyDateStamp)) |>             # Træk årstal ud
+#   group_by(PNumber, event_year) |>                          
+#   summarise(events = n(), .groups = "drop")                    # Tæl events
 
 # Employees – antal ansatte (efter konvertering til numerisk)
 
 feature_engineering <- feature_engineering |>
   mutate(
-    Employees = as.numeric(str_replace_all(Employees, "\\.", "")), # Fjern punktummer
-    Employees = as.numeric(str_replace_all(Employees, "\\s+", "")) # Fjern mellemrum
+    Employees = as.numeric(str_replace_all(Employees, "\\.", "")), 
+    # Fjern punktummer
+    Employees = as.numeric(str_replace_all(Employees, "\\s+", "")) 
+    # Fjern mellemrum
   )
 
 # CompanyTypeName – A/S, ApS, osv.
 
 feature_engineering <- feature_engineering |>
   mutate(
-    CompanyTypeName = str_replace_all(CompanyTypeName, "A/S", "Aktieselskab"),
-    CompanyTypeName = str_replace_all(CompanyTypeName, "ApS", "Anpartsselskab"),
-    CompanyTypeName = str_replace_all(CompanyTypeName, "IVS", "Iværksætterselskab"),
-    CompanyTypeName = str_replace_all(CompanyTypeName, "P/S", "Partnerselskab"),
-    CompanyTypeName = str_replace_all(CompanyTypeName, "K/S", "Kommanditselskab")
+CompanyTypeName = str_replace_all(CompanyTypeName, "A/S", "Aktieselskab"),
+CompanyTypeName = str_replace_all(CompanyTypeName, "ApS", "Anpartsselskab"),
+CompanyTypeName = str_replace_all(CompanyTypeName, "IVS", "Iværksætterselskab"),
+CompanyTypeName = str_replace_all(CompanyTypeName, "P/S", "Partnerselskab"),
+CompanyTypeName = str_replace_all(CompanyTypeName, "K/S", "Kommanditselskab")
   )
 
 # Læs NACE-lookup og omdøb kolonner
@@ -138,24 +145,21 @@ feature_engineering <- feature_engineering |>
         Konsulent_Navn != "Tom" | 
         Notat != "Tom" | 
         Kontaktdato != "Tom",
-      "Ja", "Nej"
-    )
-  )
+      "Ja", "Nej")) |>  
+  select(-Virksomhedsbesøg, -Telefonkontakt,
+               - Konsulent_Navn, -Notat, -Kontaktdato)
 
 # Deltaget i event – opret en ny feature: Har deltaget i event
 
-feature_engineering  <- feature_engineering |>
-  mutate(deltaget_i_event = if_else(EventLength != "Ingen event", "Ja", "Nej"))
+feature_engineering <- feature_engineering |>
+  mutate(
+    deltaget_i_event = if_else(
+      as.numeric(EventLength) > 0, 
+      "Ja", 
+      "Nej"
+    )
+  )
 
-# Gennemsnit af deltagere – opret en ny feature: Gennemsnitligt antal deltagere
-
-feature_engineering  <- feature_engineering |>
-  mutate(MaxParticipants_num = as.numeric(MaxParticipants))
-
-max_participants_stats <- feature_engineering |>
-  filter(!is.na(MaxParticipants_num)) |>
-  group_by(CompanyId) |>
-  summarise(gennemsnit_max_deltagere = mean(MaxParticipants_num))
 
 # Skeber kategorier for at samle alle de variabler med true og false fra 
 # områder hvor virksomheder søger hjælp 
@@ -176,7 +180,7 @@ feature_engineering <- feature_engineering |>
       (as.logical(Juridiske_forhold) | as.logical(Ejerskifte_og_generationsskifte)) ~ "Jura og Struktur",
       (as.logical(EU_Kontoret_i_DK_Interreg) | as.logical(Erhvervshuset) | as.logical(FN_1) | as.logical(Andre_nationale_ordninger)) ~ "Støtteordninger",
       
-      # Adaugă noile categorii
+      # Tilføjelse af de nye kategorier
       (as.logical(Uddannelse_kompetenceudvikling) | 
          as.logical(Vidensordninger) | 
          as.logical(IV_Vejledning) | 
