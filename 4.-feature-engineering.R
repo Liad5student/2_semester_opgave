@@ -83,20 +83,8 @@ feature_engineering <- clean_data |>
       0
     )
   )
-
-# Opret en ny feature: Deltaget i antal events
-
-feature_engineering <- feature_engineering |> 
-  group_by(PNumber) |> 
-  mutate(Antal_events = n_distinct(EventId)) |> 
-  ungroup() |> 
-  relocate(Antal_events, .after = EventLength)
-
-names(feature_engineering)  
-  
   
 # Employees – antal ansatte (efter konvertering til numerisk)
-
 feature_engineering <- feature_engineering |>
   mutate(
     Employees = as.numeric(str_replace_all(Employees, "\\.", "")), 
@@ -228,7 +216,7 @@ glimpse(feature_engineering)
 #   pull(hjælp_kategori)
 
 # Beholder kun igangværende virksomheder
-feature_engineering <- feature_engineering %>%
+feature_engineering <- feature_engineering |> 
   filter(CompanyStatus %in% c("Aktiv", "NORMAL"))
 # ------------------------------------------------------------------------------
 # End
