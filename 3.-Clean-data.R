@@ -71,17 +71,17 @@ merge_datasets <- readRDS("data/merge_datasets.rds")
 # 3. Clean data
 # ------------------------------------------------------------------------------
 
-# Tjekker datastrukturen
+# Tjekker datastrukturen for at få et overblik over variabler og deres typer
 glimpse(merge_datasets)
 
 
-# Tjekker for NA værdier 
+# Tjekker for manglende værdier (NA) i hele datasættet
 na_count <- merge_datasets |> 
   summarise(across(everything(), ~ sum(is.na(.)))) |> 
   pivot_longer(everything(), names_to = "variable", values_to = "na_count")
 
-# Det er ikke noget problem med NA værdier i dataene, 
-# så vi kan gå videre til næste trin
+# Det er ikke noget problem med NA værdier i dataene,
+#så vi kan gå videre til næste trin
 
 # Fjernelse af irrelevante tegn og tal fra variabelnavne
 names(merge_datasets) <- names(merge_datasets) |>
@@ -91,24 +91,23 @@ names(merge_datasets) <- names(merge_datasets) |>
   str_remove("_$") |>
   str_trim()
 
-# Tjeker navne 
+# Kontrollerer at variabelnavnene nu ser fornuftige ud
 names(merge_datasets)
 
-# Fjern ID’er og target (som ikke skal bruges som features)
-
+# Fjern ID’er og target (som ikke skal bruges som variabler) 
 clean_data <- merge_datasets |>
   dplyr::select(-ContactId, -CompanyOwnerId, -EventId,
                 -EventExternalId, -EventPublicId, -LocationId, 
                 -Tekstfelt, -CompanyType)
 
 # Fjern "Ukendt" og lav til NA for variabel Employees
-
 clean_data <- clean_data |>
   dplyr::mutate(across(where(is.character), ~ na_if(.x, "Ukendt"))) |>
   tidyr::drop_na()
 
-# Konverter variabler til de rigtige datatyper
-
+# Konverterer udvalgte variabler til rigtig datatype - fra tekst til numerisk:
+# - Erstatter tomme strenge og irrelevante værdier med NA
+# - Derefter konverteres til numeriske værdier 
 clean_data <- clean_data |>
   mutate(across(c(CVR, Nacecode, PostalCode, PNumber, 
                   MaxParticipants, EventLength, Employees),
@@ -121,7 +120,7 @@ clean_data <- clean_data |>
 CompanyDateStamp = as.Date(clean_data$CompanyDateStamp, format = "%Y-%m-%d")
 Kontaktdato  = as.Date(clean_data$Kontaktdato, format = "%Y-%m-%d")
 
-# Tjekker datasæt struktur
+# Tjekker den nye datastruktur for at sikre alt ser fint ud
 glimpse(clean_data)
 
 # ------------------------------------------------------------------------------
