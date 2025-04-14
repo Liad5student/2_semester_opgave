@@ -111,18 +111,22 @@ feature_engineering <- feature_engineering %>%
     CompanyTypeName = str_replace_all(CompanyTypeName, "K/S", "Kommanditselskab")
   )
 
-# Nacebranche – brancher laver kategorier 
-# 
-# feature_engineering <- feature_engineering %>%
-#   mutate(
-#     Nacebranche = str_replace_all(Nacebranche, "Sundhed", "Sundhed og socialvæsen"),
-#     Nacebranche = str_replace_all(Nacebranche, "Bygge og anlæg", "Byggeri"),
-#     Nacebranche = str_replace_all(Nacebranche, "Transport", "Transport og logistik"),
-#     Nacebranche = str_replace_all(Nacebranche, "Detailhandel", "Detailhandel"),
-#     Nacebranche = str_replace_all(Nacebranche, "IT", "IT og teknologi")
-#   )
-# 
-# feature_engineering$Nacebranche # Tjekker fordelingen af Nacebranche
+# Læs NACE-lookup og omdøb kolonner
+nace_lookup <- read_delim("data/nace_branchenavne.csv", delim = ";") |> 
+  select(KODE, TITEL) |> 
+  rename(Nace_kort = KODE, Branche_navn = TITEL)
+
+# Lav en ny kolonne med de første to cifre af Nacecode
+feature_engineering <- feature_engineering |> 
+  mutate(Nace_kort = substr(Nacecode, 1, 2)) |> 
+  select(-Nacebranche) |> 
+  left_join(nace_lookup, by = "Nace_kort") |> 
+  mutate(
+    Branche_navn = replace_na(Branche_navn, "Ukendt"),
+    Branche_navn = as.factor(Branche_navn)
+  ) %>%
+  select(-Nacecode, -Nace_kort) |> 
+  relocate(Branche_navn, .after = PNumber)
 
 # Virksomhedens besøg – opret en ny feature: Har haft kontakt
 
