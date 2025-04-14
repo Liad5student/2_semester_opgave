@@ -96,7 +96,7 @@ names(merge_datasets)
 
 # Fjern ID’er og target (som ikke skal bruges som variabler) 
 clean_data <- merge_datasets |>
-  dplyr::select(-ContactId, -CompanyOwnerId, -EventId,
+  dplyr::select(-ContactId, -CompanyOwnerId, -EventExternalId,
                 -EventPublicId, -LocationId, 
                 -Tekstfelt, -CompanyType)
 
