@@ -148,13 +148,6 @@ feature_engineering <- feature_engineering |>
 
 
 
-
-# test <- feature_engineering |>
-#   filter(PNumber == 1022227854)
-
-
-
-
 # Skeber kategorier for at samle alle de variabler med true og false fra 
 # områder hvor virksomheder søger hjælp 
 
@@ -211,9 +204,6 @@ feature_engineering <- feature_engineering |>
 # Tjek resultatet
 glimpse(feature_engineering)
 
-# test2 <- feature_engineering |>
-#   filter(PNumber == 1022227854) |>
-#   pull(hjælp_kategori)
 
 # Beholder kun igangværende virksomheder
 feature_engineering <- feature_engineering |> 
