@@ -144,6 +144,13 @@ merged_unique <- merged_df |>
     ~ if_else(is.na(.), "Ingen event", as.character(.))
   ))
 
+merged_unique <- merged_unique |> 
+  mutate(
+    MeetingLength = ifelse(MeetingLength == "Ingen event", "0 mins", MeetingLength),
+    MeetingLength = as.numeric(str_remove(MeetingLength, " mins"))
+  )
+  
+
 # Erstatter NA, splitter NACECode, fjerner original kolonne,
 # og fjerner rækker med NA
 merged_unique <- merged_unique |>
