@@ -149,7 +149,7 @@ feature_engineering <- feature_engineering |>
 
 
 
-# test <- feature_engineering |> 
+# test <- feature_engineering |>
 #   filter(PNumber == 1022227854)
 
 
@@ -211,13 +211,38 @@ feature_engineering <- feature_engineering |>
 # Tjek resultatet
 glimpse(feature_engineering)
 
-# test2 <- feature_engineering |> 
-#   filter(PNumber == 1022227854) |> 
+# test2 <- feature_engineering |>
+#   filter(PNumber == 1022227854) |>
 #   pull(hjælp_kategori)
 
 # Beholder kun igangværende virksomheder
 feature_engineering <- feature_engineering |> 
   filter(CompanyStatus %in% c("Aktiv", "NORMAL"))
+
+# Sletter de kolonner vi ikke vil bruge
+feature_engineering <- feature_engineering |> 
+  dplyr::select(
+    -CompanyDateStamp, 
+    -CompanyId,
+    -CVR,
+    -PNumber,
+    -Country,
+    -CompanyStatus,
+    -AdvertisingProtected,
+    -MaxParticipants,
+    -Description,
+    -EventLength,
+    -EventId,
+    -Andet
+  )
+
+# ------------------------------------------------------------------------------
+
+# Tilføjer churn kolonne
+feature_engineering <- feature_engineering |>
+  mutate(churn = if_else(BusinessCouncilMember == TRUE, 0, 1)) |>
+  select(-BusinessCouncilMember)
+
 # ------------------------------------------------------------------------------
 # End
 # ------------------------------------------------------------------------------
