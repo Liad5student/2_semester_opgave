@@ -82,28 +82,30 @@ old_projects <- readRDS("data/old_projects.rds")
 # 2. JOIN af tabeller
 # ------------------------------------------------------------------------------
 
-# Fjerner dubletter i 'meetings', 'events' og 'event_participants'
-meetings_unique <- meetings |> 
+
+# Fjerner dubletter og beholder første forekomst i hvert dataset
+meetings_unique <- meetings |>
   group_by(CompanyId) |> 
-  summarise(across(everything(), first))
+  summarise(across(everything(), first))     # Første møde pr. virksomhed
 
-events_unique <- events |> 
+events_unique <- events |>
   group_by(Cvr) |> 
-  summarise(across(everything(), first))
+  summarise(across(everything(), first))     # Første event pr. virksomhed
 
-event_participants_unique <- event_participants |> 
+event_participants_unique <- event_participants |>
   group_by(Cvr) |> 
-  summarise(across(everything(), first))
+  summarise(across(everything(), first))     # Første deltagerinfo pr. virksomhed
 
 # Samler alle datasæt via left_joins og fjerner dublet-kolonner
 merged_df <- all_companies |> 
-  left_join(company_contacts, by = "CompanyId") |> 
-  left_join(all_contact, by = "contactId") |> 
-  left_join(meetings_unique, by = "CompanyId") |> 
-  rename(Cvr = "z_companies_1_CVR-nummer_1") |> 
-  left_join(events_unique, by = "Cvr") |> 
-  left_join(event_participants_unique, by = "Cvr") |> 
-  select(-ends_with(".y"), -ends_with(".x"))
+  left_join(company_contacts, by = "CompanyId") |>     # Join kontaktpersoner
+  left_join(all_contact, by = "contactId") |>          # Join kontaktinfo
+  left_join(meetings_unique, by = "CompanyId") |>      # Join mødedata
+  rename(Cvr = "z_companies_1_CVR-nummer_1") |>        # Standardiser CVR-navn
+  left_join(events_unique, by = "Cvr") |>              # Join eventinfo
+  left_join(event_participants_unique, by = "Cvr") |>  # Join deltagerinfo
+  select(-ends_with(".y"), -ends_with(".x"))           # Fjerner dublet-kolonner
+
 
 # ------------------------------------------------------------------------------
 # 3. Dataklargøring og datarensning starter her
@@ -115,7 +117,8 @@ glimpse(merged_df)
 # Fokus: Unikke virksomheder via PNumber (produktionsenhedsnummer)
 # Det giver os 2966 unikke observationer
 merged_df <- merged_df |> 
-  select(-z_companies_1_Firmanavn_1, -z_contacts_1_Email_1)  # Fjerner anonymiserede data
+  select(-z_companies_1_Firmanavn_1, -z_contacts_1_Email_1)  
+# Fjerner anonymiserede data
 
 # Omdøber kolonner for at forenkle og standardisere navne
 colnames(merged_df) <- c(
@@ -128,48 +131,40 @@ colnames(merged_df) <- c(
   "MaxParticipants", "EventLength", "EventId"
 )
 
-# Beholder kun én række pr. produktionsenhed (PNumber)
-merged_unique <- merged_df |> 
-  distinct(PNumber, .keep_all = TRUE)
-
-
-# Fjern variabler som ikke vurderes relevante for churn-analyse
-merged_unique <- merged_unique |>
-  select(-TitleChanged, -LocationChanged, -CreatedBy, -Firstname,
-         -UserRole, -Initials, -ContactLastUpdated)
-
-# Erstatter NA-værdier i event-relaterede kolonner med "Ingen event"
-merged_unique <- merged_unique |>
-  mutate(across(
+# Beholder unikke virksomheder, fjerner irrelevante kolonner,
+# og udfylder NA i eventdata
+merged_unique <- merged_df |>
+  distinct(PNumber, .keep_all = TRUE) |>  # Beholder én række pr. PNumber
+  select(-TitleChanged, -LocationChanged, -CreatedBy, -Firstname,  
+         # Fjerner irrelevante variabler
+         -UserRole, -Initials, -ContactLastUpdated) |>
+  mutate(across(  # Erstatter NA i event-kolonner med "Ingen event"
     c(MeetingLength, EventExternalId, EventPublicId, Description, 
       LocationId, MaxParticipants, EventLength, EventId),
     ~ if_else(is.na(.), "Ingen event", as.character(.))
   ))
 
-# Erstatter NA i antal ansatte med "Ukendt"
-merged_unique <- merged_unique |>
-  mutate(Employees = if_else(is.na(Employees), "Ukendt", as.character(Employees)))
-
-# Erstatter NA i NACECode med "Ukendt"
-merged_unique <- merged_unique |>
-  mutate(NACECode = if_else(is.na(NACECode), "Ukendt", as.character(NACECode)))
-
-# Splitter NACECode i to: kode og branche – og håndterer "Ukendt" særskilt
+# Erstatter NA, splitter NACECode, fjerner original kolonne,
+# og fjerner rækker med NA
 merged_unique <- merged_unique |>
   mutate(
-    Nacecode = if_else(NACECode == "Ukendt", "Ukendt", str_extract(NACECode, "^[0-9]+")),
-    Nacebranche = if_else(NACECode == "Ukendt", "Ukendt", str_remove(NACECode, "^[0-9]+\\s*"))
-  )
+    Employees   = if_else(is.na(Employees), "Ukendt", as.character(Employees)),
+    # NA -> "Ukendt"
+    NACECode    = if_else(is.na(NACECode),  "Ukendt", as.character(NACECode)),
+    # NA -> "Ukendt"
+    Nacecode    = if_else(NACECode == "Ukendt", "Ukendt", 
+                          str_extract(NACECode, "^[0-9]+")),                 
+    # Hent kode
+    Nacebranche = if_else(NACECode == "Ukendt", "Ukendt", 
+                          str_remove(NACECode, "^[0-9]+\\s*"))               
+    # Hent branche
+  ) |>
+  select(-NACECode) |>  # Fjerner original NACECode-kolonne
+  na.omit()             # Fjerner rækker med NA-værdier
 
-# Fjerner den oprindelige NACECode-kolonne, da vi har splittet den op
-merged_unique <- merged_unique |>
-  select(-NACECode)
 
 # Tjekker hvor der stadig er NA-værdier tilbage i datasættet
 colSums(is.na(merged_unique))
-
-# Fjerner rækker med NA-værdier (kan også overvejes at håndteres individuelt)
-merged_unique <- na.omit(merged_unique)
 
 
 # Gemmer det rensede og unikke datasæt til senere brug
@@ -189,19 +184,16 @@ cols_to_fill <- setdiff(old_project_cols, c("Id", "SMVCompanyId", "SharedWith"))
 
 # Merge med merged_unique og fjern unødvendige kolonner
 merged_unique_old_projects <- merged_unique |>
-  left_join(old_projects, by = "ContactId") |>
-  select(-Id, -SMVCompanyId, -SharedWith)
+  left_join(old_projects, by = "ContactId") |> # Merger på ContactId
+  select(-Id, -SMVCompanyId, -SharedWith) |> # Fjerner udnødvendige kolonner
+mutate(across(all_of(cols_to_fill), 
+              ~ if_else(is.na(.), "Tom", as.character(.)))) |>
+  #Erstater NA'er med "Tom" i de relevante kolonner
+  distinct(PNumber, .keep_all = TRUE) # Behold én række per Pnumber
 
-# Udfyld NA med "Tom" i relevante kolonner
-merged_unique_old_projects <- merged_unique_old_projects |>
-  mutate(across(all_of(cols_to_fill), ~ if_else(is.na(.), "Tom", as.character(.))))
 
 # Tjek for NA-værdier
 colSums(is.na(merged_unique_old_projects))
-
-# En række for hver PNumber
-merged_unique_old_projects <- merged_unique_old_projects |>
-  distinct(PNumber, .keep_all = TRUE)
 
 # ------------------------------------------------------------------------------
 # End
