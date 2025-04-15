@@ -65,6 +65,7 @@ source("load_all_data.R")
 # Henter .rds-fil fra branchet EDA
 eda <- readRDS("data/eda.R")
 
+feature_engineering <- readRDS("data/feature_engineering.rds")
 # ------------------------------------------------------------------------------
 # 6. Preprocessing
 # ------------------------------------------------------------------------------
@@ -72,7 +73,7 @@ eda <- readRDS("data/eda.R")
 # Fra Bjarnes fil - skal rettes til
 
 set.seed(2024)
-churn_split <- initial_split(churn_data, prop = 0.8, strata = churn)
+churn_split <- initial_split(feature_engineering, prop = 0.8, strata = churn)
 churn_train <- training(churn_split)
 churn_test <- testing(churn_split)
 
@@ -88,5 +89,10 @@ churn_recipe <- recipe(churn ~ ., data = churn_train) |>
 # ------------------------------------------------------------------------------
 # End
 # ------------------------------------------------------------------------------
+preprocessing <- list(
+  recipe = churn_recipe,
+  split = churn_split,
+  folds = churn_folds
+)
 
 saveRDS(preprocessing, "data/preprocessing.rds")
