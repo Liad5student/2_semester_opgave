@@ -656,5 +656,36 @@ churn_workflow_set <- workflow_set(
 
 8. Evaluate metrics
 ```{r}
-# Evaluate metrics
+churn_metrics <- metric_set(accuracy, roc_auc, f_meas, sens, spec)
+
+grid_ctrl <- control_grid(
+  verbose = TRUE,
+  save_pred = TRUE,
+  parallel_over = "everything",
+  save_workflow = TRUE
+)
+
+plan(multisession)
+strt.time <- Sys.time()
+
+churn_results <- churn_workflow_set |> 
+  workflow_map(
+    resamples = churn_folds,
+    grid = 5,
+    metrics = churn_metrics,
+    control = grid_ctrl,
+    seed = 2025
+  )
+
+Sys.time() - strt.time
+plan(sequential)
+
+# Sammenlign resultater
+churn_results |> 
+  rank_results(select_best = TRUE) |> 
+  select(wflow_id, .metric, mean) |> 
+  pivot_wider(names_from = .metric, values_from = mean) |> 
+  arrange(-f_meas)
+
+autoplot(churn_results, select_best = TRUE)
 ```
