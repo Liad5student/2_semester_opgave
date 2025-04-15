@@ -63,57 +63,13 @@ pacman::p_load(
 source("load_all_data.R")
 
 # Henter .rds-filen fra branchet preprocessing
-preprocessing <- readRDS("data/preprocessing.rds")
-
-# Loader objekter
-churn_recipe <- preprocessing$recipe
-churn_split  <- preprocessing$split
-churn_folds  <- preprocessing$folds
-
-churn_train <- training(churn_split)
-churn_test  <- testing(churn_split)
+readRDS("data/preprocessing.rds")
 
 # ------------------------------------------------------------------------------
 # 7. Modelling
 # ------------------------------------------------------------------------------
 
-# Model specs
-rf_spec <- rand_forest(mtry = tune(), min_n = tune()) |>
-  set_engine("ranger", importance = "impurity") |>
-  set_mode("classification")
-
-xgb_spec <- boost_tree(trees = tune(), mtry = tune(), learn_rate = tune()) |>
-  set_engine("xgboost") |>
-  set_mode("classification")
-
-log_reg_spec <- logistic_reg(penalty = tune(), mixture = tune()) |>
-  set_engine("glmnet") |>
-  set_mode("classification")
-
-knn_spec <- nearest_neighbor(neighbors = tune(), weight_func = tune()) |>
-  set_engine("kknn") |>
-  set_mode("classification")
-
-nb_spec <- naive_Bayes(smoothness = tune(), Laplace = tune()) |>
-  set_engine("naivebayes") |>
-  set_mode("classification")
-
-svm_spec <- svm_rbf(cost = tune(), rbf_sigma = tune()) |>
-  set_engine("kernlab") |>
-  set_mode("classification")
-
-# Samlet workflow set
-churn_workflow_set <- workflow_set(
-  preproc = list(churn_recipe = churn_recipe),
-  models = list(
-    rf = rf_spec,
-    xgboost = xgb_spec,
-    logistic = log_reg_spec,
-    knn = knn_spec,
-    naive_bayes = nb_spec,
-    svm_rbf = svm_spec
-  )
-)
+# KIG I BRANCH 6: PREPROCESSING
 
 
 
@@ -125,21 +81,4 @@ churn_workflow_set <- workflow_set(
 # End
 # ------------------------------------------------------------------
 
-saveRDS(
-  list(
-    recipe = churn_recipe,
-    split = churn_split,
-    folds = churn_folds,
-    workflow_set = churn_workflow_set,
-    metrics = churn_metrics,
-    specs = list(
-      rf = rf_spec,
-      xgb = xgb_spec,
-      logistic = log_reg_spec,
-      knn = knn_spec,
-      nb = nb_spec,
-      svm = svm_spec
-    )
-  ),
-  file = "data/modelling.rds"
-)
+saveRDS("data/modelling.rds")
