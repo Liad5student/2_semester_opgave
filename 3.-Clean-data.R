@@ -71,63 +71,49 @@ merge_datasets <- readRDS("data/merge_datasets.rds")
 # 3. Clean data
 # ------------------------------------------------------------------------------
 
-# Tjekker datastrukturen for at få et overblik over variabler og deres typer
+# Giver overblik over datastrukturen og variabeltyper
 glimpse(merge_datasets)
 
-
-# Tjekker for manglende værdier (NA) i hele datasættet
+# Tjekker for manglende værdier (NA) i alle variabler
 na_count <- merge_datasets |> 
   summarise(across(everything(), ~ sum(is.na(.)))) |> 
   pivot_longer(everything(), names_to = "variable", values_to = "na_count")
 
-# Det er ikke noget problem med NA værdier i dataene,
-#så vi kan gå videre til næste trin
-
-# Fjernelse af irrelevante tegn og tal fra variabelnavne
+# Rydder op i variabelnavne: fjerner tal, specialtegn og whitespace
 names(merge_datasets) <- names(merge_datasets) |>
-  str_remove("^[0-9]+_1*\\s*") |>
-  str_replace_all("[ /\\-]+", "_") |>
-  str_replace_all("_+", "_") |>
-  str_remove("_$") |>
-  str_trim()
+  str_remove("^[0-9]+_1*\\s*") |>      # Fjerner startende tal/1-taller
+  str_replace_all("[ /\\-]+", "_") |> # Erstatter mellemrum og specialtegn med _
+  str_replace_all("_+", "_") |>       # Fjerner dobbelte underscores
+  str_remove("_$") |>                 # Fjerner underscore i slutningen
+  str_trim()                          # Trim whitespace
 
-# Kontrollerer at variabelnavnene nu ser fornuftige ud
-names(merge_datasets)
+# Udskriver de rensede kolonnenavne
+print(names(merge_datasets))
 
-# Fjern ID’er og target (som ikke skal bruges som variabler) 
-clean_data <- merge_datasets |>
+# Fjerner ID’er og variabler som ikke skal bruges til analyse
+clean_data <- merge_datasets |> 
   dplyr::select(-ContactId, -CompanyOwnerId, -EventExternalId,
-                -EventPublicId, -LocationId, 
-                -Tekstfelt, -CompanyType)
+                -EventPublicId, -LocationId, -Tekstfelt, -CompanyType)
 
-# Konverterer udvalgte variabler til rigtig datatype - fra tekst til numerisk:
-# - Erstatter tomme strenge og irrelevante værdier med NA
-# - Derefter konverteres til numeriske værdier 
+# Erstatter irrelevante tekstværdier med NA, konverterer til numerisk,
+# og udfylder NA med "Ukendt" (tekst) eller 0 (tal)
 clean_data <- clean_data |>
-  mutate(across(c(CVR, Nacecode, PostalCode, PNumber, 
-                  MaxParticipants, EventLength, Employees),
-                ~ ifelse(.x %in% c(" ", "", "Tom", "Ukendt", "Ingen event"), 
-                         NA, .x))) |>
-  mutate(across(c(CVR, Nacecode, PostalCode, PNumber, 
-                  MaxParticipants, EventLength, Employees), as.numeric))
+  mutate(
+    across(
+      c(CVR, Nacecode, PostalCode, PNumber, MaxParticipants, EventLength, Employees),
+      ~ as.numeric(ifelse(.x %in% c(" ", "", "Tom", "Ukendt", "Ingen event"), NA, .x))
+    ),
+    across(where(is.character), ~ replace_na(.x, "Ukendt")),  # Tekst: NA → "Ukendt"
+    across(where(is.numeric), ~ replace_na(.x, 0))             # Tal: NA → 0
+  )
 
-# Fjerner NA-værdier og erstatter
-clean_data <- clean_data |> 
-  mutate(across(
-    where(is.character),
-    ~ replace_na(.x, "Ukendt")
-  )) |> 
-  mutate(across(
-    where(is.numeric),
-    ~ replace_na(.x, 0)
-  ))
+# Konverterer datoer til korrekt datoformat
+CompanyDateStamp <- as.Date(clean_data$CompanyDateStamp, format = "%Y-%m-%d")
+Kontaktdato      <- as.Date(clean_data$Kontaktdato, format = "%Y-%m-%d")
 
-# Konverterer til tid format 
-CompanyDateStamp = as.Date(clean_data$CompanyDateStamp, format = "%Y-%m-%d")
-Kontaktdato  = as.Date(clean_data$Kontaktdato, format = "%Y-%m-%d")
-
-# Tjekker den nye datastruktur for at sikre alt ser fint ud
+# Viser datastruktur efter rensning
 glimpse(clean_data)
+
 
 # ------------------------------------------------------------------------------
 # End
