@@ -233,6 +233,17 @@ feature_engineering <- feature_engineering |>
   mutate(churn = if_else(BusinessCouncilMember == TRUE, 0, 1)) |>
   select(-BusinessCouncilMember)
 
+# Laver variabler om til faktorer
+feature_engineering <- feature_engineering |> 
+  mutate(
+    CompanyTypeName = as.factor(CompanyTypeName),
+    har_haft_kontakt = as.factor(har_haft_kontakt),
+    deltaget_i_event = as.factor(deltaget_i_event),
+    hjælp_kategori = as.factor(hjælp_kategori),
+    PostalCode = as.factor(PostalCode),
+    churn = as.factor(churn)
+  )
+
 # ------------------------------------------------------------------------------
 # End
 # ------------------------------------------------------------------------------
