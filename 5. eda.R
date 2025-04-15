@@ -72,7 +72,7 @@ featured <- readRDS("data/feature_engineering.rds")
 
 
 
-
+eda <- featured
 
 # ------------------------------------------------------------------------------
 # End
