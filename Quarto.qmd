@@ -403,6 +403,8 @@ mutate(across(all_of(cols_to_fill),
 
 # Tjek for NA-værdier
 colSums(is.na(merged_unique_old_projects))
+
+merge_datasets <- merged_unique_old_projects
 ```
 
 3. Clean data
@@ -636,7 +638,7 @@ feature_engineering <- feature_engineering |>
 ```{r}
 set.seed(2025)
 
-churn_split <- initial_split(df_feature, prop = 0.8, strata = churn)
+churn_split <- initial_split(feature_engineering, prop = 0.8, strata = churn)
 churn_train <- training(churn_split)
 churn_test  <- testing(churn_split)
 
