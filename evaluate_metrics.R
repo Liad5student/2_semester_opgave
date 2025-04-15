@@ -69,55 +69,7 @@ modelling <- readRDS("data/modelling.rds")
 # 8. Evaluate metrics
 # ------------------------------------------------------------------------------
 
-# Taget fra Bjarnes fil - skal tilpasses:
-
-# Overblik over bedste modeller
-churn_results %>% 
-  rank_results(select_best = TRUE) %>%
-  select(wflow_id, .metric, mean) %>%
-  pivot_wider(names_from = .metric, values_from = mean) %>%
-  arrange(-f_meas)
-
-# Plot
-autoplot(churn_results, select_best = TRUE)
-
-# Udvælg og fit den bedste model
-best_result <- churn_results |>
-  extract_workflow_set_result("churn_logistic") |>
-  select_best(metric = "f_meas")
-
-final_wf <- churn_results |>
-  extract_workflow("churn_logistic") |>
-  finalize_workflow(best_result)
-
-# Evaluer på testdata
-last_fit_result <- final_wf |> 
-  last_fit(split = churn_split, metrics = churn_metrics)
-
-last_fit_result |> collect_metrics()
-
-# Confusion matrix
-last_fit_result |> 
-  collect_predictions() |> 
-  conf_mat(truth = churn, estimate = .pred_class)
-
-# Fit hele modellen på alle data
-final_model <- fit(final_wf, churn_data)
-
-# Prediktion på ny kunde
-new_customer <- tribble(
-  ~tenure_months, ~monthly_fee, ~num_logins, ~num_clicks, ~num_support_tickets, ~contract_type, ~region,
-  12, 199, 30, 250, 3, "Monthly", "East"
-)
-
-predict(final_model, new_data = new_customer, type = "prob")
-
-
-
-
-
-
-evaluate_metrics <-
+# KIG I BRANCH 6
 
 # ------------------------------------------------------------------------------
 # End
