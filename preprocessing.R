@@ -66,34 +66,109 @@ source("load_all_data.R")
 eda <- readRDS("data/eda.R")
 
 feature_engineering <- readRDS("data/feature_engineering.rds")
+
 # ------------------------------------------------------------------------------
 # 6. Preprocessing
 # ------------------------------------------------------------------------------
 
-# Fra Bjarnes fil - skal rettes til
+set.seed(2025)
 
-set.seed(2024)
-churn_split <- initial_split(feature_engineering, prop = 0.8, strata = churn)
+churn_split <- initial_split(df_feature, prop = 0.8, strata = churn)
 churn_train <- training(churn_split)
-churn_test <- testing(churn_split)
+churn_test  <- testing(churn_split)
 
 churn_folds <- vfold_cv(churn_train, v = 10, strata = churn)
 
-churn_recipe <- recipe(churn ~ ., data = churn_train) |>
-  step_novel(all_nominal_predictors()) |>
+churn_recipe <- 
+  recipe(churn ~ ., data = churn_train) |>
+  step_novel(all_nominal_predictors()) |> 
   step_dummy(all_nominal_predictors(), one_hot = TRUE) |>
-  step_zv(all_predictors()) |>
-  step_normalize(all_numeric_predictors()) |>
-  step_smote(churn)  # hvis ubalanceret
+  step_zv(all_predictors()) |> 
+  step_normalize(all_numeric_predictors()) |> 
+  step_downsample(churn)  # Brug evt. step_smote(churn) hvis ekstrem ubalance
+
+# ------------------------------------------------------------------------------
+# 7. Modelling
+# ------------------------------------------------------------------------------
+
+# Model specs
+rf_spec <- rand_forest(mtry = tune(), min_n = tune()) |>
+  set_engine("ranger", importance = "impurity") |>
+  set_mode("classification")
+
+xgb_spec <- boost_tree(trees = tune(), mtry = tune(), learn_rate = tune()) |>
+  set_engine("xgboost") |>
+  set_mode("classification")
+
+log_reg_spec <- logistic_reg(penalty = tune(), mixture = tune()) |>
+  set_engine("glmnet") |>
+  set_mode("classification")
+
+knn_spec <- nearest_neighbor(neighbors = tune(), weight_func = tune()) |>
+  set_engine("kknn") |>
+  set_mode("classification")
+
+nb_spec <- naive_Bayes(smoothness = tune(), Laplace = tune()) |>
+  set_engine("naivebayes") |>
+  set_mode("classification")
+
+svm_spec <- svm_rbf(cost = tune(), rbf_sigma = tune()) |>
+  set_engine("kernlab") |>
+  set_mode("classification")
+
+# Samlet workflow set
+churn_workflow_set <- workflow_set(
+  preproc = list(churn_recipe = churn_recipe),
+  models = list(
+    rf = rf_spec,
+    xgboost = xgb_spec,
+    logistic = log_reg_spec,
+    knn = knn_spec,
+    naive_bayes = nb_spec,
+    svm_rbf = svm_spec
+  )
+)
+
+# ------------------------------------------------------------------------------
+# 8. Evaluate metrics
+# ------------------------------------------------------------------------------
+
+churn_metrics <- metric_set(accuracy, roc_auc, f_meas, sens, spec)
+
+grid_ctrl <- control_grid(
+  verbose = TRUE,
+  save_pred = TRUE,
+  parallel_over = "everything",
+  save_workflow = TRUE
+)
+
+plan(multisession)
+strt.time <- Sys.time()
+
+churn_results <- churn_workflow_set |> 
+  workflow_map(
+    resamples = churn_folds,
+    grid = 5,
+    metrics = churn_metrics,
+    control = grid_ctrl,
+    seed = 2025
+  )
+
+Sys.time() - strt.time
+plan(sequential)
+
+# Sammenlign resultater
+churn_results |> 
+  rank_results(select_best = TRUE) |> 
+  select(wflow_id, .metric, mean) |> 
+  pivot_wider(names_from = .metric, values_from = mean) |> 
+  arrange(-f_meas)
+
+autoplot(churn_results, select_best = TRUE)
 
 # ------------------------------------------------------------------------------
 # End
 # ------------------------------------------------------------------------------
-preprocessing <- list(
-  recipe = churn_recipe,
-  split = churn_split,
-  folds = churn_folds
-)
 
 saveRDS(preprocessing, "data/preprocessing.rds")
 
