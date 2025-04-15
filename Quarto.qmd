@@ -217,9 +217,47 @@ Pacman
 # ------------------------------------------------------------------------------
 # Pacman
 # ------------------------------------------------------------------------------
-
-
-
+pacman::p_load(
+  dplyr, 
+  tidyr, 
+  stringr, 
+  tidyverse, 
+  skimr, 
+  readxl, 
+  hms, 
+  ggpubr,
+  ggfortify, 
+  GGally, 
+  gridExtra, 
+  hrbrthemes, 
+  table1, 
+  tidymodels, 
+  themis,
+  broom, 
+  caret, 
+  discrim, 
+  glmnet, 
+  kknn, 
+  naivebayes, 
+  kernlab, 
+  xgboost,
+  ranger, 
+  gbm, 
+  randomForest, 
+  rpart, 
+  leaps, 
+  car, 
+  PerformanceAnalytics,
+  rvest, 
+  httr, 
+  jsonlite, 
+  rjson, 
+  rlist, 
+  Rcrawler, 
+  rmarkdown, 
+  knitr, 
+  future
+)
 ```
 
 1. Data load
@@ -242,15 +280,6 @@ old_projects <- readRDS("data/old_projects.rds")
 
 2. Merge datasets
 ```{r}
-# Indlæser alle nødvendige datasæt
-meetings <- readRDS("data/meetings.rds")
-events <- readRDS("data/events.rds")
-event_participants <- readRDS("data/event_participants.rds")
-company_contacts <- readRDS("data/company_contacts.rds")
-all_contact <- readRDS("data/all_contact.rds")
-all_companies <- readRDS("data/all_companies.rds")
-old_projects <- readRDS("data/old_projects.rds")
-
 # ------------------------------------------------------------------------------
 # 2. JOIN af tabeller
 # ------------------------------------------------------------------------------
