@@ -319,7 +319,6 @@ OpenAI. (2025). ChatGPT (4.0). <https://chatgpt.com/>
 
 \newpage
 
-```
 
 1. Data load
 ```{r}
