@@ -284,45 +284,50 @@ old_projects <- readRDS("data/old_projects.rds")
 # 2. JOIN af tabeller
 # ------------------------------------------------------------------------------
 
-
-# Fjerner dubletter og beholder første forekomst i hvert dataset
+# ------------------------------------------------------------------------------
+# 2.1: Fjern dubletter og behold første registrering pr. virksomhed
+# ------------------------------------------------------------------------------
 meetings_unique <- meetings |>
   group_by(CompanyId) |> 
-  summarise(across(everything(), first))     # Første møde pr. virksomhed
+  summarise(across(everything(), first))    # Første møde pr. virksomhed
 
 events_unique <- events |>
   group_by(Cvr) |> 
-  summarise(across(everything(), first))     # Første event pr. virksomhed
+  summarise(across(everything(), first))    # Første event pr. virksomhed
 
 event_participants_unique <- event_participants |>
   group_by(Cvr) |> 
-  summarise(across(everything(), first))     # Første deltagerinfo pr. virksomhed
+  summarise(across(everything(), first))    # Første deltagerinfo pr. virksomhed
 
-# Samler alle datasæt via left_joins og fjerner dublet-kolonner
+
+
+# ------------------------------------------------------------------------------
+# 2.2: Saml alle datasæt med left_join og ryd op i dubletter
+# ------------------------------------------------------------------------------
 merged_df <- all_companies |> 
   left_join(company_contacts, by = "CompanyId") |>     # Join kontaktpersoner
   left_join(all_contact, by = "contactId") |>          # Join kontaktinfo
   left_join(meetings_unique, by = "CompanyId") |>      # Join mødedata
-  rename(Cvr = "z_companies_1_CVR-nummer_1") |>        # Standardiser CVR-navn
+  rename(Cvr = "z_companies_1_CVR-nummer_1") |>        # Omdøber kolonnen til 
+                                              # "Cvr", så den matcher med events
   left_join(events_unique, by = "Cvr") |>              # Join eventinfo
   left_join(event_participants_unique, by = "Cvr") |>  # Join deltagerinfo
   select(-ends_with(".y"), -ends_with(".x"))           # Fjerner dublet-kolonner
 
 
 # ------------------------------------------------------------------------------
-# 3. Dataklargøring og datarensning starter her
+# 2.3: Klargør datasæt: fjern anonyme oplysninger og omdøb kolonnenavne
 # ------------------------------------------------------------------------------
-
 # Viser overblik over datasættet og datatyper
 glimpse(merged_df)
 
 # Fokus: Unikke virksomheder via PNumber (produktionsenhedsnummer)
-# Det giver os 2966 unikke observationer
+# Det giver os 2966 unikke observationer.
 merged_df <- merged_df |> 
   select(-z_companies_1_Firmanavn_1, -z_contacts_1_Email_1)  
 # Fjerner anonymiserede data
 
-# Omdøber kolonner for at forenkle og standardisere navne
+# Standardiser kolonnenavne for overskuelighed
 colnames(merged_df) <- c(
   "BusinessCouncilMember", "CompanyDateStamp", "CompanyId", "CompanyType",
   "CVR", "Employees", "PostalCode", "CompanyTypeName", "PNumber", "Country",
@@ -332,6 +337,11 @@ colnames(merged_df) <- c(
   "EventExternalId", "EventPublicId", "Description", "LocationId",
   "MaxParticipants", "EventLength", "EventId"
 )
+
+# ------------------------------------------------------------------------------
+# 2.4: Fjern dubletter og irrelevante kolonner
+# Udfyld manglende værdier i eventkolonner med "Ingen event"
+# ------------------------------------------------------------------------------
 
 # Beholder unikke virksomheder, fjerner irrelevante kolonner,
 # og udfylder NA i eventdata
@@ -346,21 +356,25 @@ merged_unique <- merged_df |>
     ~ if_else(is.na(.), "Ingen event", as.character(.))
   ))
 
+# Rens MeetingLength og konverter til numerisk (fjern " mins")
 merged_unique <- merged_unique |> 
   mutate(
-    MeetingLength = ifelse(MeetingLength == "Ingen event", "0 mins", MeetingLength),
+    MeetingLength = ifelse(MeetingLength == "Ingen event", "0 mins", 
+                           MeetingLength), 
     MeetingLength = as.numeric(str_remove(MeetingLength, " mins"))
   )
   
-
-# Erstatter NA, splitter NACECode, fjerner original kolonne,
-# og fjerner rækker med NA
+# ------------------------------------------------------------------------------
+# 2.5: Splits NACECode i kode og beskrivelse, fjern original kolonne og NA-rækker
+# ------------------------------------------------------------------------------
 merged_unique <- merged_unique |>
   mutate(
     Employees   = if_else(is.na(Employees), "Ukendt", as.character(Employees)),
     # NA -> "Ukendt"
+    
     NACECode    = if_else(is.na(NACECode),  "Ukendt", as.character(NACECode)),
     # NA -> "Ukendt"
+    
     Nacecode    = if_else(NACECode == "Ukendt", "Ukendt", 
                           str_extract(NACECode, "^[0-9]+")),                 
     # Hent kode
@@ -371,37 +385,40 @@ merged_unique <- merged_unique |>
   select(-NACECode) |>  # Fjerner original NACECode-kolonne
   na.omit()             # Fjerner rækker med NA-værdier
 
-
-# Tjekker hvor der stadig er NA-værdier tilbage i datasættet
+# ------------------------------------------------------------------------------
+# 2.6: Tjek for tilbageværende NA-værdier
+# ------------------------------------------------------------------------------
 colSums(is.na(merged_unique))
 
 
-# Gemmer det rensede og unikke datasæt til senere brug
+# ------------------------------------------------------------------------------
+# 2.7: Gem det rensede datasæt til senere brug
+# ------------------------------------------------------------------------------
 saveRDS(merged_unique, "merged_unique.rds")
 
 # ------------------------------------------------------------------------------
-# 4. Hvis vi vil have old_projects merged med i den samlede merge
+# 2.8: Merge old_projects (frivillig) med virksomhedsdata
 # ------------------------------------------------------------------------------
 
 # Omdøb SMVContactId til ContactId
 old_projects <- old_projects |>
-  rename(ContactId = SMVContactId)
+  rename(ContactId = SMVContactId) # Omdøb kolonne for at matche join
 
 # Gem kolonnenavne fra old_projects (ekskl. ContactId)
 old_project_cols <- setdiff(names(old_projects), "ContactId")
 cols_to_fill <- setdiff(old_project_cols, c("Id", "SMVCompanyId", "SharedWith"))
 
-# Merge med merged_unique og fjern unødvendige kolonner
+# Join med merged_unique og erstat NA med "Tom"
 merged_unique_old_projects <- merged_unique |>
-  left_join(old_projects, by = "ContactId") |> # Merger på ContactId
-  select(-Id, -SMVCompanyId, -SharedWith) |> # Fjerner udnødvendige kolonner
-mutate(across(all_of(cols_to_fill), 
-              ~ if_else(is.na(.), "Tom", as.character(.)))) |>
-  #Erstater NA'er med "Tom" i de relevante kolonner
-  distinct(PNumber, .keep_all = TRUE) # Behold én række per Pnumber
+  left_join(old_projects, by = "ContactId") |>   # Merger på ContactId
+  select(-Id, -SMVCompanyId, -SharedWith) |>     # Fjerner unødvendige kolonner
+  mutate(across(all_of(cols_to_fill), 
+                ~ if_else(is.na(.), "Tom", as.character(.)))) |> # NA → "Tom"
+  distinct(PNumber, .keep_all = TRUE)            # Behold unikke virksomheder
 
-
-# Tjek for NA-værdier
+# ------------------------------------------------------------------------------
+# 2.9: Tjek for NA-værdier i det udvidede datasæt
+# ------------------------------------------------------------------------------
 colSums(is.na(merged_unique_old_projects))
 
 merge_datasets <- merged_unique_old_projects
@@ -409,14 +426,28 @@ merge_datasets <- merged_unique_old_projects
 
 3. Clean data
 ```{r}
-# Giver overblik over datastrukturen og variabeltyper
+# ------------------------------------------------------------------------------
+# 3.1: Første kig på datastrukturen
+# Giver et hurtigt overblik over variabelnavne, typer og eksempelværdier
+# ------------------------------------------------------------------------------
 glimpse(merge_datasets)
 
+
+
+# ------------------------------------------------------------------------------
+# 3.2: Tæl hvor mange NA (manglende værdier) der findes i hver kolonne
+# Dette er nyttigt for at forstå, hvor der evt. skal renses eller imputeres
+# ------------------------------------------------------------------------------
 # Tjekker for manglende værdier (NA) i alle variabler
 na_count <- merge_datasets |> 
   summarise(across(everything(), ~ sum(is.na(.)))) |> 
   pivot_longer(everything(), names_to = "variable", values_to = "na_count")
 
+# ------------------------------------------------------------------------------
+# 3.3: Rensning af kolonnenavne
+# Fjerner forstyrrende elementer som tal, specialtegn og mellemrum
+# Gør kolonnenavne nemmere at bruge i videre analyser og modeller
+# ------------------------------------------------------------------------------
 # Rydder op i variabelnavne: fjerner tal, specialtegn og whitespace
 names(merge_datasets) <- names(merge_datasets) |>
   str_remove("^[0-9]+_1*\\s*") |>      # Fjerner startende tal/1-taller
@@ -428,26 +459,42 @@ names(merge_datasets) <- names(merge_datasets) |>
 # Udskriver de rensede kolonnenavne
 print(names(merge_datasets))
 
-# Fjerner ID’er og variabler som ikke skal bruges til analyse
+# ------------------------------------------------------------------------------
+# 3.4: Fjern irrelevante kolonner (ID’er og tekniske felter)
+# Disse kolonner bruges ikke i analysen og fjernes derfor fra datasættet
+# ------------------------------------------------------------------------------
 clean_data <- merge_datasets |> 
   dplyr::select(-ContactId, -CompanyOwnerId, -EventExternalId,
                 -EventPublicId, -LocationId, -Tekstfelt, -CompanyType)
 
-# Erstatter irrelevante tekstværdier med NA, konverterer til numerisk,
-# og udfylder NA med "Ukendt" (tekst) eller 0 (tal)
+# ------------------------------------------------------------------------------
+# 3.5: Erstatning og konvertering af værdier
+# - Tekst som "Tom", "Ukendt" og "Ingen event" → NA
+# - NA i tekstfelter bliver til "Ukendt"
+# - NA i tal bliver til 0
+# - Udvalgte kolonner konverteres til numerisk format
+# ------------------------------------------------------------------------------
 clean_data <- clean_data |>
   mutate(
     across(
-      c(CVR, Nacecode, PostalCode, PNumber, MaxParticipants, EventLength, Employees),
-      ~ as.numeric(ifelse(.x %in% c(" ", "", "Tom", "Ukendt", "Ingen event"), NA, .x))
+      c(CVR, Nacecode, PostalCode, PNumber, MaxParticipants, 
+        EventLength, Employees), ~ as.numeric(ifelse(.x %in% c(" ", "", "Tom", 
+                                            "Ukendt", "Ingen event"), NA, .x))
     ),
-    across(where(is.character), ~ replace_na(.x, "Ukendt")),  # Tekst: NA → "Ukendt"
+    across(where(is.character), ~ replace_na(.x, "Ukendt")), # Tekst: NA → "Ukendt"
     across(where(is.numeric), ~ replace_na(.x, 0))             # Tal: NA → 0
   )
 
-# Konverterer datoer til korrekt datoformat
+# ------------------------------------------------------------------------------
+# 3.6: Konverter dato-kolonner til rigtig datoformat
+# Vigtigt hvis man senere skal beregne fx forskel i tid
+# ------------------------------------------------------------------------------
 CompanyDateStamp <- as.Date(clean_data$CompanyDateStamp, format = "%Y-%m-%d")
 Kontaktdato      <- as.Date(clean_data$Kontaktdato, format = "%Y-%m-%d")
+
+
+
+
 
 # Viser datastruktur efter rensning
 glimpse(clean_data)
@@ -455,9 +502,13 @@ glimpse(clean_data)
 
 4. Feature Engineering
 ```{r}
-glimpse(clean_data) #Bruger glimpse til at få et hurtigt overblik over data
+glimpse(clean_data) # Bruger glimpse til at få et hurtigt overblik over data
 
-# Opret en ny feature: Medlem i antal år
+# ------------------------------------------------------------------------------
+# 4.1: Opretter en ny variabel, der beregner hvor mange år 
+# en virksomhed har været medlem. Vi bruger CompanyDateStamp (oprettelsesdato)
+# og beregner forskellen til dags dato.
+# ------------------------------------------------------------------------------
 feature_engineering <- clean_data |>
   mutate(
     medlem_antal_år = round(
@@ -467,17 +518,25 @@ feature_engineering <- clean_data |>
     )
   )
   
-# Employees – antal ansatte (efter konvertering til numerisk)
+
+# ------------------------------------------------------------------------------
+# 4.2: Rensning af Employees-kolonnen (antal ansatte). 
+# Nogle gange kan tal være formateret med punktummer (f.eks. "1.000") 
+# eller mellemrum (f.eks. "1 000"). 
+# Disse fjernes, så kolonnen kan konverteres til numerisk format
+# ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |>
   mutate(
-    Employees = as.numeric(str_replace_all(Employees, "\\.", "")), 
-    # Fjern punktummer
-    Employees = as.numeric(str_replace_all(Employees, "\\s+", "")) 
-    # Fjern mellemrum
+    Employees = Employees |> 
+      str_replace_all("\\.", "") |>       # Fjerner punktummer
+      str_replace_all("\\s+", "") |>      # Fjerner mellemrum
+      as.numeric()                        # Konverterer til tal
   )
 
-# CompanyTypeName – A/S, ApS, osv.
-
+# ------------------------------------------------------------------------------
+# 4.3: Oversættelse af virksomhedstyper til mere læsbare formater
+# Eksempel: "A/S" bliver til "Aktieselskab"
+# ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |>
   mutate(
 CompanyTypeName = str_replace_all(CompanyTypeName, "A/S", "Aktieselskab"),
@@ -487,68 +546,107 @@ CompanyTypeName = str_replace_all(CompanyTypeName, "P/S", "Partnerselskab"),
 CompanyTypeName = str_replace_all(CompanyTypeName, "K/S", "Kommanditselskab")
   )
 
-# Læs NACE-lookup og omdøb kolonner
+# ------------------------------------------------------------------------------
+# 4.4: Tilføj branchebetegnelse baseret på NACE-koder
+# NACE er en standard for brancheklassifikation (fx "01 Landbrug")
+# Vi bruger de første to cifre til at matche mod en lookup-tabel med branchenavne
+# ------------------------------------------------------------------------------
 nace_lookup <- read_delim("data/nace_branchenavne.csv", delim = ";") |> 
   select(KODE, TITEL) |> 
   rename(Nace_kort = KODE, Branche_navn = TITEL)
 
+
+# Tilføj branchebetegnelse baseret på Nacecode og fjern overflødige kolonner
 # Lav en ny kolonne med de første to cifre af Nacecode
 feature_engineering <- feature_engineering |> 
-  mutate(Nace_kort = substr(Nacecode, 1, 2)) |> 
-  select(-Nacebranche) |> 
-  left_join(nace_lookup, by = "Nace_kort") |> 
+  mutate(Nace_kort = substr(Nacecode, 1, 2)) |> # Udtrækker de to første cifre
+  select(-Nacebranche) |>                       # Fjerner den gamle kolonne
+  left_join(nace_lookup, by = "Nace_kort") |>   # Slår op i brancheregister
   mutate(
-    Branche_navn = replace_na(Branche_navn, "Ukendt"),
-    Branche_navn = as.factor(Branche_navn)
-  ) %>%
-  select(-Nacecode, -Nace_kort) |> 
-  relocate(Branche_navn, .after = PNumber)
+    Branche_navn = replace_na(Branche_navn, "Ukendt"), 
+    # Hvis ingen match, brug "Ukendt"
+    Branche_navn = as.factor(Branche_navn) 
+    # Gør den klar til ML (kategorisk)
+  ) |> 
+  select(-Nacecode, -Nace_kort) |>         # Fjerner unødvendige kolonner
+  relocate(Branche_navn, .after = PNumber) # Flytter Branche_navn efter PNumber
 
-# Virksomhedens besøg – opret en ny feature: Har haft kontakt
 
+
+
+
+# ------------------------------------------------------------------------------
+# 4.5: Opretter 2. feature/variabel – har virksomheden haft kontakt?
+# Vi kigger på flere kolonner og vurderer: 
+# hvis mindst én ikke er "Tom", så har der været kontakt
+# ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |>
   mutate(
     har_haft_kontakt = if_else(
-      Virksomhedsbesøg != "Tom" | 
-        Telefonkontakt != "Tom" | 
-        Konsulent_Navn != "Tom" | 
-        Notat != "Tom" | 
-        Kontaktdato != "Tom",
-      "Ja", "Nej")) |>  
-  select(-Virksomhedsbesøg, -Telefonkontakt,
-               - Konsulent_Navn, -Notat, -Kontaktdato)
+      Virksomhedsbesøg != "Tom" | Telefonkontakt != "Tom" | 
+        Konsulent_Navn != "Tom" | Notat != "Tom" | Kontaktdato != "Tom",
+      "Ja", "Nej")
+    ) |>  
+  select(-Virksomhedsbesøg, -Telefonkontakt, - Konsulent_Navn, 
+         -Notat, -Kontaktdato)
 
-# Deltaget i event – opret en ny feature: Har deltaget i event
-
+# ------------------------------------------------------------------------------
+# 4.6:# Trin 6: Opretter 3. feature/variabel – har virksomheden deltaget i event?
+# Hvis EventLength er større end 0, siger vi "Ja", ellers "Nej"
+# ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |>
-  mutate(
-    deltaget_i_event = if_else(
-      as.numeric(EventLength) > 0, 
-      "Ja", 
-      "Nej"
-    )
-  )
+  mutate(deltaget_i_event = if_else(as.numeric(EventLength) > 0, "Ja", "Nej"))
 
 
 
-# Skeber kategorier for at samle alle de variabler med true og false fra 
-# områder hvor virksomheder søger hjælp 
 
-
+# ------------------------------------------------------------------------------
+# 4.7: Skaber kategorier der viser virksomhedens behov for hjælp
+# Her grupperes TRUE/FALSE-kolonner i temaer som Strategi, Jura, Økonomi osv.
+  # Den viser, hvilken overordnet type hjælp virksomheden har modtaget.
+# ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |>
   # Sørg for at konvertere kolonnerne til logiske værdier (TRUE/FALSE)
   mutate(across(matches("^\\d+_1"), ~ .x != "FALSE" & .x != "Tom")) |>
   mutate(
-    # Opretter en enkelt variabel, der kategoriserer virksomheden baseret på de 8 områder
+    
+# Opretter en enkelt variabel, der kategoriserer virksomheden baseret på de 8 områder
     hjælp_kategori = case_when(
+
+# Hvis virksomheden har søgt hjælp til strategi/emner som forretningsidé, produkt osv.
       (as.logical(Kundeportefølje) | as.logical(Forretningsmodel) | as.logical(Forretningsidé) | as.logical(Produktportefølje)) ~ "Strategi Udvikling",
-      (as.logical(Markedsføring) | as.logical(Branding) | as.logical(Kommunikation_og_PR)) ~ "Marketing og Kommunikation",
-      (as.logical(Salg) | as.logical(Eksport) | as.logical(Markedsposition)) ~ "Salg og Eksport",
-      (as.logical(Medarbejdere) | as.logical(Netværk) | as.logical(Samarbejdspartnere) | as.logical(Ejer_og_bestyrelse)) ~ "Organisation og Ledelse",
-      (as.logical(Økonomistyring) | as.logical(Finansiering) | as.logical(Kapitalfond) | as.logical(Vækstfonden) | as.logical(Innovationsfonden)) ~ "Økonomi og Finansiering",
-      (as.logical(Leverance_og_projektstyring) | as.logical(IT_systemer) | as.logical(Faciliteter) | as.logical(Forretningsgange)) ~ "Drift og Systemer",
-      (as.logical(Juridiske_forhold) | as.logical(Ejerskifte_og_generationsskifte)) ~ "Jura og Struktur",
-      (as.logical(EU_Kontoret_i_DK_Interreg) | as.logical(Erhvervshuset) | as.logical(FN_1) | as.logical(Andre_nationale_ordninger)) ~ "Støtteordninger",
+      
+# Hvis fokus har været på markedsføring, branding eller PR
+      (as.logical(Markedsføring) | as.logical(Branding) | 
+         as.logical(Kommunikation_og_PR)) ~ "Marketing og Kommunikation",
+
+# Hvis der er søgt hjælp til salg, eksport eller markedsposition
+      (as.logical(Salg) | as.logical(Eksport) | 
+         as.logical(Markedsposition)) ~ "Salg og Eksport",
+      
+# Hvis der har været fokus på ledelse, netværk eller organisation
+      (as.logical(Medarbejdere) | as.logical(Netværk) | 
+         as.logical(Samarbejdspartnere) | as.logical(Ejer_og_bestyrelse)) 
+                                            ~ "Organisation og Ledelse",
+      
+# Hvis det handler om økonomi, finansiering eller fonde
+      (as.logical(Økonomistyring) | as.logical(Finansiering) | 
+         as.logical(Kapitalfond) | as.logical(Vækstfonden) | 
+         as.logical(Innovationsfonden)) ~ "Økonomi og Finansiering",
+      
+# Hvis det handler om daglig drift, it-systemer eller forretningsgange
+      (as.logical(Leverance_og_projektstyring) | as.logical(IT_systemer) | 
+         as.logical(Faciliteter) | 
+         as.logical(Forretningsgange)) ~ "Drift og Systemer",
+      
+# Hvis fokus er på jura, ejerskifte mv.
+      (as.logical(Juridiske_forhold) | 
+         as.logical(Ejerskifte_og_generationsskifte)) ~ "Jura og Struktur",
+    
+# Hvis der er søgt støtte gennem offentlige ordninger
+      (as.logical(EU_Kontoret_i_DK_Interreg) | as.logical(Erhvervshuset) | 
+         as.logical(FN_1) | 
+         as.logical(Andre_nationale_ordninger)) ~ "Støtteordninger",
       
       # Tilføjelse af de nye kategorier
       (as.logical(Uddannelse_kompetenceudvikling) | 
@@ -567,7 +665,7 @@ feature_engineering <- feature_engineering |>
       TRUE ~ "Ingen specifik hjælp"
     )
   ) |>
-  # Fjern de gamle variabler, som ikke længere er nødvendige
+  # Ryd op ved at fjerne de originale variabler der er brugt til grupperingen
   select(-c(
     Kundeportefølje, Forretningsmodel, Forretningsidé, Produktportefølje,
     Markedsføring, Branding, Kommunikation_og_PR,
@@ -588,35 +686,35 @@ feature_engineering <- feature_engineering |>
 glimpse(feature_engineering)
 
 
-# Beholder kun igangværende virksomheder
+# ------------------------------------------------------------------------------
+# 4.8: Behold kun aktive virksomheder
+# ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |> 
-  filter(CompanyStatus %in% c("Aktiv", "NORMAL"))
-
-# Sletter de kolonner vi ikke vil bruge
-feature_engineering <- feature_engineering |> 
-  dplyr::select(
-    -CompanyDateStamp, 
-    -CompanyId,
-    -CVR,
-    -PNumber,
-    -Country,
-    -CompanyStatus,
-    -AdvertisingProtected,
-    -MaxParticipants,
-    -Description,
-    -EventLength,
-    -EventId,
-    -Andet
-  )
+  filter(CompanyStatus %in% c("Aktiv", "NORMAL")) |> 
+  dplyr::select(-CompanyDateStamp, -CompanyId, -CVR, -PNumber, -Country, 
+    -CompanyStatus, -AdvertisingProtected, -MaxParticipants, -Description,
+    -EventLength, -EventId, -Andet) # Sletter de kolonner vi ikke vil bruge
 
 # ------------------------------------------------------------------------------
-
-# Tilføjer churn kolonne
+# 4.9: Tilføj churn-kolonne
+# Opretter ny kolonne kaldet 'churn',viser om virksomheden er stoppet som medlem. 
+# Hvis BusinessCouncilMember er TRUE (virksomheden er medlem), sættes churn = 0
+# Hvis BusinessCouncilMember er FALSE (virksomheden har forladt fællesskabet), 
+# sættes churn = 1
+# ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |>
   mutate(churn = if_else(BusinessCouncilMember == TRUE, 0, 1)) |>
   select(-BusinessCouncilMember)
 
-# Laver variabler om til faktorer
+# ------------------------------------------------------------------------------
+# 4.10: Konverter udvalgte kolonner til faktorer, 
+# som er nødvendigt for ML-modeller
+# En faktor er en kategorisk variabel – dvs. den indeholder en begrænset mængde 
+# unikke værdier (kategorier). # Eksempler på faktorer: postnumre, ja/nej, 
+# virksomhedsformer (ApS, A/S, IVS osv.)
+# I maskinlæring skal sådanne kolonner være faktorer, 
+# så algoritmerne forstår dem som kategorier og ikke som tekst.
+# ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |> 
   mutate(
     CompanyTypeName = as.factor(CompanyTypeName),
@@ -626,6 +724,12 @@ feature_engineering <- feature_engineering |>
     PostalCode = as.factor(PostalCode),
     churn = as.factor(churn)
   )
+
+
+# ------------------------------------------------------------------------------
+# 4.11: Gem det færdigbehandlede datasæt til senere analyse eller modellering
+# ------------------------------------------------------------------------------
+write_rds(feature_engineering, "data/feature_engineered_data.rds")
 
 ```
 
