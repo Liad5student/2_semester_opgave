@@ -908,7 +908,135 @@ autoplot(churn_results, select_best = TRUE)
 
 ```{r}
 # ------------------------------------------------------------------------------
-# Visualiseringer
+# 10. Visualiseringer
+# -------------------------------------------------------------------------
+# Plot modeller efter deres performance
+# -------------------------------------------------------------------------
+
+
+# Din tibble, hvis ikke du allerede har den i en variabel:
+metrics_df <- tibble::tibble(
+  wflow_id = c("churn_recipe_rf", "churn_recipe_xgboost", "churn_recipe_svm_rbf",
+               "churn_recipe_logistic", "churn_recipe_knn", "churn_recipe_naive_bayes"),
+  accuracy = c(0.825, 0.827, 0.845, 0.807, 0.743, 0.710),
+  f_meas   = c(0.724, 0.723, 0.708, 0.697, 0.592, 0.287),
+  roc_auc  = c(0.877, 0.881, 0.439, 0.858, 0.778, 0.855),
+  sens     = c(0.777, 0.766, 0.643, 0.755, 0.634, 0.272),
+  spec     = c(0.845, 0.852, 0.929, 0.828, 0.788, 0.893)
+)
+
+# Gør labels lidt pænere
+metrics_focus <- metrics_long %>%
+  filter(metric %in% c("accuracy", "f_meas", "roc_auc")) %>%
+  mutate(metric = case_when(
+    metric == "accuracy" ~ "Accuracy",
+    metric == "f_meas" ~ "F1-score",
+    metric == "roc_auc" ~ "ROC AUC",
+    TRUE ~ metric
+  ))
+
+# Nr. 1: BarPlot med værdier for denne 3 metrikker
+
+ggplot(metrics_focus, aes(x = metric, y = value, fill = metric)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = round(value, 3)), vjust = -0.3, size = 3.5) +
+  facet_wrap(~ wflow_id) +
+  ylim(0, 1.05) +
+  labs(
+    title = "Model performance (Accuracy, F1 og ROC AUC)",
+    x = NULL,
+    y = "Score"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 0),
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
+  ) +
+  scale_fill_brewer(palette = "Set3")
+
+
+# Nr. 2: Linje plot 
+
+ggplot(metrics_focus, aes(x = wflow_id, y = value, color = metric, group = metric)) +
+  geom_line(size = 1) +
+  geom_point(size = 3) +
+  geom_text(aes(label = round(value, 3)), vjust = -0.7, size = 3) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(
+    title = "Sammenligning på tværs af modeller",
+    x = "Model",
+    y = "Score"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(hjust = 0.5)
+  )
+
+# Nr. 3: Heatmap pr. model og metrik 
+
+ggplot(metrics_focus, aes(x = metric, y = wflow_id, fill = value)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = round(value, 2)), size = 3) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(
+    title = "Performance heatmap pr. model og metrik",
+    x = "Metric",
+    y = "Model"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# -------------------------------------------------------------------------
+# Plot for xgboost og Random forest med de vigtigste variabler 
+# -------------------------------------------------------------------------
+
+# Hent tuning-resultater for rf og xgboost
+rf_result <- churn_results %>% extract_workflow_set_result("churn_recipe_rf")
+xgb_result <- churn_results %>% extract_workflow_set_result("churn_recipe_xgboost")
+
+# Hent workflow (før det er fit)
+rf_workflow <- churn_results %>% extract_workflow("churn_recipe_rf")
+xgb_workflow <- churn_results %>% extract_workflow("churn_recipe_xgboost")
+
+# Vælg bedste parametre og fit modellen
+best_rf <- rf_workflow %>%
+  finalize_workflow(select_best(rf_result, metric = "f_meas")) %>%
+  fit(data = churn_train)
+
+best_xgb <- xgb_workflow %>%
+  finalize_workflow(select_best(xgb_result, metric = "f_meas")) %>%
+  fit(data = churn_train)
+
+# Feature importance
+vip_rf <- vi(extract_fit_parsnip(best_rf)) %>% mutate(model = "Random Forest")
+vip_xgb <- vi(extract_fit_parsnip(best_xgb)) %>% mutate(model = "XGBoost")
+
+# Kombinér og vis kun top 10 vigtigste variabler pr. model
+vip_combined <- bind_rows(vip_rf, vip_xgb) %>%
+  group_by(model) %>%
+  slice_max(order_by = Importance, n = 10) %>%
+  ungroup() %>%
+  mutate(Variable = str_wrap(Variable, width = 25))
+
+# Plot med labels og tekstrotation optimeret
+ggplot(vip_combined, aes(x = reorder(Variable, Importance), y = Importance, fill = model)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = round(Importance, 2)), hjust = -0.1, size = 3) +
+  facet_wrap(~ model, scales = "free") +
+  coord_flip() +
+  labs(
+    title = "Top 10 vigtigste variabler pr. model",
+    x = "Variabel",
+    y = "Vigtighed"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+    strip.text = element_text(size = 12, face = "bold"),
+    axis.text.y = element_text(size = 9)
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) #ektra space til labels
 # ------------------------------------------------------------------------------
 ```
 
