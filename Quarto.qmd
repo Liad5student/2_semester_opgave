@@ -708,6 +708,8 @@ grid_ctrl <- control_grid(
 plan(multisession)
 strt.time <- Sys.time()
 
+# Man kører modellen - den står og arbejder
+# Funktion der siger hvor langt modellen er nået i processen
 churn_results <- churn_workflow_set |> 
   workflow_map(
     resamples = churn_folds,
@@ -729,3 +731,11 @@ churn_results |>
 
 autoplot(churn_results, select_best = TRUE)
 ```
+
+```{r}
+# ------------------------------------------------------------------------------
+# Visualiseringer
+# ------------------------------------------------------------------------------
+```
+
+
