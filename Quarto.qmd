@@ -596,7 +596,7 @@ feature_engineering <- feature_engineering |>
          -Notat, -Kontaktdato)
 
 # ------------------------------------------------------------------------------
-# 4.7:# Trin 6: Opretter 3. feature/variabel – har virksomheden deltaget i event?
+# 4.7: Opretter 3. feature/variabel – har virksomheden deltaget i event?
 # Hvis EventLength er større end 0, siger vi "Ja", ellers "Nej"
 # ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |>
