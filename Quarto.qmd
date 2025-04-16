@@ -180,6 +180,112 @@ Vi behandler kort de etiske og juridiske aspekter ved brugen af persondata i ove
 
 # Analyse
 
+# Juridiske og etiske overvejelser
+
+## Juridiske og etiske forhold i churn-projektet for Business Viborg
+I forbindelse med udviklingen af en datadrevet løsning til forudsigelse af 
+medlems-churn hos Business Viborg er det essentielt, at både juridiske og etiske
+hensyn bliver nøje overvejet og integreret i hele udviklingsprocessen. 
+Den teknologiske og analytiske dimension af projektet må ikke stå alene, 
+men skal suppleres af en bevidsthed om datasikkerhed, individets rettigheder og 
+ansvarlig brug af data. Da løsningen tager udgangspunkt i oplysninger om 
+organisationens medlemmer, der potentielt kan knyttes til 
+identificerbare personer, er databehandlingen omfattet af 
+EU’s Databeskyttelsesforordning (GDPR). 
+Dette gælder, uanset om data fremstår pseudonymiserede for os som analytikere, 
+da Business Viborg internt kan koble data til konkrete virksomheder eller 
+kontaktpersoner. Formålet med dette afsnit er derfor at belyse de centrale 
+juridiske forpligtelser samt de etiske retningslinjer, som Business Viborg bør 
+overholde i forbindelse med udviklingen og implementeringen af churn-modellen.
+
+## Behandlingsgrundlag
+Et fundamentalt krav i GDPR er, at al behandling af personoplysninger skal 
+have et lovligt behandlingsgrundlag. Business Viborgs databehandling relaterer 
+sig til almindelige personoplysninger såsom virksomhedsnavne, 
+kontaktoplysninger, mødedeltagelse og interaktionshistorik. 
+Det er derfor nødvendigt at vurdere, hvilket hjemmelsgrundlag der gør det 
+lovligt at anvende disse data i en churn-model. Ifølge artikel 6 i GDPR kan 
+behandlingen enten baseres på samtykke fra medlemmerne (art. 6, stk. 1, litra a)
+eller på organisationens legitime interesser (art. 6, stk. 1, litra f). 
+I denne kontekst vurderes det, at Business Viborg primært bør benytte den 
+legitime interesse som behandlingsgrundlag, da organisationens formål – at 
+forbedre medlemsservice, understøtte fastholdelse og sikre et bæredygtigt 
+erhvervsfællesskab – er både sagligt, proportionalt og foreneligt med 
+medlemmernes forventninger.
+Det er dog vigtigt at bemærke, at hvis data senere anvendes til andre formål, 
+f.eks. målrettet markedsføring eller automatiseret profilering,
+kan det være nødvendigt at genoverveje behandlingsgrundlaget, 
+herunder at indhente eksplicit samtykke.
+
+## Personoplysninger og dataminimering
+Analyserne tager udgangspunkt i almindelige personoplysninger, 
+som ikke i sig selv er følsomme, men som i kombination med andre oplysninger 
+stadig udgør personoplysninger i GDPR-forstand. 
+Eksempler kan være data om deltagelse i arrangementer, 
+mødeaktivitet eller medlemskabets varighed. 
+For at overholde principperne om dataminimering 
+og formålsbegrænsning (jf. GDPR art. 5), skal Business Viborg sikre, 
+at der kun behandles data, som er nødvendige og relevante i forhold til det 
+definerede formål – nemlig at kunne identificere virksomheder i 
+risiko for udmeldelse. Alle unødvendige oplysninger bør fjernes eller 
+anonymiseres, og det samlede datasæt skal reduceres til det minimum, der kræves 
+for at modellere churn med høj præcision.
+Derudover skal der være dokumentation for, hvordan og hvorfor de valgte 
+variabler indgår i modellen. Denne dokumentation skal kunne anvendes til 
+intern kontrol og overfor Datatilsynet, hvis der føres tilsyn.
+
+## Oplysningspligt og transparens
+Business Viborg har i henhold til GDPR artikel 13 og 14 en klar oplysningspligt
+over for de registrerede medlemmer. Det betyder, at medlemmerne skal informeres 
+om, at deres data indgår i analyser, hvad formålet med analysen er, hvilke 
+rettigheder de har, og hvordan de kan kontakte organisationen for spørgsmål 
+eller indsigelser. Oplysningen bør være let tilgængelig og formuleret i et 
+sprog, der er forståeligt for ikke-specialister. 
+Ideelt set bør informationen formidles både via organisationens 
+privatlivspolitik og i forbindelse med medlemskommunikation – f.eks. 
+i velkomstmateriale eller nyhedsbreve.
+Transparens er i denne sammenhæng ikke blot et juridisk krav, 
+men også et middel til at styrke medlemmernes tillid til 
+Business Viborgs databrug.
+
+
+## Pseudonymisering og identifikationsrisici
+Selvom datasættet, som analysen baseres på, er pseudonymiseret for 
+dataanalytikerne, betyder det ikke, at oplysningerne er anonyme i GDPR-forstand.
+Business Viborgs medarbejdere har adgang til nøgleoplysninger 
+såsom medlemsnummer, virksomhedsnavn eller kontaktpersoner, som gør det 
+muligt at identificere de registrerede. Dette understreger, at databehandlingen
+fortsat er omfattet af alle GDPR-krav. Der skal derfor træffes passende 
+forholdsregler for at sikre, at oplysningerne ikke anvendes til andre formål 
+uden nyt behandlingsgrundlag og ikke utilsigtet afslører følsom information 
+om specifikke virksomheder.
+
+
+## Datasikkerhed og organisatorisk ansvar
+Business Viborg er som dataansvarlig forpligtet til at beskytte 
+personoplysninger mod uautoriseret adgang, tab, ændring eller misbrug. 
+I henhold til artikel 24 og 32 i GDPR skal organisationen iværksætte både 
+tekniske og organisatoriske sikkerhedsforanstaltninger. 
+Det inkluderer brug af adgangsstyring, kryptering, logning af datatilgange, 
+opdaterede sikkerhedspolitikker og uddannelse af personale i datasikkerhed. 
+Derudover skal der foreligge databehandleraftaler, hvis eksterne 
+samarbejdspartnere inddrages i projektet. 
+Manglende sikkerhed kan ikke alene få juridiske konsekvenser, 
+men også underminere den tillid, som projektet skal baseres på.
+
+## Etiske overvejelser og ansvarlig dataanvendelse
+Udover den juridiske ramme bør Business Viborg også forholde sig aktivt til 
+dataetik og samfundsansvar. Ifølge anbefalinger fra bl.a. 
+Dataetisk Råd handler ansvarlig dataanvendelse om at sætte mennesket i centrum, 
+sikre gennemsigtighed og undgå skævvridning eller diskrimination. 
+Anvendelsen af en churn-model må ikke resultere i, at bestemte virksomheder 
+eller grupper automatisk vurderes som mindre værdifulde baseret på statistiske 
+mønstre, som ikke er sagligt begrundede. Der skal derfor tages højde for 
+fairness og risikoen for bias – både i datasættets sammensætning og i de 
+variable, der anvendes i modellen.
+
+
+
 # Anbefaling
 
 # Konklusion
@@ -212,52 +318,7 @@ OpenAI. (2025). ChatGPT (4.0). <https://chatgpt.com/>
 -   Bilag 6: x
 
 \newpage
-Pacman
-```{r}
-# ------------------------------------------------------------------------------
-# Pacman
-# ------------------------------------------------------------------------------
-pacman::p_load(
-  dplyr, 
-  tidyr, 
-  stringr, 
-  tidyverse, 
-  skimr, 
-  readxl, 
-  hms, 
-  ggpubr,
-  ggfortify, 
-  GGally, 
-  gridExtra, 
-  hrbrthemes, 
-  table1, 
-  tidymodels, 
-  themis,
-  broom, 
-  caret, 
-  discrim, 
-  glmnet, 
-  kknn, 
-  naivebayes, 
-  kernlab, 
-  xgboost,
-  ranger, 
-  gbm, 
-  randomForest, 
-  rpart, 
-  leaps, 
-  car, 
-  PerformanceAnalytics,
-  rvest, 
-  httr, 
-  jsonlite, 
-  rjson, 
-  rlist, 
-  Rcrawler, 
-  rmarkdown, 
-  knitr, 
-  future
-)
+
 ```
 
 1. Data load
@@ -700,7 +761,7 @@ glimpse(feature_engineering)
 # ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |> 
   filter(CompanyStatus %in% c("Aktiv", "NORMAL")) |> 
-  dplyr::select(-CompanyDateStamp, -CompanyId, -CVR, -PNumber, -Country, 
+  dplyr::select(-CompanyDateStamp, -CompanyId, -CVR, -Country, 
     -CompanyStatus, -AdvertisingProtected, -MaxParticipants, -Description,
     -EventLength, -EventId, -Andet) # Sletter de kolonner vi ikke vil bruge
 
@@ -903,7 +964,8 @@ new_company <- tibble(
   hjælp_kategori = factor("Strategi Udvikling"),
   medlem_antal_år = 2,
   Branche_navn = factor("Fremstilling af maskiner og udstyr i.a.n."),
-  MeetingLength = 180
+  MeetingLength = 180,
+  PNumber = 12345678
 )
 
 # Forudsiger klassifikation og sandsynlighed
