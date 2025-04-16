@@ -851,4 +851,205 @@ autoplot(churn_results, select_best = TRUE)
 # ------------------------------------------------------------------------------
 ```
 
+```{r}
+# ------------------------------------------------------------------------------
+# 11. Evaluering af bedste model på testdatasættet (Random Forest) 
+
+# Hvis XGBoost skal vi prøve med flere grids først for at teste den bedre
+# ------------------------------------------------------------------------------
+
+# 1. Find bedste parametre for den bedste model
+best_results <- churn_results |> 
+  extract_workflow_set_result("churn_recipe_rf") |> 
+  select_best(metric = "f_meas")
+
+# 2. Finaliser workflow med de fundne parametre
+final_wf <- churn_results |> 
+  extract_workflow("churn_recipe_rf") |> 
+  finalize_workflow(best_results)
+
+# 3. Træn modellen på træningsdata og evaluer på testdata
+churn_last_fit <- final_wf |> 
+  last_fit(split = churn_split, metrics = churn_metrics)
+
+# 4. Udskriv evalueringsmetrikker
+collect_metrics(churn_last_fit)
+
+# 5. Gem confusion matrix som objekt (brugbar til præsentation)
+conf_matrix <- churn_last_fit |> 
+  collect_predictions() |> 
+  conf_mat(estimate = .pred_class, truth = churn)
+
+# 6. Gem test-prædiktioner hvis ønsket
+test_preds <- collect_predictions(churn_last_fit)
+
+# 7. Træn endelig model på hele datasættet
+final_model <- fit(final_wf, data = feature_engineering)
+
+# 8. Gem modellen
+saveRDS(final_model, "final_churn_model.rds")
+
+
+# ------------------------------------------------------------------------------
+# 11.1 Eksempel: Forudsig churn for én ny virksomhed
+# ------------------------------------------------------------------------------
+
+new_company <- tibble(
+  Employees = 15,
+  PostalCode = factor("8800"),
+  CompanyTypeName = factor("Aktieselskab"),
+  har_haft_kontakt = factor("Ja"),
+  deltaget_i_event = factor("Nej"),
+  hjælp_kategori = factor("Strategi Udvikling"),
+  medlem_antal_år = 2,
+  Branche_navn = factor("Fremstilling af maskiner og udstyr i.a.n."),
+  MeetingLength = 180
+)
+
+# Forudsiger klassifikation og sandsynlighed
+predict(final_model, new_company)                    # 0 = bliver, 1 = churn
+predict(final_model, new_company, type = "prob")     # churn-sandsynlighed
+
+
+# ------------------------------------------------------------------------------
+# 11.2 Forudsig churn for ALLE virksomheder og tilføj resultater
+# ------------------------------------------------------------------------------
+
+# Forudsiger sandsynlighed og klasse
+churn_probs   <- predict(final_model, feature_engineering, type = "prob")
+churn_classes <- predict(final_model, feature_engineering)
+
+# Kombiner og omdøb kolonner
+all_predictions <- bind_cols(churn_probs, churn_classes) |> 
+  rename(
+    churn_prob = .pred_1,      # Sandsynlighed for churn
+    churn_class = .pred_class  # Klassifikation (0/1)
+  )
+
+# Tilføj til datasættet og konvertér sandsynlighed til procent
+full_results <- feature_engineering |> 
+  bind_cols(all_predictions) |> 
+  mutate(
+    churn_prob = round(churn_prob * 100, 1)
+  )
+
+# Tilføj churn-risikokategorier tidligt (bruges i visualiseringer og rapporter)
+full_results <- full_results |> 
+  mutate(
+    churn_risiko = case_when(
+      churn_prob >= 80 ~ "Høj risiko",
+      churn_prob >= 60 ~ "Moderat risiko",
+      churn_prob >= 40 ~ "Lav risiko",
+      TRUE             ~ "Minimal risiko"
+    )
+  )
+
+
+# ------------------------------------------------------------------------------
+# 11.3 Churn-risiko: Filtrér medlemmer (churn == 0) med høj risiko (churn_class == 1)
+# ------------------------------------------------------------------------------
+
+top_risiko_medlemmer <- full_results |> 
+  filter(churn == 0, churn_class == 1) |> 
+  arrange(desc(churn_prob)) |> 
+  slice_head(n = 20)  # Call to action: top 20
+
+View(top_risiko_medlemmer)
+
+
+# ------------------------------------------------------------------------------
+# 11.4 Visualiseringer: Brancher og postnumre med høj churn
+# ------------------------------------------------------------------------------
+
+# Brancher med højest gennemsnitlig churn
+full_results |> 
+  group_by(Branche_navn) |> 
+  summarise(gennemsnitlig_churn = mean(churn_prob), n = n()) |> 
+  arrange(desc(gennemsnitlig_churn)) |> 
+  slice_head(n = 5) |> 
+  ggplot(aes(x = reorder(Branche_navn, gennemsnitlig_churn), y = gennemsnitlig_churn)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Top 5 brancher med højest churn-risiko", x = "Branche", y = "Gns. churn sandsynlighed (%)") +
+  theme_minimal()
+
+# Postnumre med højest gennemsnitlig churn
+full_results |> 
+  group_by(PostalCode) |> 
+  summarise(gennemsnitlig_churn = mean(churn_prob), n = n()) |> 
+  arrange(desc(gennemsnitlig_churn)) |> 
+  slice_head(n = 5) |> 
+  ggplot(aes(x = reorder(as.character(PostalCode), gennemsnitlig_churn), y = gennemsnitlig_churn)) +
+  geom_col(fill = "darkred") +
+  coord_flip() +
+  labs(title = "Top 5 postnumre med højest churn-risiko", x = "Postnummer", y = "Gns. churn sandsynlighed (%)") +
+  theme_minimal()
+
+
+# ------------------------------------------------------------------------------
+# 11.5 Hvad kendetegner virksomheder der IKKE churner?
+# ------------------------------------------------------------------------------
+
+full_results |> 
+  filter(churn_class == 0) |>  # Virksomheder som modellen forudser bliver
+  count(Branche_navn, sort = TRUE) |> 
+  slice_head(n = 5) |> 
+  ggplot(aes(x = reorder(Branche_navn, n), y = n)) +
+  geom_col(fill = "forestgreen") +
+  coord_flip() +
+  labs(
+    title = "Top 5 brancher hvor virksomheder ikke churner",
+    x = "Branche",
+    y = "Antal virksomheder"
+  ) +
+  theme_minimal()
+
+# Sammenlignende statistik på udvalgte variabler
+# churn_class:
+# 0 = modellen tror de bliver
+# 1 = modellen tror de churner
+full_results |> 
+  group_by(churn_class) |> 
+  summarise(
+    mødelængde = mean(MeetingLength),
+    medlem_år = mean(medlem_antal_år),
+    kontakt_rate = mean(har_haft_kontakt == "Ja"),
+    event_rate = mean(deltaget_i_event == "Ja")
+  )
+
+
+# -------------------------------------------------------------------------
+# Forklaring af churn-relaterede variabler
+# -------------------------------------------------------------------------
+
+# 1. churn:
+#    Den faktiske status for virksomheden ifølge databasen.
+#    0 = Virksomheden er stadig medlem.
+#    1 = Virksomheden har meldt sig ud (churnet).
+#    Dette er det "rigtige facit", vi forsøger at forudsige.
+
+# 2. .pred_0:
+#    Modellens vurdering af sandsynligheden for, at virksomheden IKKE churner.
+#    Fx 0.93 betyder: modellen mener der er 93 % chance for, at virksomheden bliver medlem.
+#    OBS: Denne bruges mest til teknisk forståelse – i praksis bruger vi oftest churn_prob i stedet.
+
+# 3. churn_prob:
+#    Modellens vurdering af sandsynligheden for churn – konverteret til procent.
+#    Fx 6.1 betyder: modellen vurderer, at der er 6,1 % risiko for, at virksomheden churner.
+#    Denne kolonne er lettest at forstå og bruge i praksis.
+
+# 4. churn_class:
+#    Modellens endelige beslutning: churn eller ej?
+#    1 = modellen tror virksomheden churner
+#    0 = modellen tror virksomheden bliver
+#    Beslutningen bygger på en tærskel, typisk 50 %
+
+# 5. churn_risiko:
+#    Kategori baseret på churn_prob – lavet for at gøre det endnu mere overskueligt.
+#    Fx:
+#      • "Minimal risiko" → under 40 %
+#      • "Lav risiko"     → 40-59 %
+#      • "Moderat risiko" → 60-79 %
+#      • "Høj risiko"     → 80 % eller højere
+```
 
