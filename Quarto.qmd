@@ -281,10 +281,6 @@ old_projects <- readRDS("data/old_projects.rds")
 2. Merge datasets
 ```{r}
 # ------------------------------------------------------------------------------
-# 2. JOIN af tabeller
-# ------------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
 # 2.1: Fjern dubletter og behold første registrering pr. virksomhed
 # ------------------------------------------------------------------------------
 meetings_unique <- meetings |>
@@ -365,7 +361,8 @@ merged_unique <- merged_unique |>
   )
   
 # ------------------------------------------------------------------------------
-# 2.5: Splits NACECode i kode og beskrivelse, fjern original kolonne og NA-rækker
+# 2.5: Splitter NACECode i kode og beskrivelse, 
+# fjern original kolonne og NA-rækker
 # ------------------------------------------------------------------------------
 merged_unique <- merged_unique |>
   mutate(
@@ -450,7 +447,7 @@ na_count <- merge_datasets |>
 # ------------------------------------------------------------------------------
 # Rydder op i variabelnavne: fjerner tal, specialtegn og whitespace
 names(merge_datasets) <- names(merge_datasets) |>
-  str_remove("^[0-9]+_1*\\s*") |>      # Fjerner startende tal/1-taller
+  str_remove("^[0-9]+_1*\\s*") |>     # Fjerner startende tal/1-taller
   str_replace_all("[ /\\-]+", "_") |> # Erstatter mellemrum og specialtegn med _
   str_replace_all("_+", "_") |>       # Fjerner dobbelte underscores
   str_remove("_$") |>                 # Fjerner underscore i slutningen
@@ -481,7 +478,8 @@ clean_data <- clean_data |>
         EventLength, Employees), ~ as.numeric(ifelse(.x %in% c(" ", "", "Tom", 
                                             "Ukendt", "Ingen event"), NA, .x))
     ),
-    across(where(is.character), ~ replace_na(.x, "Ukendt")), # Tekst: NA → "Ukendt"
+    across(where(is.character), ~ replace_na(.x, "Ukendt")), # Tekst: NA → 
+    # "Ukendt"
     across(where(is.numeric), ~ replace_na(.x, 0))             # Tal: NA → 0
   )
 
@@ -495,17 +493,24 @@ Kontaktdato      <- as.Date(clean_data$Kontaktdato, format = "%Y-%m-%d")
 
 
 
-
-# Viser datastruktur efter rensning
+# ------------------------------------------------------------------------------
+# 3.7: # Viser datastruktur efter rensning
+# ------------------------------------------------------------------------------
 glimpse(clean_data)
 ```
 
 4. Feature Engineering
 ```{r}
-glimpse(clean_data) # Bruger glimpse til at få et hurtigt overblik over data
 
 # ------------------------------------------------------------------------------
-# 4.1: Opretter en ny variabel, der beregner hvor mange år 
+# 4.1: # Viser datastruktur efter rensning
+# ------------------------------------------------------------------------------
+
+glimpse(clean_data) # Bruger glimpse til at få et hurtigt overblik over data
+
+
+# ------------------------------------------------------------------------------
+# 4.2: Opretter en ny variabel, der beregner hvor mange år 
 # en virksomhed har været medlem. Vi bruger CompanyDateStamp (oprettelsesdato)
 # og beregner forskellen til dags dato.
 # ------------------------------------------------------------------------------
@@ -520,7 +525,7 @@ feature_engineering <- clean_data |>
   
 
 # ------------------------------------------------------------------------------
-# 4.2: Rensning af Employees-kolonnen (antal ansatte). 
+# 4.3: Rensning af Employees-kolonnen (antal ansatte). 
 # Nogle gange kan tal være formateret med punktummer (f.eks. "1.000") 
 # eller mellemrum (f.eks. "1 000"). 
 # Disse fjernes, så kolonnen kan konverteres til numerisk format
@@ -534,7 +539,7 @@ feature_engineering <- feature_engineering |>
   )
 
 # ------------------------------------------------------------------------------
-# 4.3: Oversættelse af virksomhedstyper til mere læsbare formater
+# 4.4: Oversættelse af virksomhedstyper til mere læsbare formater
 # Eksempel: "A/S" bliver til "Aktieselskab"
 # ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |>
@@ -547,7 +552,7 @@ CompanyTypeName = str_replace_all(CompanyTypeName, "K/S", "Kommanditselskab")
   )
 
 # ------------------------------------------------------------------------------
-# 4.4: Tilføj branchebetegnelse baseret på NACE-koder
+# 4.5: Tilføj branchebetegnelse baseret på NACE-koder
 # NACE er en standard for brancheklassifikation (fx "01 Landbrug")
 # Vi bruger de første to cifre til at matche mod en lookup-tabel med branchenavne
 # ------------------------------------------------------------------------------
@@ -576,7 +581,7 @@ feature_engineering <- feature_engineering |>
 
 
 # ------------------------------------------------------------------------------
-# 4.5: Opretter 2. feature/variabel – har virksomheden haft kontakt?
+# 4.6: Opretter 2. feature/variabel – har virksomheden haft kontakt?
 # Vi kigger på flere kolonner og vurderer: 
 # hvis mindst én ikke er "Tom", så har der været kontakt
 # ------------------------------------------------------------------------------
@@ -591,7 +596,7 @@ feature_engineering <- feature_engineering |>
          -Notat, -Kontaktdato)
 
 # ------------------------------------------------------------------------------
-# 4.6:# Trin 6: Opretter 3. feature/variabel – har virksomheden deltaget i event?
+# 4.7:# Trin 6: Opretter 3. feature/variabel – har virksomheden deltaget i event?
 # Hvis EventLength er større end 0, siger vi "Ja", ellers "Nej"
 # ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |>
@@ -601,7 +606,7 @@ feature_engineering <- feature_engineering |>
 
 
 # ------------------------------------------------------------------------------
-# 4.7: Skaber kategorier der viser virksomhedens behov for hjælp
+# 4.8: Skaber kategorier der viser virksomhedens behov for hjælp
 # Her grupperes TRUE/FALSE-kolonner i temaer som Strategi, Jura, Økonomi osv.
   # Den viser, hvilken overordnet type hjælp virksomheden har modtaget.
 # ------------------------------------------------------------------------------
@@ -610,11 +615,15 @@ feature_engineering <- feature_engineering |>
   mutate(across(matches("^\\d+_1"), ~ .x != "FALSE" & .x != "Tom")) |>
   mutate(
     
-# Opretter en enkelt variabel, der kategoriserer virksomheden baseret på de 8 områder
+# Opretter en enkelt variabel, der kategoriserer virksomheden baseret på de 
+    # 8 områder
     hjælp_kategori = case_when(
 
-# Hvis virksomheden har søgt hjælp til strategi/emner som forretningsidé, produkt osv.
-      (as.logical(Kundeportefølje) | as.logical(Forretningsmodel) | as.logical(Forretningsidé) | as.logical(Produktportefølje)) ~ "Strategi Udvikling",
+# Hvis virksomheden har søgt hjælp til strategi/emner som 
+      # forretningsidé, produkt osv.
+      (as.logical(Kundeportefølje) | as.logical(Forretningsmodel) | 
+         as.logical(Forretningsidé) | as.logical(Produktportefølje)) 
+      ~ "Strategi Udvikling",
       
 # Hvis fokus har været på markedsføring, branding eller PR
       (as.logical(Markedsføring) | as.logical(Branding) | 
@@ -687,7 +696,7 @@ glimpse(feature_engineering)
 
 
 # ------------------------------------------------------------------------------
-# 4.8: Behold kun aktive virksomheder
+# 4.9: Behold kun aktive virksomheder
 # ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |> 
   filter(CompanyStatus %in% c("Aktiv", "NORMAL")) |> 
@@ -696,7 +705,7 @@ feature_engineering <- feature_engineering |>
     -EventLength, -EventId, -Andet) # Sletter de kolonner vi ikke vil bruge
 
 # ------------------------------------------------------------------------------
-# 4.9: Tilføj churn-kolonne
+# 4.10: Tilføj churn-kolonne
 # Opretter ny kolonne kaldet 'churn',viser om virksomheden er stoppet som medlem. 
 # Hvis BusinessCouncilMember er TRUE (virksomheden er medlem), sættes churn = 0
 # Hvis BusinessCouncilMember er FALSE (virksomheden har forladt fællesskabet), 
@@ -707,7 +716,7 @@ feature_engineering <- feature_engineering |>
   select(-BusinessCouncilMember)
 
 # ------------------------------------------------------------------------------
-# 4.10: Konverter udvalgte kolonner til faktorer, 
+# 4.11: Konverter udvalgte kolonner til faktorer, 
 # som er nødvendigt for ML-modeller
 # En faktor er en kategorisk variabel – dvs. den indeholder en begrænset mængde 
 # unikke værdier (kategorier). # Eksempler på faktorer: postnumre, ja/nej, 
@@ -727,7 +736,7 @@ feature_engineering <- feature_engineering |>
 
 
 # ------------------------------------------------------------------------------
-# 4.11: Gem det færdigbehandlede datasæt til senere analyse eller modellering
+# 4.12: Gem det færdigbehandlede datasæt til senere analyse eller modellering
 # ------------------------------------------------------------------------------
 write_rds(feature_engineering, "data/feature_engineered_data.rds")
 
