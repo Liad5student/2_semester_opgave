@@ -312,13 +312,13 @@ På baggrund af analysen anbefales det, at Business Viborg anvender den udvikled
 ## Dashboards og churn-risiko indgår som fast element i konsulenternes arbejdsrutiner og prioritering af medlemmer.
 
 
-## Medlemspleje prioriteres over for virksomheder uden kontakt, eventdeltagelse eller modtaget hjælp, da disse faktorer er stærkt associeret med churn.
+Medlemspleje prioriteres over for virksomheder uden kontakt, eventdeltagelse eller modtaget hjælp, da disse faktorer er stærkt associeret med churn.
 
 
-## Løbende opdatering af modellen sikres ved at integrere churn-værktøjet i Business Viborgs CRM eller medlemsdatabase, så nye data automatisk indgår i fremtidige analyser.
+Løbende opdatering af modellen sikres ved at integrere churn-værktøjet i Business Viborgs CRM eller medlemsdatabase, så nye data automatisk indgår i fremtidige analyser.
 
 
-## Etisk og transparent kommunikation om brugen af data indgår i medlemsdialogen for at styrke tilliden og sikre overholdelse af GDPR.
+Etisk og transparent kommunikation om brugen af data indgår i medlemsdialogen for at styrke tilliden og sikre overholdelse af GDPR.
 
 
 # Konklusion
@@ -922,8 +922,7 @@ strt.time <- Sys.time()
 
 
 ```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
-# Man kører modellen - den står og arbejder
-# Funktion der siger hvor langt modellen er nået i processen
+# Vi kører modellerne - den står og arbejder
 churn_results <- churn_workflow_set |> 
   workflow_map(
     resamples = churn_folds,
@@ -949,9 +948,10 @@ churn_results |>
 autoplot(churn_results, select_best = TRUE)
 ```
 
+9. Visualiseringer
 ```{r}
 # ------------------------------------------------------------------------------
-# 10. Visualiseringer
+# 9. Visualiseringer
 # -------------------------------------------------------------------------
 # Plot modeller efter deres performance
 # -------------------------------------------------------------------------
@@ -1087,19 +1087,66 @@ ggplot(vip_combined, aes(x = reorder(Variable, Importance), y = Importance, fill
 # ------------------------------------------------------------------------------
 ```
 
+10. Endelig model (sidste tuning - skal vi gøre det?)
+```{r}
+# -------------------------------------------------------
+# 10. Endelig model – Finetuning af Random Forest
+# -------------------------------------------------------
+
+# 1. Lav et workflow set med kun én model: Random Forest
+churn_workflow_set_rf <- workflow_set(
+  preproc = list(churn_recipe = churn_recipe),
+  models  = list(rf = rf_spec)  # kun én model
+)
+
+# 2. Tænd for parallelisering
+plan(multisession)
+
+# 3. Start tidstagning
+strt.time <- Sys.time()
+
+# 4. Tuning af kun Random Forest med 25 kombinationer
+churn_results_rf <- churn_workflow_set_rf |>  # <-- her var der fejl i dit input
+  workflow_map(
+    resamples = churn_folds,
+    grid = 25,
+    metrics = churn_metrics,
+    control = grid_ctrl,
+    seed = 2025
+  )
+
+# 5. Tid brugt
+Sys.time() - strt.time
+
+# 6. Sluk for parallelisering
+plan(sequential)
+
+# 7. Vis bedste resultater pr. metrik
+churn_results_rf |> 
+  rank_results(select_best = TRUE) |> 
+  select(wflow_id, .metric, mean) |> 
+  pivot_wider(names_from = .metric, values_from = mean) |> 
+  arrange(-f_meas)
+
+# 8. Visualisér den bedste model
+autoplot(churn_results_rf, select_best = TRUE)
+```
+
 ```{r}
 # ------------------------------------------------------------------------------
 # 11. Evaluering af bedste model på testdatasættet (Random Forest) 
 # ------------------------------------------------------------------------------
 
+# Bemærk: Modellen i dette afsnit er baseret på finetuning med 25 kombinationer
+
 # 1. Find bedste parametre for den bedste model
-best_results <- churn_results |> 
-  extract_workflow_set_result("churn_recipe_rf") |> 
+best_results <- churn_results_rf |>
+  extract_workflow_set_result("churn_recipe_rf") |>
   select_best(metric = "f_meas")
 
 # 2. Finaliser workflow med de fundne parametre
-final_wf <- churn_results |> 
-  extract_workflow("churn_recipe_rf") |> 
+final_wf <- churn_results_rf |>
+  extract_workflow("churn_recipe_rf") |>
   finalize_workflow(best_results)
 
 # 3. Træn modellen på træningsdata og evaluer på testdata
@@ -1149,6 +1196,8 @@ predict(final_model, new_company, type = "prob")     # churn-sandsynlighed
 # ------------------------------------------------------------------------------
 # 11.2 Forudsig churn for ALLE virksomheder og tilføj resultater
 # ------------------------------------------------------------------------------
+
+# Modellen anvendes nu på hele medlemsdatabasen for at identificere churn-risiko
 
 # Forudsiger sandsynlighed og klasse
 churn_probs   <- predict(final_model, feature_engineering, type = "prob")
