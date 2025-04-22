@@ -886,7 +886,10 @@ grid_ctrl <- control_grid(
 
 plan(multisession)
 strt.time <- Sys.time()
+```
 
+
+```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
 # Man kører modellen - den står og arbejder
 # Funktion der siger hvor langt modellen er nået i processen
 churn_results <- churn_workflow_set |> 
@@ -897,7 +900,10 @@ churn_results <- churn_workflow_set |>
     control = grid_ctrl,
     seed = 2025
   )
+```
 
+
+```{r}
 Sys.time() - strt.time
 plan(sequential)
 
