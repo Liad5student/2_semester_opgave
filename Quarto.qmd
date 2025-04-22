@@ -123,8 +123,18 @@ Vejleder: Simon Bjerrum Eilersen
 \newpage
 
 # Resumé
+Business Viborg arbejder for at skabe optimale rammer for erhvervslivet i Viborg Kommune og har en ambition om at nå 700 medlemmer i 2025. Medlemsafgang truer imidlertid både organisationens økonomiske fundament og dens rolle som erhvervspolitisk talerør. For at imødekomme denne udfordring er der i dette projekt udviklet en datadrevet prototype, der forudsiger churn og identificerer centrale risikofaktorer på medlemsniveau.
+
+Løsningen kombinerer brugervenlig formidling med avanceret maskinlæring i et R-baseret workflow. Seks modeller blev afprøvet, hvor Support Vector Machine opnåede den bedste performance (AUC = 0,88, F1 = 0,74). Alligevel blev Random Forest valgt som slutmodel på baggrund af gennemsigtighed og forklaringskraft. Feature engineering inddrager bl.a. kontaktfrekvens, eventdeltagelse og modtaget erhvervshjælp.
+
+Modellen er operationaliseret i et interaktivt dashboard, som understøtter medlemskonsulenternes opsøgende arbejde. Projektet er udviklet med respekt for GDPR og dataetik og illustrerer, hvordan en lokal medlemsorganisation med begrænsede ressourcer kan anvende data strategisk og ansvarligt til at styrke fastholdelsen og engagementet blandt sine medlemmer.
 
 # Indledning
+Business Viborg er en medlemsorganisation, der arbejder målrettet for at skabe optimale vilkår for erhvervslivet i Viborg Kommune. Med over 600 medlemsvirksomheder udgør organisationen en væsentlig aktør i det lokale erhvervsøkosystem – både som netværksfacilitator, vidensformidler og politisk interessevaretager. Ifølge chefkonsulent Michael Freundlich er ambitionen at nå 700 medlemmer og en omsætning på 2,9 mio. kr. i 2025.
+
+Men når virksomheder forlader organisationen, reduceres ikke blot indtægtsgrundlaget – også Business Viborgs netværkskapital og politiske legitimitet svækkes. Derfor er det afgørende at få indsigt i, hvilke faktorer der øger risikoen for udmeldelse, og hvordan man kan arbejde proaktivt med medlemsfastholdelse.
+
+Med dette projekt søges udviklet en datadrevet løsning, der kombinerer teknisk analyse med brugervenlig indsigt og som respekterer både juridiske og etiske rammer. Målet er at styrke medlemskonsulenternes beslutningsgrundlag og understøtte en mere effektiv og målrettet medlemspleje.
 
 # Problemstilling
 
@@ -136,7 +146,7 @@ Derfor skal der udvikles et datadrevet værktøj, som kombinerer teknisk analyse
 
 # Problemformulering
 
-Hvordan kan Business Viborg analysere og anvende medlemsdata til at udvikle et beslutningsunderstøttende dashboard, der forudsiger churn og forklarer centrale risikofaktorer baseret på relevante maskinlæringsmetoder og med inddragelse af etiske og juridiske overvejelser?
+Hvordan kan Business Viborg analysere og anvende medlemsdata til at udvikle et beslutningsunderstøttende dashboard, der forudsiger churn og forklarer centrale risikofaktorer – baseret på relevante maskinlæringsmetoder og med inddragelse af etiske og juridiske overvejelser?
 
 ## Underspørgsmål
 
@@ -159,139 +169,132 @@ Hvilke juridiske krav (fx GDPR) og etiske overvejelser bør indgå i udviklingen
 
 # Afgrænsning
 
-## AI Chatbots
-I forbindelse med udarbejdelsen af projektet er ChatGPT 4.0 blevet anvendt som et værktøj til grammatisk og sproglig korrektur, idéudvikling samt forbedring af det sproglige udtryk. Modellen har udelukkende fungeret som et hjælpemiddel i arbejdet med tekstbaserede opgaver og har hverken erstattet selvstændig analyse, kritisk refleksion eller været brugt til direkte besvarelse af problemformuleringen
+I udviklingen af en datadrevet churn-model for Business Viborg er det nødvendigt at foretage en række metodiske og praktiske afgrænsninger for at sikre projektets gennemførlighed og fokus. Følgende underafsnit præciserer, hvordan projektets omfang er afgrænset i forhold til teknologisk anvendelse, datagrundlag, modeller, systemintegration og juridiske vurderinger.
 
-I dette projekt fokuserer vi på at udvikle en webbaseret applikation, der kan forudsige medlems-churn og visualisere centrale churn-drivere for Business Viborg. Projektet indebærer derfor flere afgrænsninger.
+## AI-chatbots og anvendelse af ChatGPT
 
-## Data
-Vi anvender udelukkende datasættet, som er udleveret af Business Viborg. Datasættet indeholder information om medlemskab, virksomhedsstørrelse, branche, engagementsniveau, kontaktfrekvens og deltagelse i arrangementer. Dataene er anonymiserede og begrænset til et specifikt tidsrum, hvilket kan påvirke modellens generaliserbarhed.
+ChatGPT 4.0 har været anvendt som et understøttende værktøj i forbindelse med idéudvikling, sproglig formulering og grammatisk korrektur. Modellen har alene fungeret som et supplement i arbejdet med tekstbaserede opgaver og har ikke erstattet selvstændig analyse, faglig vurdering eller besvarelse af projektets problemformulering. Chatbotten er således ikke anvendt til at generere indhold i den analytiske eller metodiske del af projektet.
 
-## Modeller
-Projektet fokuserer på udvikling og afprøvning af machine learning-modeller til churn-prediktion, herunder blandt andet Random Forest, XGBoost og Lasso. Vi anvender bootstrapping som resampling-metode og benytter AUC og accuracy som de primære evalueringsmål. Fokus er på modellens forklaringskraft og praktiske anvendelighed frem for at optimere for den højest mulige præcision.
+## Datagrundlag
 
-## Webapplikation
-Applikationen er en prototype og er ikke integreret med Business Viborgs IT-systemer eller databaser. Den kan uploades og anvendes lokalt eller via RStudio Cloud.
+Projektet baserer sig udelukkende på det datasæt, der er stillet til rådighed af Business Viborg. Datasættet indeholder oplysninger om medlemskab, virksomhedsdemografi, branchetilknytning, kontaktaktivitet, eventdeltagelse samt ydet rådgivning. Alle data er pseudonymiserede og begrænset til et afgrænset tidsrum. Dette kan påvirke modellens generaliserbarhed over tid og dens evne til at indfange nyere tendenser i medlemsadfærd.
 
-## Etik og jura
-Vi behandler kort de etiske og juridiske aspekter ved brugen af persondata i overensstemmelse med GDPR, men foretager ikke en fuld juridisk gennemgang. Implementering af samtykke- og adgangsstyring indgår ikke som en del af denne prototype.
+## Modellens omfang og valg af algoritmer
+
+Formålet med projektet er at udvikle en forklarlig og anvendelig prototype frem for en produktionsklar løsning. Der er derfor ikke foretaget omfattende hyperparameter-tuning for alle modeller. Seks modeller er testet – herunder Support Vector Machine, Random Forest og XGBoost – og performance er evalueret på baggrund af F1-score og AUC som de primære metrikker. Fokus har været på at finde en balance mellem prædiktiv nøjagtighed og forklaringskraft.
+
+## Systemintegration
+
+Den udviklede løsning er implementeret som en webbaseret prototype i R og er ikke integreret med Business Viborgs interne systemer, såsom CRM- eller medlemsdatabaser. Modellen kan tilgås og anvendes lokalt gennem RStudio Cloud eller ved afvikling på en dedikeret server, men kræver manuel opdatering af data. Fremtidig integration og automatisering er oplagte skridt i en potentiel videreudvikling.
+
+## Juridiske og etiske vurderinger
+
+Projektet indeholder en overordnet vurdering af de juridiske og etiske rammer med fokus på dataminimering, transparens og behandlingsgrundlag i henhold til GDPR. Der er ikke foretaget en fuld juridisk gennemgang, og tekniske løsninger som adgangsstyring, kryptering og samtykkehåndtering er ikke implementeret i prototypen. Disse aspekter betragtes som en integreret del af en eventuel implementeringsfase og bør afklares i samarbejde med relevante juridiske rådgivere og systemansvarlige.
 
 
 # Definitioner
 
 # Analyse
+## Dataforståelse og fordeling
+
+Analysen tager udgangspunkt i et datasæt bestående af 2.966 medlemsvirksomheder tilknyttet Business Viborg. Af disse har cirka 30 % valgt at opsige deres medlemskab i den analyserede periode. Datasættet afspejler en betydelig variation med hensyn til virksomhedsstørrelse, branchetilhørsforhold og interaktionsniveau med organisationen.
+
+En indledende fordeling afslører, at virksomheder uden dokumenteret kontakt eller deltagelse i arrangementer har markant højere churn-rate. Denne observation antyder, at fraværet af relationel kontakt og engagement kan være centrale indikatorer for medlemsophør.
+
+## Egenskaber ved virksomheder med høj churn
+
+Virksomheder med lav kontaktfrekvens, manglende eventdeltagelse og ingen dokumenteret konsulentinteraktion udviser signifikant højere sandsynlighed for churn. Eksempelvis ses en gennemsnitlig churn-rate på over 40 % blandt virksomheder, der ikke har modtaget nogen form for erhvervsfaglig støtte. I kontrast falder churn-raten til under 20 % blandt virksomheder, der har modtaget strategisk eller organisatorisk rådgivning.
+
+Der identificeres desuden geografiske og branchemæssige mønstre. Brancher med lav netværksværdi – som detailhandel og enkeltmandsvirksomheder – har generelt højere churn, mens produktions- og vidensbaserede erhverv udviser en mere stabil medlemsbase.
+
+## Feature engineering
+
+På baggrund af ovenstående mønstre blev der konstrueret nye forklarende variable for at styrke modellernes prædiktive kapacitet. De mest centrale inkluderer:
+	•	medlem_antal_år: længden af medlemskab målt i år
+	•	har_haft_kontakt: binær indikator for, om der har været nogen form for kontakt
+	•	deltaget_i_event: binær indikator for eventdeltagelse
+	•	hjælp_kategori: tematisk klassifikation af den modtagne konsulentbistand
+
+Disse variable blev udledt på baggrund af domæneviden og eksplorativ analyse, og bidrog væsentligt til forbedret modelperformance.
+
+## Modelperformance
+
+Seks maskinlæringsmodeller blev afprøvet: Support Vector Machine (SVM), XGBoost, Random Forest, logistisk regression, K-nearest Neighbors (KNN) og Naive Bayes. Blandt disse opnåede SVM den højeste F1-score (0,74) og AUC (0,88), hvilket indikerer en stærk balance mellem præcision og recall.
+
+På trods af SVM’s gode resultater blev Random Forest valgt som slutmodel. Dette skyldes modellens kombination af prædiktiv styrke og modelgennemsigtighed, hvilket gør den mere anvendelig i en praktisk kontekst. XGBoost blev fravalgt grundet behovet for yderligere parameteroptimering, som ikke var formålstjenligt inden for projektets rammer.
+
+## Variable importance og indsigt
+
+Ved hjælp af vip()-pakken blev de mest betydningsfulde variable i Random Forest-modellen identificeret. De fire vigtigste prædiktorer var: hjælp_kategori, har_haft_kontakt, medlem_antal_år og MeetingLength. Disse variable udgør tilsammen et stærkt grundlag for at forstå churn-mekanismer i Business Viborgs medlemsbase og bekræfter den eksplorative analyses fund.
 
 # Juridiske og etiske overvejelser
 
-## Juridiske og etiske forhold i churn-projektet for Business Viborg
-I forbindelse med udviklingen af en datadrevet løsning til forudsigelse af 
-medlems-churn hos Business Viborg er det essentielt, at både juridiske og etiske
-hensyn bliver nøje overvejet og integreret i hele udviklingsprocessen. 
-Den teknologiske og analytiske dimension af projektet må ikke stå alene, 
-men skal suppleres af en bevidsthed om datasikkerhed, individets rettigheder og 
-ansvarlig brug af data. Da løsningen tager udgangspunkt i oplysninger om 
-organisationens medlemmer, der potentielt kan knyttes til 
-identificerbare personer, er databehandlingen omfattet af 
-EU’s Databeskyttelsesforordning (GDPR). 
-Dette gælder, uanset om data fremstår pseudonymiserede for os som analytikere, 
-da Business Viborg internt kan koble data til konkrete virksomheder eller 
-kontaktpersoner. Formålet med dette afsnit er derfor at belyse de centrale 
-juridiske forpligtelser samt de etiske retningslinjer, som Business Viborg bør 
-overholde i forbindelse med udviklingen og implementeringen af churn-modellen.
+## Introduktion
 
-## Behandlingsgrundlag
-Et fundamentalt krav i GDPR er, at al behandling af personoplysninger skal 
-have et lovligt behandlingsgrundlag. Business Viborgs databehandling relaterer 
-sig til almindelige personoplysninger såsom virksomhedsnavne, 
-kontaktoplysninger, mødedeltagelse og interaktionshistorik. 
-Det er derfor nødvendigt at vurdere, hvilket hjemmelsgrundlag der gør det 
-lovligt at anvende disse data i en churn-model. Ifølge artikel 6 i GDPR kan 
-behandlingen enten baseres på samtykke fra medlemmerne (art. 6, stk. 1, litra a)
-eller på organisationens legitime interesser (art. 6, stk. 1, litra f). 
-I denne kontekst vurderes det, at Business Viborg primært bør benytte den 
-legitime interesse som behandlingsgrundlag, da organisationens formål – at 
-forbedre medlemsservice, understøtte fastholdelse og sikre et bæredygtigt 
-erhvervsfællesskab – er både sagligt, proportionalt og foreneligt med 
-medlemmernes forventninger.
-Det er dog vigtigt at bemærke, at hvis data senere anvendes til andre formål, 
-f.eks. målrettet markedsføring eller automatiseret profilering,
-kan det være nødvendigt at genoverveje behandlingsgrundlaget, 
-herunder at indhente eksplicit samtykke.
+Udviklingen af en maskinlæringsbaseret churn-model for Business Viborg involverer behandling af medlemsdata, som i flere tilfælde kan tilknyttes identificerbare virksomheder og kontaktpersoner. Det er derfor afgørende, at både juridiske krav og etiske principper integreres som en central del af udviklingsprocessen. Dette afsnit belyser de væsentligste krav i henhold til EU’s databeskyttelsesforordning (GDPR) samt centrale dataetiske hensyn, der bør overvejes i forbindelse med implementeringen af modellen.
 
-## Personoplysninger og dataminimering
-Analyserne tager udgangspunkt i almindelige personoplysninger, 
-som ikke i sig selv er følsomme, men som i kombination med andre oplysninger 
-stadig udgør personoplysninger i GDPR-forstand. 
-Eksempler kan være data om deltagelse i arrangementer, 
-mødeaktivitet eller medlemskabets varighed. 
-For at overholde principperne om dataminimering 
-og formålsbegrænsning (jf. GDPR art. 5), skal Business Viborg sikre, 
-at der kun behandles data, som er nødvendige og relevante i forhold til det 
-definerede formål – nemlig at kunne identificere virksomheder i 
-risiko for udmeldelse. Alle unødvendige oplysninger bør fjernes eller 
-anonymiseres, og det samlede datasæt skal reduceres til det minimum, der kræves 
-for at modellere churn med høj præcision.
-Derudover skal der være dokumentation for, hvordan og hvorfor de valgte 
-variabler indgår i modellen. Denne dokumentation skal kunne anvendes til 
-intern kontrol og overfor Datatilsynet, hvis der føres tilsyn.
+## Behandlingsgrundlag og dataminimering
 
-## Oplysningspligt og transparens
-Business Viborg har i henhold til GDPR artikel 13 og 14 en klar oplysningspligt
-over for de registrerede medlemmer. Det betyder, at medlemmerne skal informeres 
-om, at deres data indgår i analyser, hvad formålet med analysen er, hvilke 
-rettigheder de har, og hvordan de kan kontakte organisationen for spørgsmål 
-eller indsigelser. Oplysningen bør være let tilgængelig og formuleret i et 
-sprog, der er forståeligt for ikke-specialister. 
-Ideelt set bør informationen formidles både via organisationens 
-privatlivspolitik og i forbindelse med medlemskommunikation – f.eks. 
-i velkomstmateriale eller nyhedsbreve.
-Transparens er i denne sammenhæng ikke blot et juridisk krav, 
-men også et middel til at styrke medlemmernes tillid til 
-Business Viborgs databrug.
+Ifølge artikel 6 i GDPR må personoplysninger kun behandles, hvis der foreligger et lovligt behandlingsgrundlag. I denne kontekst vurderes det, at Business Viborg lovligt kan basere databehandlingen på den legitime interesse (artikel 6, stk. 1, litra f). Formålet – at fastholde medlemmer og styrke medlemsrelationer – vurderes som sagligt, nødvendigt og proportionalt i forhold til de registreredes forventninger.
 
+Det er dog væsentligt, at formålet med databehandlingen er klart defineret og dokumenteret. Hvis data senere ønskes anvendt til fx automatiseret profilering eller målrettet markedsføring, skal formålet genvurderes, og samtykke kan blive nødvendigt.
 
-## Pseudonymisering og identifikationsrisici
-Selvom datasættet, som analysen baseres på, er pseudonymiseret for 
-dataanalytikerne, betyder det ikke, at oplysningerne er anonyme i GDPR-forstand.
-Business Viborgs medarbejdere har adgang til nøgleoplysninger 
-såsom medlemsnummer, virksomhedsnavn eller kontaktpersoner, som gør det 
-muligt at identificere de registrerede. Dette understreger, at databehandlingen
-fortsat er omfattet af alle GDPR-krav. Der skal derfor træffes passende 
-forholdsregler for at sikre, at oplysningerne ikke anvendes til andre formål 
-uden nyt behandlingsgrundlag og ikke utilsigtet afslører følsom information 
-om specifikke virksomheder.
+Samtidig er det afgørende, at behandlingen lever op til GDPR’s princip om dataminimering (artikel 5). Kun data, der er relevante og nødvendige i forhold til churn-prediktion, må inddrages. Følsomme eller overflødige oplysninger skal enten udelades eller anonymiseres, og modellen bør løbende evalueres for at sikre overensstemmelse med dette princip.
 
+## Transparens og oplysningspligt
+
+Business Viborg er forpligtet til at informere sine medlemmer om, hvordan deres data anvendes. Denne oplysningspligt følger af artikel 13 og 14 i GDPR og indebærer, at medlemmerne skal oplyses om formål, behandlingsgrundlag, deres rettigheder samt hvordan de kan gøre indsigelse. Disse informationer bør være let tilgængelige og formidles i et klart og forståeligt sprog, fx via privatlivspolitikken eller velkomstmateriale.
+
+Transparens bidrager ikke blot til juridisk overholdelse, men også til at opbygge tillid og styrke relationen til medlemmerne.
+
+## Pseudonymisering og adgangsforhold
+
+Datasættet, der er anvendt til udvikling af modellen, er pseudonymiseret for analytikere. Det betyder, at personhenførbare oplysninger er fjernet eller maskeret, men ikke fuldt anonymiseret. Internt i Business Viborg vil det fortsat være muligt at identificere enkelte virksomheder eller personer.
+
+Det betyder, at alle krav i GDPR fortsat er gældende. Organisationen skal sikre passende adgangsstyring, begrænse adgangen til identificerbare data, og dokumentere hvilke medarbejdere har adgang til hvad. Endvidere skal der være klare retningslinjer for, hvordan data må bruges, og hvordan utilsigtet identifikation undgås.
 
 ## Datasikkerhed og organisatorisk ansvar
-Business Viborg er som dataansvarlig forpligtet til at beskytte 
-personoplysninger mod uautoriseret adgang, tab, ændring eller misbrug. 
-I henhold til artikel 24 og 32 i GDPR skal organisationen iværksætte både 
-tekniske og organisatoriske sikkerhedsforanstaltninger. 
-Det inkluderer brug af adgangsstyring, kryptering, logning af datatilgange, 
-opdaterede sikkerhedspolitikker og uddannelse af personale i datasikkerhed. 
-Derudover skal der foreligge databehandleraftaler, hvis eksterne 
-samarbejdspartnere inddrages i projektet. 
-Manglende sikkerhed kan ikke alene få juridiske konsekvenser, 
-men også underminere den tillid, som projektet skal baseres på.
 
-## Etiske overvejelser og ansvarlig dataanvendelse
-Udover den juridiske ramme bør Business Viborg også forholde sig aktivt til 
-dataetik og samfundsansvar. Ifølge anbefalinger fra bl.a. 
-Dataetisk Råd handler ansvarlig dataanvendelse om at sætte mennesket i centrum, 
-sikre gennemsigtighed og undgå skævvridning eller diskrimination. 
-Anvendelsen af en churn-model må ikke resultere i, at bestemte virksomheder 
-eller grupper automatisk vurderes som mindre værdifulde baseret på statistiske 
-mønstre, som ikke er sagligt begrundede. Der skal derfor tages højde for 
-fairness og risikoen for bias – både i datasættets sammensætning og i de 
-variable, der anvendes i modellen.
+I henhold til artikel 32 i GDPR skal Business Viborg etablere passende tekniske og organisatoriske foranstaltninger for at beskytte personoplysninger mod uautoriseret adgang, tab eller misbrug. Dette inkluderer:
+	•	Kryptering og adgangskontrol
+	•	Intern logning af dataadgang
+	•	Uddannelse af medarbejdere i datasikkerhed
+	•	Regelmæssig evaluering af sikkerhedspolitikker
+	•	Eventuelle databehandleraftaler med eksterne samarbejdspartnere
+
+En systematisk tilgang til datasikkerhed er afgørende – ikke blot af juridiske årsager, men også for at opretholde tillid til organisationens datapraksis.
+
+## Etiske overvejelser og ansvarlig anvendelse
+
+Ud over de juridiske krav bør Business Viborg også forholde sig aktivt til de etiske implikationer ved at anvende en churn-model. Dataetiske principper foreslået af bl.a. Dataetisk Råd anbefaler, at teknologiske løsninger skal:
+	•	Sætte mennesket i centrum
+	•	Undgå diskrimination og skævvridning
+	•	Skabe gennemsigtighed og forklarelige beslutninger
+
+Det er vigtigt, at modellen ikke bruges til at stigmatisere bestemte medlemsgrupper eller segmenter. Anvendelsen af churn-risiko bør altid ledsages af kritisk refleksion og inddragelse af menneskelig dømmekraft i den endelige beslutning om handling. Medlemsdialogen bør være præget af forståelse og imødekommenhed – ikke automatiseret kategorisering.
 
 
 
 # Anbefaling
+På baggrund af analysen anbefales det, at Business Viborg anvender den udviklede churn-model som et beslutningsunderstøttende værktøj i det opsøgende medlemsarbejde. Modellen kan identificere virksomheder med høj risiko for udmeldelse og derved muliggøre en mere målrettet og proaktiv indsats fra medlemskonsulenterne. Det foreslås, at:
+## Dashboards og churn-risiko indgår som fast element i konsulenternes arbejdsrutiner og prioritering af medlemmer.
+
+
+## Medlemspleje prioriteres over for virksomheder uden kontakt, eventdeltagelse eller modtaget hjælp, da disse faktorer er stærkt associeret med churn.
+
+
+## Løbende opdatering af modellen sikres ved at integrere churn-værktøjet i Business Viborgs CRM eller medlemsdatabase, så nye data automatisk indgår i fremtidige analyser.
+
+
+## Etisk og transparent kommunikation om brugen af data indgår i medlemsdialogen for at styrke tilliden og sikre overholdelse af GDPR.
+
 
 # Konklusion
+Dette projekt har demonstreret, hvordan Business Viborg kan anvende medlemsdata og maskinlæring til at forudsige churn og styrke den strategiske medlemspleje. Med udgangspunkt i en analyse af 2.966 medlemsvirksomheder og afprøvning af seks modeller blev der udviklet en forklarlig og prædiktiv Random Forest-model (F1 = 0,71, AUC = 0,86). Modellen integreres i et dashboard, som giver medlemskonsulenterne mulighed for at prioritere opsøgende indsats på et datadrevet grundlag.
 
-# 
+Analysen viser, at variabler relateret til kontakt, eventdeltagelse og modtaget erhvervshjælp er blandt de vigtigste drivere for fastholdelse – i tråd med både tidligere analyser og forretningsmæssig intuition. Løsningen er udviklet med respekt for GDPR og dataetik og udgør et realistisk og skalerbart værktøj for medlemsorganisationer, der ønsker at arbejde mere strategisk med churn.
+
+Projektet besvarer dermed problemformuleringen ved at kombinere teknisk modeludvikling med brugervenlig formidling og ansvarlig dataanvendelse. Perspektiverende åbner det op for en bredere anvendelse af datadrevne beslutningsstøttesystemer i mindre organisationer med store medlemsmæssige ambitioner.
 
 \newpage
 
@@ -311,7 +314,13 @@ OpenAI. (2025). ChatGPT (4.0). <https://chatgpt.com/>
 
 # Bilagsoversigt
 
--   Bilag 1: x
+-   Bilag 1: GDPR – Europa-Parlamentets og Rådets Forordning (EU) 2016/679
+
+Konsolideret og officielt dokument om databeskyttelse i EU. Anvendes som juridisk referenceramme i projektets afsnit om etiske og juridiske overvejelser.
+
+Tilgængelig via:
+https://eur-lex.europa.eu/legal-content/DA/TXT/?uri=CELEX%3A32016R0679
+
 -   Bilag 2: x
 -   Bilag 3: x
 -   Bilag 4: x
@@ -1147,9 +1156,6 @@ top_risiko_medlemmer <- full_results |>
   filter(churn == 0, churn_class == 1) |> 
   arrange(desc(churn_prob)) |> 
   slice_head(n = 20)  # Call to action: top 20
-
-View(top_risiko_medlemmer)
-
 
 # ------------------------------------------------------------------------------
 # 11.4 Visualiseringer: Brancher og postnumre med høj churn
