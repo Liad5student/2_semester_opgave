@@ -384,8 +384,6 @@ merged_df <- all_companies |>
 # ------------------------------------------------------------------------------
 # 2.3: Klargør datasæt: fjern anonyme oplysninger og omdøb kolonnenavne
 # ------------------------------------------------------------------------------
-# Viser overblik over datasættet og datatyper
-glimpse(merged_df)
 
 # Fokus: Unikke virksomheder via PNumber (produktionsenhedsnummer)
 # Det giver os 2966 unikke observationer.
@@ -455,7 +453,7 @@ merged_unique <- merged_unique |>
 # ------------------------------------------------------------------------------
 # 2.6: Tjek for tilbageværende NA-værdier
 # ------------------------------------------------------------------------------
-colSums(is.na(merged_unique))
+# colSums(is.na(merged_unique))
 
 
 # ------------------------------------------------------------------------------
@@ -486,7 +484,7 @@ merged_unique_old_projects <- merged_unique |>
 # ------------------------------------------------------------------------------
 # 2.9: Tjek for NA-værdier i det udvidede datasæt
 # ------------------------------------------------------------------------------
-colSums(is.na(merged_unique_old_projects))
+# colSums(is.na(merged_unique_old_projects))
 
 merge_datasets <- merged_unique_old_projects
 ```
@@ -497,9 +495,7 @@ merge_datasets <- merged_unique_old_projects
 # 3.1: Første kig på datastrukturen
 # Giver et hurtigt overblik over variabelnavne, typer og eksempelværdier
 # ------------------------------------------------------------------------------
-glimpse(merge_datasets)
-
-
+# glimpse(merge_datasets)
 
 # ------------------------------------------------------------------------------
 # 3.2: Tæl hvor mange NA (manglende værdier) der findes i hver kolonne
@@ -524,7 +520,7 @@ names(merge_datasets) <- names(merge_datasets) |>
   str_trim()                          # Trim whitespace
 
 # Udskriver de rensede kolonnenavne
-print(names(merge_datasets))
+# print(names(merge_datasets))
 
 # ------------------------------------------------------------------------------
 # 3.4: Fjern irrelevante kolonner (ID’er og tekniske felter)
@@ -566,7 +562,7 @@ Kontaktdato      <- as.Date(clean_data$Kontaktdato, format = "%Y-%m-%d")
 # ------------------------------------------------------------------------------
 # 3.7: # Viser datastruktur efter rensning
 # ------------------------------------------------------------------------------
-glimpse(clean_data)
+# glimpse(clean_data)
 ```
 
 4. Feature Engineering
@@ -576,7 +572,7 @@ glimpse(clean_data)
 # 4.1: # Viser datastruktur efter rensning
 # ------------------------------------------------------------------------------
 
-glimpse(clean_data) # Bruger glimpse til at få et hurtigt overblik over data
+# glimpse(clean_data) # Bruger glimpse til at få et hurtigt overblik over data
 
 
 # ------------------------------------------------------------------------------
@@ -762,7 +758,7 @@ feature_engineering <- feature_engineering |>
   ))
 
 # Tjek resultatet
-glimpse(feature_engineering)
+# glimpse(feature_engineering)
 
 
 # ------------------------------------------------------------------------------
@@ -1056,8 +1052,6 @@ ggplot(vip_combined, aes(x = reorder(Variable, Importance), y = Importance, fill
 ```{r}
 # ------------------------------------------------------------------------------
 # 11. Evaluering af bedste model på testdatasættet (Random Forest) 
-
-# Hvis XGBoost skal vi prøve med flere grids først for at teste den bedre
 # ------------------------------------------------------------------------------
 
 # 1. Find bedste parametre for den bedste model
