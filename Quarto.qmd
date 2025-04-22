@@ -86,8 +86,8 @@ pacman::p_load(
     Rcrawler,      # web crawling
     rmarkdown,     # rapportgenerering
     knitr,         # knit Rmd-dokumenter
-    future         # parallelisering og asynkron kodning
-    
+    future,        # parallelisering og asynkron kodning
+    vip            # hent variabler for modeller 
 )
 ```
 
@@ -925,6 +925,10 @@ metrics_df <- tibble::tibble(
   spec     = c(0.845, 0.852, 0.929, 0.828, 0.788, 0.893)
 )
 
+# Pivot til langt format
+metrics_long <- metrics_df %>%
+  pivot_longer(cols = -wflow_id, names_to = "metric", values_to = "score")
+
 # Gør labels lidt pænere
 metrics_focus <- metrics_long %>%
   filter(metric %in% c("accuracy", "f_meas", "roc_auc")) %>%
@@ -937,9 +941,9 @@ metrics_focus <- metrics_long %>%
 
 # Nr. 1: BarPlot med værdier for denne 3 metrikker
 
-ggplot(metrics_focus, aes(x = metric, y = value, fill = metric)) +
+ggplot(metrics_focus, aes(x = metric, y = score, fill = metric)) +
   geom_col(show.legend = FALSE) +
-  geom_text(aes(label = round(value, 3)), vjust = -0.3, size = 3.5) +
+  geom_text(aes(label = round(score, 2)), vjust = -0.3, size = 3.5) +
   facet_wrap(~ wflow_id) +
   ylim(0, 1.05) +
   labs(
@@ -957,10 +961,10 @@ ggplot(metrics_focus, aes(x = metric, y = value, fill = metric)) +
 
 # Nr. 2: Linje plot 
 
-ggplot(metrics_focus, aes(x = wflow_id, y = value, color = metric, group = metric)) +
+ggplot(metrics_focus, aes(x = wflow_id, y = score, color = metric, group = metric)) +
   geom_line(size = 1) +
   geom_point(size = 3) +
-  geom_text(aes(label = round(value, 3)), vjust = -0.7, size = 3) +
+  geom_text(aes(label = round(score, 2)), vjust = -0.7, size = 3) +
   scale_color_brewer(palette = "Dark2") +
   labs(
     title = "Sammenligning på tværs af modeller",
@@ -975,9 +979,9 @@ ggplot(metrics_focus, aes(x = wflow_id, y = value, color = metric, group = metri
 
 # Nr. 3: Heatmap pr. model og metrik 
 
-ggplot(metrics_focus, aes(x = metric, y = wflow_id, fill = value)) +
+ggplot(metrics_focus, aes(x = metric, y = wflow_id, fill = score)) +
   geom_tile(color = "white") +
-  geom_text(aes(label = round(value, 2)), size = 3) +
+  geom_text(aes(label = round(score, 2)), size = 3) +
   scale_fill_gradient(low = "white", high = "steelblue") +
   labs(
     title = "Performance heatmap pr. model og metrik",
@@ -1036,7 +1040,7 @@ ggplot(vip_combined, aes(x = reorder(Variable, Importance), y = Importance, fill
     strip.text = element_text(size = 12, face = "bold"),
     axis.text.y = element_text(size = 9)
   ) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) #ektra space til labels
+  scale_y_continuous(expand = expansion(mult = c(0, 0.10))) #ektra space til labels
 # ------------------------------------------------------------------------------
 ```
 
