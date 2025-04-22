@@ -194,6 +194,38 @@ Projektet indeholder en overordnet vurdering af de juridiske og etiske rammer me
 
 # Definitioner
 
+I dette afsnit defineres centrale begreber og forkortelser anvendt gennem rapporten:
+
+**Churn:** Når en virksomhed ophører med sit medlemskab i Business Viborg. I datasættet angives dette som en binær variabel, hvor 1 betyder churn og 0 betyder fortsat medlemskab.
+
+**Churn-model:** En prædiktiv model, der estimerer sandsynligheden for, at en virksomhed churner. Den er baseret på historiske medlemsdata og konstruerede forklaringsvariable.
+
+**Feature Engineering:** Fremstilling af nye forklarende variable fra eksisterende data, som styrker modellens evne til at forudsige churn. Eksempler inkluderer medlemsanciennitet, kontaktaktivitet og deltagelse i arrangementer.
+
+**MeetingLength:** Længden af det seneste dokumenterede møde med en virksomhed, målt i minutter. Bruges som indikator for relationens styrke.
+
+**har_haft_kontakt:** En binær indikator for, om virksomheden har haft kontakt med Business Viborg (f.eks. møder, telefonopkald eller rådgivning).
+
+**deltaget_i_event:** Binær variabel der angiver, om virksomheden har deltaget i mindst ét event i analyseperioden.
+
+**hjælp_kategori:** En kategorisk variabel, der angiver typen af erhvervsfaglig støtte virksomheden har modtaget. Kategorierne er fx Strategi Udvikling, Organisation og Ledelse, Jura og Struktur m.fl.
+
+**medlem_antal_år:** Antal år virksomheden har været medlem, beregnet som forskellen mellem analysedato og oprettelsesdato.
+
+**Machine Learning (ML):** En metode til at bygge modeller, der kan lære mønstre i data og forudsige fremtidige hændelser. I projektet er ML anvendt til churn-forudsigelse.
+
+**Random Forest:** En ML-algoritme, der kombinerer mange beslutningstræer for at skabe en robust og forklarlig model. Valgt som slutmodel i projektet.
+
+**ROC AUC:** Et mål for modellens evne til at adskille churnere og ikke-churnere. En værdi tæt på 1 indikerer høj prædiktiv nøjagtighed.
+
+**F1-score:** Et samlet præstationsmål, som balancerer præcision og recall – særligt velegnet ved skæve datasæt.
+
+**Dashboard:** Et interaktivt visualiseringsværktøj, der præsenterer churn-risici og medlemsindsigter på en overskuelig måde til brug i den daglige medlemspleje.
+
+**Pseudonymisering:** En teknik hvor direkte identifikatorer fjernes eller maskeres, så data ikke uden videre kan knyttes til en bestemt virksomhed eller person.
+
+**GDPR:** EU’s databeskyttelsesforordning. Projektet tager højde for centrale principper som dataminimering, transparens og legitimt behandlingsgrundlag.
+
 # Analyse
 ## Dataforståelse og fordeling
 
