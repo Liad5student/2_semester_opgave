@@ -28,8 +28,12 @@ format:
       - heightrounded
 ---
 
+
+
 \renewcommand{\contentsname}{Indholdsfortegnelse}
 \newpage
+
+
 
 ```{r}
 #| label: setup
@@ -90,6 +94,8 @@ pacman::p_load(
     vip            # hent variabler for modeller 
 )
 ```
+
+
 
 \begin{titlepage}
 \begin{center}
@@ -374,6 +380,8 @@ https://eur-lex.europa.eu/legal-content/DA/TXT/?uri=CELEX%3A32016R0679
 -   Bilag 6: x
 
 \newpage
+
+
 
 ```{r}
 # ------------------------------------------------------------------------------
@@ -947,7 +955,6 @@ plan(multisession)
 strt.time <- Sys.time()
 ```
 
-
 ```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
 # Vi kører modellerne - den står og arbejder
 churn_results <- churn_workflow_set |> 
@@ -959,7 +966,6 @@ churn_results <- churn_workflow_set |>
     seed = 2025
   )
 ```
-
 
 ```{r}
 Sys.time() - strt.time
@@ -1140,7 +1146,6 @@ plan(multisession)
 strt.time <- Sys.time()
 ```
 
-
 ```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
 # 4. Tuning af kun Random Forest med 25 kombinationer
 churn_results_rf <- churn_workflow_set_rf |>  # <-- her var der fejl i dit input
@@ -1152,7 +1157,6 @@ churn_results_rf <- churn_workflow_set_rf |>  # <-- her var der fejl i dit input
     seed = 2025
   )
 ```
-
 
 ```{r}
 # 5. Tid brugt
