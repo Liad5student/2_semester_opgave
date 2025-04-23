@@ -233,9 +233,16 @@ En indledende fordeling afslører, at virksomheder uden dokumenteret kontakt ell
 
 ## Egenskaber ved virksomheder med høj churn
 
-Virksomheder med lav kontaktfrekvens, manglende eventdeltagelse og ingen dokumenteret konsulentinteraktion udviser signifikant højere sandsynlighed for churn. Eksempelvis ses en gennemsnitlig churn-rate på over 40 % blandt virksomheder, der ikke har modtaget nogen form for erhvervsfaglig støtte. I kontrast falder churn-raten til under 20 % blandt virksomheder, der har modtaget strategisk eller organisatorisk rådgivning.
+Virksomheder med begrænset kontakt til organisationen, lav deltagelse i arrangementer og uden dokumenteret interaktion har generelt en markant højere risiko for at opsige deres medlemskab. Dette underbygges af figuren nedenfor, der viser de fem postnumre med den højeste gennemsnitlige churn-risiko. Her ses, at geografiske områder med lav tilknytning til det centrale område udviser særlig høj churn-sandsynlighed.
 
-Der identificeres desuden geografiske og branchemæssige mønstre. Brancher med lav netværksværdi – som detailhandel og enkeltmandsvirksomheder – har generelt højere churn, mens produktions- og vidensbaserede erhverv udviser en mere stabil medlemsbase.
+![Top 5 postnumre med højeste churn risiko](images/6_postnummer_højeste_churn.png){ width=80% fig-align="center" }
+
+Også på brancheniveau er der tydelige forskelle. Nogle brancher er kendetegnet ved lav netværksværdi og begrænset interaktion med organisationen og har derfor en højere sandsynlighed for medlemsophør. Figuren herunder visualiserer de fem brancher med den højeste gennemsnitlige churn-risiko, hvilket bekræfter tendensen.
+
+![Top 5 brancher med højeste churn sandsynlighed](images/5_brancher_højeste_churn.png){ width=80% fig-align="center" }
+Omvendt findes der brancher, hvor medlemmerne i langt højere grad fastholdes. Disse brancher har ofte en mere stabil tilknytning og deltager aktivt i organisationens tilbud. Den følgende visualisering viser de fem brancher, hvor medlemmerne i størst omfang forbliver tilknyttet – hvilket indikerer, at der her eksisterer en stærkere relation og et større udbytte af medlemskabet.
+
+![Top 5 brancher hvor sandsynligheden for churn er lav](images/7_top5_der_ikke_churner.png){ width=80% fig-align="center" }
 
 ## Feature engineering
 
@@ -251,11 +258,19 @@ Disse variable blev udledt på baggrund af domæneviden og eksplorativ analyse, 
 
 Seks maskinlæringsmodeller blev afprøvet: Support Vector Machine (SVM), XGBoost, Random Forest, logistisk regression, K-nearest Neighbors (KNN) og Naive Bayes. Blandt disse opnåede SVM den højeste F1-score (0,74) og AUC (0,88), hvilket indikerer en stærk balance mellem præcision og recall.
 
-På trods af SVM’s gode resultater blev Random Forest valgt som slutmodel. Dette skyldes modellens kombination af prædiktiv styrke og modelgennemsigtighed, hvilket gør den mere anvendelig i en praktisk kontekst. XGBoost blev fravalgt grundet behovet for yderligere parameteroptimering, som ikke var formålstjenligt inden for projektets rammer.
+![Model performance – Accuracy, F1 og AUC](images/1_model_performance.png){ width=80% fig-align="center" }
+
+På trods af SVM’s gode resultater blev Random Forest valgt som slutmodel. Dette skyldes modellens kombination af prædiktiv styrke og modelgennemsigtighed, hvilket gør den mere anvendelig i en praktisk kontekst. XGBoost blev fravalgt grundet behovet for yderligere parameteroptimering, som ikke var formålstjenligt inden for projektets rammer. Vi valgte den mest simple af de to modeller, da deres metrikker lå meget tæt.
+
+![Performance heatmap](images/3_heatmap_pr_model.png){ width=80% fig-align="center" }
+
+![Linjeplot med sammenligning af metrikker](images/2_linje_plot.png){ width=80% fig-align="center" }
 
 ## Variable importance og indsigt
 
 Ved hjælp af vip()-pakken blev de mest betydningsfulde variable i Random Forest-modellen identificeret. De fire vigtigste prædiktorer var: hjælp_kategori, har_haft_kontakt, medlem_antal_år og MeetingLength. Disse variable udgør tilsammen et stærkt grundlag for at forstå churn-mekanismer i Business Viborgs medlemsbase og bekræfter den eksplorative analyses fund.
+
+![Top 10 variabler (Random Forest)](images/8_top_10_variabler_rf.png){ width=80% fig-align="center" }
 
 # Juridiske og etiske overvejelser
 
@@ -303,20 +318,18 @@ Ud over de juridiske krav bør Business Viborg også forholde sig aktivt til de 
 
 Det er vigtigt, at modellen ikke bruges til at stigmatisere bestemte medlemsgrupper eller segmenter. Anvendelsen af churn-risiko bør altid ledsages af kritisk refleksion og inddragelse af menneskelig dømmekraft i den endelige beslutning om handling. Medlemsdialogen bør være præget af forståelse og imødekommenhed – ikke automatiseret kategorisering.
 
-
-
 # Anbefaling
 På baggrund af analysen anbefales det, at Business Viborg anvender den udviklede churn-model som et beslutningsunderstøttende værktøj i det opsøgende medlemsarbejde. Modellen kan identificere virksomheder med høj risiko for udmeldelse og derved muliggøre en mere målrettet og proaktiv indsats fra medlemskonsulenterne. Det foreslås, at:
 ## Dashboards og churn-risiko indgår som fast element i konsulenternes arbejdsrutiner og prioritering af medlemmer.
 
 
-Medlemspleje prioriteres over for virksomheder uden kontakt, eventdeltagelse eller modtaget hjælp, da disse faktorer er stærkt associeret med churn.
+## Medlemspleje prioriteres over for virksomheder uden kontakt, eventdeltagelse eller modtaget hjælp, da disse faktorer er stærkt associeret med churn.
 
 
-Løbende opdatering af modellen sikres ved at integrere churn-værktøjet i Business Viborgs CRM eller medlemsdatabase, så nye data automatisk indgår i fremtidige analyser.
+## Løbende opdatering af modellen sikres ved at integrere churn-værktøjet i Business Viborgs CRM eller medlemsdatabase, så nye data automatisk indgår i fremtidige analyser.
 
 
-Etisk og transparent kommunikation om brugen af data indgår i medlemsdialogen for at styrke tilliden og sikre overholdelse af GDPR.
+## Etisk og transparent kommunikation om brugen af data indgår i medlemsdialogen for at styrke tilliden og sikre overholdelse af GDPR.
 
 
 # Konklusion
@@ -1013,6 +1026,7 @@ ggplot(metrics_focus, aes(x = metric, y = score, fill = metric)) +
   ) +
   scale_fill_brewer(palette = "Set3")
 
+ggsave("images/1_model_performance.png", width = 7, height = 4, dpi = 300)
 
 # Nr. 2: Linje plot 
 
@@ -1032,6 +1046,8 @@ ggplot(metrics_focus, aes(x = wflow_id, y = score, color = metric, group = metri
     plot.title = element_text(hjust = 0.5)
   )
 
+ggsave("images/2_linje_plot.png", width = 7, height = 4, dpi = 300)
+
 # Nr. 3: Heatmap pr. model og metrik 
 
 ggplot(metrics_focus, aes(x = metric, y = wflow_id, fill = score)) +
@@ -1045,6 +1061,8 @@ ggplot(metrics_focus, aes(x = metric, y = wflow_id, fill = score)) +
   ) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("images/3_heatmap_pr_model.png", width = 7, height = 4, dpi = 300)
 
 # -------------------------------------------------------------------------
 # Plot for xgboost og Random forest med de vigtigste variabler 
@@ -1096,6 +1114,8 @@ ggplot(vip_combined, aes(x = reorder(Variable, Importance), y = Importance, fill
     axis.text.y = element_text(size = 9)
   ) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.10))) #ektra space til labels
+
+ggsave("images/4_top_10_variabler_pr_model.png", width = 7, height = 4, dpi = 300)
 # ------------------------------------------------------------------------------
 ```
 
@@ -1270,8 +1290,10 @@ full_results |>
   ggplot(aes(x = reorder(Branche_navn, gennemsnitlig_churn), y = gennemsnitlig_churn)) +
   geom_col(fill = "steelblue") +
   coord_flip() +
-  labs(title = "Top 5 brancher med højest churn-risiko", x = "Branche", y = "Gns. churn sandsynlighed (%)") +
+  labs(title = "Top 5 churn-risiko", x = "Branche", y = "Gns. churn sandsynlighed (%)") +
   theme_minimal()
+
+ggsave("images/5_brancher_højeste_churn.png", width = 7, height = 4, dpi = 300)
 
 # Postnumre med højest gennemsnitlig churn
 full_results |> 
@@ -1285,6 +1307,7 @@ full_results |>
   labs(title = "Top 5 postnumre med højest churn-risiko", x = "Postnummer", y = "Gns. churn sandsynlighed (%)") +
   theme_minimal()
 
+ggsave("images/6_postnummer_højeste_churn.png", width = 7, height = 4, dpi = 300)
 
 # ------------------------------------------------------------------------------
 # 11.5 Hvad kendetegner virksomheder der IKKE churner?
@@ -1298,11 +1321,13 @@ full_results |>
   geom_col(fill = "forestgreen") +
   coord_flip() +
   labs(
-    title = "Top 5 brancher hvor virksomheder ikke churner",
+    title = "Top 5 der ikke churner",
     x = "Branche",
     y = "Antal virksomheder"
   ) +
   theme_minimal()
+
+ggsave("images/7_top5_der_ikke_churner.png", width = 7, height = 4, dpi = 300)
 
 # Sammenlignende statistik på udvalgte variabler
 # churn_class:
@@ -1317,10 +1342,40 @@ full_results |>
     event_rate = mean(deltaget_i_event == "Ja")
   )
 
+# ------------------------------------------------------------------------------
+# 11.6 Hvad er de vigtigste parametre
+# ------------------------------------------------------------------------------
+
+# 1. Ekstraher den trænede Random Forest-model fra workflowet
+final_rf_fit <- extract_fit_parsnip(final_model)
+
+# 2. Brug vip til at finde de 10 vigtigste variabler
+vip_rf <- vi(final_rf_fit) |> 
+  slice_max(order_by = Importance, n = 10) |> 
+  mutate(Variable = str_wrap(Variable, width = 30))
+
+# 3. Plot top 10 vigtigste variabler
+ggplot(vip_rf, aes(x = reorder(Variable, Importance), y = Importance)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = "Top 10 variabler (RF)",
+    x = "Variabel",
+    y = "Vigtighed"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+    axis.text.y = element_text(size = 10)
+  )
+
+# 4. Gem billedet
+ggsave("images/8_top_10_variabler_rf.png", width = 7, height = 4, dpi = 300)
 
 # -------------------------------------------------------------------------
 # Forklaring af churn-relaterede variabler
 # -------------------------------------------------------------------------
+
 # 1. churn:
 #    Den faktiske status for virksomheden ifølge databasen.
 #    0 = Virksomheden er stadig medlem.
