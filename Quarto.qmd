@@ -239,7 +239,7 @@ Virksomheder med begrænset kontakt til organisationen, lav deltagelse i arrange
 
 Også på brancheniveau er der tydelige forskelle. Nogle brancher er kendetegnet ved lav netværksværdi og begrænset interaktion med organisationen og har derfor en højere sandsynlighed for medlemsophør. Figuren herunder visualiserer de fem brancher med den højeste gennemsnitlige churn-risiko, hvilket bekræfter tendensen.
 
-![Top 5 brancher med højeste churn sandsynlighed](images/5_brancher_højeste_churn.png){ fig-cap="Top 5 brancher med høj churn", width=80% fig-align="center" }
+![Top 5 brancher med højeste churn](images/5_brancher_højeste_churn.png){ width=80% fig-align="center" }
 
 Omvendt findes der brancher, hvor medlemmerne i langt højere grad fastholdes. Disse brancher har ofte en mere stabil tilknytning og deltager aktivt i organisationens tilbud. Den følgende visualisering viser de fem brancher, hvor medlemmerne i størst omfang forbliver tilknyttet – hvilket indikerer, at der her eksisterer en stærkere relation og et større udbytte af medlemskabet.
 
