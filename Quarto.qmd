@@ -137,7 +137,6 @@ Men når virksomheder forlader organisationen, reduceres ikke blot indtægtsgrun
 Med dette projekt søges udviklet en datadrevet løsning, der kombinerer teknisk analyse med brugervenlig indsigt og som respekterer både juridiske og etiske rammer. Målet er at styrke medlemskonsulenternes beslutningsgrundlag og understøtte en mere effektiv og målrettet medlemspleje.
 
 # Problemstilling
-
 Business Viborg er registreret under branchekoden 26104793, og arbejder målrettet for at skabe optimale rammer for erhvervslivet i Viborg Kommune. Som en medlemsorganisation med over 600 virksomheder i ryggen, er relationerne til medlemskredsen helt afgørende, både for at dele viden, styrke netværk og skabe lokal vækst.I forbindelse med præsentationen af Business Viborg udtalte chefkonsulent Michael Freundlich: “Vores mål for 2025 er at nå 700 medlemmer og en omsætning på 2,9 mio. kr.”
 
 Men når virksomheder melder sig ud, mister Business Viborg ikke kun en indtægt, men også værdifulde forbindelser, politisk legitimitet og mulighed for at gøre en forskel for erhvervslivet i området. For at handle proaktivt ønsker Business Viborg at få bedre indsigt i, hvad der driver churn og hvem der er i risikozonen. 
@@ -145,7 +144,6 @@ Men når virksomheder melder sig ud, mister Business Viborg ikke kun en indtægt
 Derfor skal der udvikles et datadrevet værktøj, som kombinerer teknisk analyse med brugervenlig indsigt. Et værktøj, der gør det muligt for både medlemskonsulenter og ledelse at træffe kloge beslutninger og handle i tide med respekt for både dataetik og jura.
 
 # Problemformulering
-
 Hvordan kan Business Viborg analysere og anvende medlemsdata til at udvikle et beslutningsunderstøttende dashboard, der forudsiger churn og forklarer centrale risikofaktorer – baseret på relevante maskinlæringsmetoder og med inddragelse af etiske og juridiske overvejelser?
 
 ## Underspørgsmål
@@ -1106,7 +1104,10 @@ plan(multisession)
 
 # 3. Start tidstagning
 strt.time <- Sys.time()
+```
 
+
+```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
 # 4. Tuning af kun Random Forest med 25 kombinationer
 churn_results_rf <- churn_workflow_set_rf |>  # <-- her var der fejl i dit input
   workflow_map(
@@ -1116,7 +1117,10 @@ churn_results_rf <- churn_workflow_set_rf |>  # <-- her var der fejl i dit input
     control = grid_ctrl,
     seed = 2025
   )
+```
 
+
+```{r}
 # 5. Tid brugt
 Sys.time() - strt.time
 
@@ -1337,15 +1341,12 @@ full_results |>
 ```
 
 ```{r}
-library(shiny)
-library(leaflet)
-library(dplyr)
-library(readr)
-library(shinyWidgets)
-library(DT)
-library(ggplot2)
+# Loader pakker til Shiny appen
+pacman::p_load(
+  shiny, leaflet, dplyr, readr, shinyWidgets, DT, ggplot2
+)
 
-
+# Indlæser datasæt
 full_results <- readRDS("data/full_results.rds")
 
 # Postal code coordinates
