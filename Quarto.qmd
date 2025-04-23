@@ -324,6 +324,8 @@ Dette projekt har demonstreret, hvordan Business Viborg kan anvende medlemsdata 
 
 Analysen viser, at variabler relateret til kontakt, eventdeltagelse og modtaget erhvervshjælp er blandt de vigtigste drivere for fastholdelse – i tråd med både tidligere analyser og forretningsmæssig intuition. Løsningen er udviklet med respekt for GDPR og dataetik og udgør et realistisk og skalerbart værktøj for medlemsorganisationer, der ønsker at arbejde mere strategisk med churn.
 
+Det vurderes, at modellens præcision kunne forbedres yderligere, hvis der var adgang til oplysninger om, hvornår udmeldelser fandt sted (Timestamp). Denne information kunne give indblik i, hvordan churn-risikoen udvikler sig over tid og bidrage til en endnu mere målrettet indsats.
+
 Projektet besvarer dermed problemformuleringen ved at kombinere teknisk modeludvikling med brugervenlig formidling og ansvarlig dataanvendelse. Perspektiverende åbner det op for en bredere anvendelse af datadrevne beslutningsstøttesystemer i mindre organisationer med store medlemsmæssige ambitioner.
 
 \newpage
@@ -359,8 +361,6 @@ https://eur-lex.europa.eu/legal-content/DA/TXT/?uri=CELEX%3A32016R0679
 
 \newpage
 
-
-1. Data load
 ```{r}
 # ------------------------------------------------------------------------------
 # 1. Load data
@@ -377,9 +377,11 @@ old_projects <- readRDS("data/old_projects.rds")
 
 ```
 
-
-2. Merge datasets
 ```{r}
+# ------------------------------------------------------------------------------
+# 2. Merge datasets
+# ------------------------------------------------------------------------------
+
 # ------------------------------------------------------------------------------
 # 2.1: Fjern dubletter og behold første registrering pr. virksomhed
 # ------------------------------------------------------------------------------
@@ -519,8 +521,11 @@ merged_unique_old_projects <- merged_unique |>
 merge_datasets <- merged_unique_old_projects
 ```
 
-3. Clean data
 ```{r}
+# ------------------------------------------------------------------------------
+# 3. Cleaning data
+# ------------------------------------------------------------------------------
+
 # ------------------------------------------------------------------------------
 # 3.1: Første kig på datastrukturen
 # Giver et hurtigt overblik over variabelnavne, typer og eksempelværdier
@@ -595,8 +600,10 @@ Kontaktdato      <- as.Date(clean_data$Kontaktdato, format = "%Y-%m-%d")
 # glimpse(clean_data)
 ```
 
-4. Feature Engineering
 ```{r}
+# ------------------------------------------------------------------------------
+# 4. Feature Engineering
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 # 4.1: # Viser datastruktur efter rensning
@@ -838,13 +845,16 @@ write_rds(feature_engineering, "data/feature_engineered_data.rds")
 
 ```
 
-5. EDA
 ```{r}
-# EDA
+# ------------------------------------------------------------------------------
+# 5. EDA
+# ------------------------------------------------------------------------------
 ```
 
-6. Preprocessing
 ```{r}
+# ------------------------------------------------------------------------------
+# 6. Preprocessing
+# ------------------------------------------------------------------------------
 set.seed(2025)
 
 churn_split <- initial_split(feature_engineering, prop = 0.8, strata = churn)
@@ -862,8 +872,11 @@ churn_recipe <-
   step_downsample(churn)  # Brug evt. step_smote(churn) hvis ekstrem ubalance
 ```
 
-7. Modelling
 ```{r}
+# ------------------------------------------------------------------------------
+# 7. Modelling
+# ------------------------------------------------------------------------------
+
 # Model specs
 rf_spec <- rand_forest(mtry = tune(), min_n = tune()) |>
   set_engine("ranger", importance = "impurity") |>
@@ -903,8 +916,10 @@ churn_workflow_set <- workflow_set(
 )
 ```
 
-8. Evaluate metrics
 ```{r}
+# ------------------------------------------------------------------------------
+# 8. Evaluate metrics
+# ------------------------------------------------------------------------------
 churn_metrics <- metric_set(accuracy, roc_auc, f_meas, sens, spec)
 
 grid_ctrl <- control_grid(
@@ -946,7 +961,6 @@ churn_results |>
 autoplot(churn_results, select_best = TRUE)
 ```
 
-9. Visualiseringer
 ```{r}
 # ------------------------------------------------------------------------------
 # 9. Visualiseringer
@@ -1085,7 +1099,6 @@ ggplot(vip_combined, aes(x = reorder(Variable, Importance), y = Importance, fill
 # ------------------------------------------------------------------------------
 ```
 
-10. Endelig model (sidste tuning - skal vi gøre det?)
 ```{r}
 # -------------------------------------------------------
 # 10. Endelig model – Finetuning af Random Forest
