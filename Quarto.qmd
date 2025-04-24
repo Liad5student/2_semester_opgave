@@ -2141,4 +2141,3 @@ ggsave("images/8_top_10_variabler_rf.png", width = 7, height = 4, dpi = 300)
 #      • "Moderat risiko" → 60-79 %
 #      • "Høj risiko"     → 80 % eller højere
 ```
-
