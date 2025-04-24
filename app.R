@@ -1,0 +1,219 @@
+#
+# This is a Shiny web application. You can run the application by clicking
+# the 'Run App' button above.
+#
+# Find out more about building applications with Shiny here:
+#
+#    https://shiny.posit.co/
+#
+
+library(shiny)
+
+# Loader pakker til Shiny appen
+pacman::p_load(
+  shiny, leaflet, dplyr, readr, shinyWidgets, DT, ggplot2
+)
+
+# Indlæser datasæt
+full_results <- readRDS("data/full_results.rds")
+
+# Postnummer koordinater
+postal_coords <- data.frame(
+  PostalCode = c(8800, 8850, 8830, 7470, 8840, 7800, 8831, 8832, 9632, 7850, 9620, 9500, 8860),
+  lat = c(56.451, 56.532, 56.447, 56.489, 56.472, 56.475, 56.448, 56.449, 56.907, 56.573, 56.824, 57.226, 56.611),
+  lng = c(9.404, 8.486, 9.186, 9.000, 8.662, 9.156, 9.163, 9.171, 9.287, 9.156, 9.388, 9.388, 8.954)
+)
+
+# Klargør data
+full_results$PostalCode <- as.character(full_results$PostalCode)
+postal_coords$PostalCode <- as.character(postal_coords$PostalCode)
+
+data_map <- full_results %>%
+  left_join(postal_coords, by = "PostalCode") %>%
+  mutate(
+    risk_category = case_when(
+      churn_prob > 0.75 ~ "High",
+      churn_prob > 0.5 ~ "Medium",
+      TRUE ~ "Low"
+    ),
+    risk_category = factor(risk_category, levels = c("High", "Medium", "Low"))
+  )
+
+# UI
+ui <- fluidPage(
+  tags$head(
+    tags$link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap"),
+    tags$style(HTML("
+      body {
+        background: linear-gradient(to bottom, #0b2e2a 0%, #12483e 40%, #1a5d4b 70%, #2f7561 100%);
+        font-family: 'Open Sans', sans-serif;
+        color: #ffffff;
+      }
+      h1, h2, h3, h4, h5 {
+        font-weight: 600;
+        color: #90c73e;
+      }
+      .container-fluid, .main-panel, .well, .panel, .tab-pane {
+        background-color: transparent;
+        padding: 20px;
+      }
+      .sidebarPanel {
+        background-color: #103a33;
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 5px solid #90c73e;
+      }
+      .info-box { 
+        background-color: #103a33; 
+        border-left: 5px solid #90c73e; 
+        padding: 15px;
+        margin-bottom: 15px;
+        color: #ffffff;
+      }
+      .btn, .btn-primary, .btn-warning, .btn-danger {
+        background-color: #90c73e !important;
+        color: #0b2e2a !important;
+        font-weight: 600;
+        border: none;
+        border-radius: 4px;
+      }
+      .btn:hover {
+        background-color: #a7db50 !important;
+      }
+      .radioButtons .btn, .checkboxGroupButtons .btn {
+        background-color: #18453e !important;
+        color: #ffffff !important;
+        border: 1px solid #90c73e;
+      }
+      .radioButtons .active, .checkboxGroupButtons .active {
+        background-color: #90c73e !important;
+        color: #0b2e2a !important;
+      }
+      .tabbable > .nav > li[class=active] > a {
+        background-color: #90c73e !important;
+        color: #0b2e2a !important;
+      }
+      .dataTables_wrapper .dataTables_length, 
+      .dataTables_wrapper .dataTables_filter, 
+      .dataTables_wrapper .dataTables_info, 
+      .dataTables_wrapper .dataTables_paginate {
+        font-size: 90%;
+      }
+      table.dataTable th, table.dataTable td {
+        white-space: nowrap;
+        padding: 4px 10px;
+        font-size: 90%;
+      }
+      .risk-high { color: #e74c3c; font-weight: bold; }
+      .risk-medium { color: #f39c12; }
+      .risk-low { color: #2ecc71; }
+    "))
+  ),
+  
+  div(style = "display: flex; align-items: center; justify-content: space-between; padding: 10px 30px;",
+      img(src = "images/businessviborgny.jpeg", height = "50px"),
+      h2("Medlemsanalyse – Business Viborg")
+  ),
+  
+  sidebarLayout(
+    sidebarPanel(
+      width = 3,
+      class = "sidebarPanel",
+      
+      div(class = "info-box",
+          h4("Guide"),
+          p("Udforsk medlemmernes churn-risiko efter lokation. Filtrer og analyser data med kontrollerne.")
+      ),
+      
+      radioGroupButtons(
+        inputId = "view_by",
+        label = "Visningstilstand:",
+        choices = c("Postnummer" = "PostalCode", "Medlemsnummer" = "PNumber", "Alle medlemmer" = "all"),
+        selected = "all",
+        status = "primary"
+      ),
+      
+      conditionalPanel(
+        condition = "input.view_by == 'PostalCode'",
+        pickerInput(
+          inputId = "postal_code",
+          label = "Vælg postnummer:",
+          choices = unique(data_map$PostalCode),
+          multiple = TRUE,
+          options = list(`actionsBox` = TRUE)
+        )
+      ),
+      
+      conditionalPanel(
+        condition = "input.view_by == 'PNumber'",
+        selectizeInput(
+          inputId = "member_id",
+          label = "Vælg medlemsnummer:",
+          choices = NULL,
+          multiple = FALSE,
+          options = list(
+            placeholder = 'Skriv for at søge',
+            onInitialize = I('function() { this.setValue(\"\"); }')
+          )
+        )
+      ),
+      
+      sliderInput(
+        inputId = "churn_range",
+        label = "Churn sandsynlighed:",
+        min = 0,
+        max = 1,
+        value = c(0, 1),
+        step = 0.01
+      ),
+      
+      checkboxGroupButtons(
+        inputId = "risk_categories",
+        label = "Risiko-kategorier:",
+        choices = c("High", "Medium", "Low"),
+        selected = c("High", "Medium", "Low"),
+        status = "primary",
+        checkIcon = list(yes = icon("ok", lib = "glyphicon"))
+      ),
+      
+      actionBttn(
+        inputId = "reset_filters",
+        label = "Nulstil filtre",
+        style = "material-flat",
+        color = "warning"
+      ),
+      
+      actionBttn(
+        inputId = "show_top10",
+        label = "Vis Top 10 Churn",
+        style = "material-flat",
+        color = "danger"
+      ),
+      
+      br(), br(),
+      div(class = "info-box",
+          h5("Business Viborg"),
+          p("Erik Ejegods Vej 16, 2. sal\n8800 Viborg\n+45 87 25 51 51\ninfo@buvi.dk")
+      )
+    ),
+    
+    mainPanel(
+      width = 9,
+      tabsetPanel(
+        tabPanel("Kortvisning", leafletOutput("map", height = "700px")),
+        tabPanel("Data", DTOutput("data_table"), downloadButton("download_data", "Download data")),
+        tabPanel("Statistik",
+                 h4("Fordeling af churn-risiko"), plotOutput("risk_distribution", height = "300px"),
+                 h4("Risiko efter postnummer"), plotOutput("postal_code_summary", height = "300px")
+        ),
+        tabPanel("Brancher",
+                 h4("Top 5 brancher med højest churn"),
+                 plotOutput("top_branches", height = "400px")
+        )
+      )
+    )
+  )
+)
+
+# Server og app start
+shinyApp(ui, server)
