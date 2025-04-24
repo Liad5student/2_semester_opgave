@@ -7,8 +7,6 @@
 #    https://shiny.posit.co/
 #
 
-library(shiny)
-
 # Loader pakker til Shiny appen
 pacman::p_load(
   shiny, leaflet, dplyr, readr, shinyWidgets, DT, ggplot2
