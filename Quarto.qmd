@@ -862,10 +862,8 @@ write_rds(feature_engineering, "data/feature_engineered_data.rds")
 ```{r}
 # Helper-funktion: Henter og opdaterer .rds-filer fra de andre branches
 
-source("load_all_data.R")
-
 # ==============================================================================
-# Eksplorativ Dataanalyse (EDA)
+# 5. Eksplorativ Dataanalyse (EDA)
 # ==============================================================================
 
 
