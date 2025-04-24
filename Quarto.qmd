@@ -125,7 +125,7 @@ Vejleder: Simon Bjerrum Eilersen
 # Resumé
 Business Viborg arbejder for at skabe optimale rammer for erhvervslivet i Viborg Kommune og har en ambition om at nå 700 medlemmer i 2025. Medlemsafgang truer imidlertid både organisationens økonomiske fundament og dens rolle som erhvervspolitisk talerør. For at imødekomme denne udfordring er der i dette projekt udviklet en datadrevet prototype, der forudsiger churn og identificerer centrale risikofaktorer på medlemsniveau.
 
-Løsningen kombinerer brugervenlig formidling med avanceret maskinlæring i et R-baseret workflow. Seks modeller blev afprøvet, hvor Support Vector Machine opnåede den bedste performance (AUC = 0,88, F1 = 0,74). Alligevel blev Random Forest valgt som slutmodel på baggrund af gennemsigtighed og forklaringskraft. Feature engineering inddrager bl.a. kontaktfrekvens, eventdeltagelse og modtaget erhvervshjælp.
+Løsningen kombinerer brugervenlig formidling med avanceret maskinlæring i et R-baseret workflow. Seks modeller blev afprøvet, hvor Random Forest blev valgt som slutmodel på baggrund af gennemsigtighed og forklaringskraft. Feature engineering inddrager bl.a. kontaktfrekvens, eventdeltagelse og modtaget erhvervshjælp.
 
 Modellen er operationaliseret i et interaktivt dashboard, som understøtter medlemskonsulenternes opsøgende arbejde. Projektet er udviklet med respekt for GDPR og dataetik og illustrerer, hvordan en lokal medlemsorganisation med begrænsede ressourcer kan anvende data strategisk og ansvarligt til at styrke fastholdelsen og engagementet blandt sine medlemmer.
 
@@ -134,7 +134,7 @@ Business Viborg er en medlemsorganisation, der arbejder målrettet for at skabe 
 
 Men når virksomheder forlader organisationen, reduceres ikke blot indtægtsgrundlaget – også Business Viborgs netværkskapital og politiske legitimitet svækkes. Derfor er det afgørende at få indsigt i, hvilke faktorer der øger risikoen for udmeldelse, og hvordan man kan arbejde proaktivt med medlemsfastholdelse.
 
-Med dette projekt søges udviklet en datadrevet løsning, der kombinerer teknisk analyse med brugervenlig indsigt og som respekterer både juridiske og etiske rammer. Målet er at styrke medlemskonsulenternes beslutningsgrundlag og understøtte en mere effektiv og målrettet medlemspleje.
+I dette projekt udvikles der en datadrevet løsning, der kombinerer teknisk analyse med brugervenlig indsigt og som respekterer både juridiske og etiske rammer. Målet er at styrke medlemskonsulenternes beslutningsgrundlag og understøtte en mere effektiv og målrettet medlemspleje.
 
 # Problemstilling
 Business Viborg er registreret under branchekoden 26104793, og arbejder målrettet for at skabe optimale rammer for erhvervslivet i Viborg Kommune. Som en medlemsorganisation med over 600 virksomheder i ryggen, er relationerne til medlemskredsen helt afgørende, både for at dele viden, styrke netværk og skabe lokal vækst.I forbindelse med præsentationen af Business Viborg udtalte chefkonsulent Michael Freundlich: “Vores mål for 2025 er at nå 700 medlemmer og en omsætning på 2,9 mio. kr.”
@@ -216,20 +216,18 @@ I dette afsnit defineres centrale begreber og forkortelser anvendt gennem rappor
 
 **ROC AUC:** Et mål for modellens evne til at adskille churnere og ikke-churnere. En værdi tæt på 1 indikerer høj prædiktiv nøjagtighed.
 
-**F1-score:** Et samlet præstationsmål, som balancerer præcision og recall – særligt velegnet ved skæve datasæt.
+**F_meas (F1-score):** Et samlet præstationsmål, som balancerer præcision og recall – særligt velegnet ved skæve datasæt.
 
 **Dashboard:** Et interaktivt visualiseringsværktøj, der præsenterer churn-risici og medlemsindsigter på en overskuelig måde til brug i den daglige medlemspleje.
-
-**Pseudonymisering:** En teknik hvor direkte identifikatorer fjernes eller maskeres, så data ikke uden videre kan knyttes til en bestemt virksomhed eller person.
 
 **GDPR:** EU’s databeskyttelsesforordning. Projektet tager højde for centrale principper som dataminimering, transparens og legitimt behandlingsgrundlag.
 
 # Analyse
 ## Dataforståelse og fordeling
 
-Analysen tager udgangspunkt i et datasæt bestående af 2.966 medlemsvirksomheder tilknyttet Business Viborg. Af disse har cirka 30 % valgt at opsige deres medlemskab i den analyserede periode. Datasættet afspejler en betydelig variation med hensyn til virksomhedsstørrelse, branchetilhørsforhold og interaktionsniveau med organisationen.
+Analysen tager udgangspunkt i et datasæt bestående af 2.966 medlemsvirksomheder tilknyttet Business Viborg, som har et selvstændigt P-nummer. Datasættet afspejler en betydelig variation med hensyn til virksomhedsstørrelse, branchetilhørsforhold og interaktionsniveau med organisationen.
 
-En indledende fordeling afslører, at virksomheder uden dokumenteret kontakt eller deltagelse i arrangementer har markant højere churn-rate. Denne observation antyder, at fraværet af relationel kontakt og engagement kan være centrale indikatorer for medlemsophør.
+En indledende fordeling afslører, at virksomheder uden dokumenteret kontakt eller deltagelse i arrangementer har markant højere churn-rate. Denne observation antyder, at fraværet af kontakt og engagement kan være centrale indikatorer for medlemsophør.
 
 ## Egenskaber ved virksomheder med høj churn
 
@@ -237,11 +235,11 @@ For bedre at forstå hvordan forskellige former for engagement påvirker medlems
 
 ![Fravær af begge faktorer er tæt forbundet med udmeldelse, mens dobbelt engagement viser stærk fastholdelse.](images/EDA_5_kombination_kontakt_event.png){ width=80% fig-align="center" }
 
-Virksomheder med begrænset kontakt til organisationen, lav deltagelse i arrangementer og uden dokumenteret interaktion har generelt en markant højere risiko for at opsige deres medlemskab. Dette underbygges af figuren nedenfor, der viser de fem postnumre med den højeste gennemsnitlige churn-risiko. Her ses, at geografiske områder med lav tilknytning til det centrale område udviser særlig høj churn-sandsynlighed.
+Virksomheder med begrænset kontakt til organisationen, lav deltagelse i arrangementer og uden dokumenteret interaktion har generelt en markant højere risiko for at opsige deres medlemskab. Dette underbygges af figuren nedenfor, der viser de fem postnumre med den højeste gennemsnitlige churn-risiko. Her ses, at geografiske områder med lav tilknytning til det centrale område (8800 Viborg) udviser særlig høj churn-sandsynlighed.
 
-![Geografisk afstand fra Viborgs centrum ser ud til at spille en rolle i udmeldelsestendens.](images/6_postnummer_højeste_churn.png){ width=80% fig-align="center" }
+![Geografisk afstand fra Viborgs centrum ser ud til at spille en rolle i udmeldelsestendens. 9620 Aalestrup, 7800 Skive, 7850 Stoholm, 7470 Karup, 8831 Løgstrup](images/6_postnummer_højeste_churn.png){ width=80% fig-align="center" }
 
-Også på brancheniveau er der tydelige forskelle. Nogle brancher er kendetegnet ved lav netværksværdi og begrænset interaktion med organisationen og har derfor en højere sandsynlighed for medlemsophør. Figuren herunder visualiserer de fem brancher med den højeste gennemsnitlige churn-risiko, hvilket bekræfter tendensen.
+Også på brancheniveau er der tydelige forskelle. Nogle brancher er kendetegnet ved  begrænset interaktion med organisationen og har derfor en højere sandsynlighed for medlemsophør. Figuren herunder visualiserer de fem brancher med den højeste gennemsnitlige churn-risiko, hvilket bekræfter tendensen.
 
 ![Brancher med lav netværksværdi og specialiserede ydelser udviser generelt højere risiko for medlemsophør.](images/5_brancher_højeste_churn.png){ width=80% fig-align="center" }
 
@@ -249,31 +247,38 @@ Omvendt findes der brancher, hvor medlemmerne i langt højere grad fastholdes. D
 
 ![Branchenes høje fastholdelse kan skyldes stærkere relationer og oplevet værdi af netværket.](images/7_top5_der_ikke_churner.png){ width=80% fig-align="center" }
 
+I de fem brancher hvor churnrisikoen er lille, er antallet af virksomheder højt. Dette kunne understøtte teorien om at netværksværdi har høj prioritet, blandt dem der er medlemmer af Business Viborg.
+
 ## Feature engineering
 
-På baggrund af ovenstående mønstre blev der konstrueret nye forklarende variable for at styrke modellernes prædiktive kapacitet. De mest centrale inkluderer:
-	•	medlem_antal_år: længden af medlemskab målt i år
-	•	har_haft_kontakt: binær indikator for, om der har været nogen form for kontakt
-	•	deltaget_i_event: binær indikator for eventdeltagelse
-	•	hjælp_kategori: tematisk klassifikation af den modtagne konsulentbistand
+På baggrund af ovenstående mønstre blev der konstrueret nye forklarende variabler for at styrke modellernes prædiktioner. De mest centrale inkluderer:
 
-Disse variable blev udledt på baggrund af domæneviden og eksplorativ analyse, og bidrog væsentligt til forbedret modelperformance.
+	- medlem_antal_år: længden af medlemskab målt i år
+	- har_haft_kontakt: binær indikator for, om der har været nogen form for kontakt
+	- deltaget_i_event: binær indikator for eventdeltagelse
+
+Disse variabler blev udledt på baggrund af domæneviden og eksplorativ analyse, og bidrog væsentligt til forbedret modelperformance.
 
 ## Modelperformance
 
-Seks maskinlæringsmodeller blev afprøvet: Support Vector Machine (SVM), XGBoost, Random Forest, logistisk regression, K-nearest Neighbors (KNN) og Naive Bayes.
+Seks machine learning modeller blev afprøvet: Support Vector Machine (SVM), XGBoost, Random Forest, logistisk regression, K-nearest Neighbors (KNN) og Naive Bayes.
 
-![Figuren illustrerer variationen i modellernes styrker på tværs af metrikker.](images/1_model_performance.png){ width=80% fig-align="center" }
+![Farveintensitet viser performance – mørkere felter angiver højere score. Random Forest og XGBoost scorer generelt højt, mens Naive Bayes udviser lav F1-score.](images/3_heatmap_pr_model.png){ width=80% fig-align="center" }
 
-På trods af SVM’s gode resultater blev Random Forest valgt som slutmodel. Dette skyldes modellens kombination af prædiktiv styrke og modelgennemsigtighed, hvilket gør den mere anvendelig i en praktisk kontekst. XGBoost blev fravalgt grundet behovet for yderligere parameteroptimering, som ikke var formålstjenligt inden for projektets rammer. Vi valgte den mest simple af de to modeller, da deres metrikker lå meget tæt.
-
-![Farveintensitet viser performance – mørkere felter angiver højere score. Random Forest og SVM scorer generelt højt, mens Naive Bayes udviser lav F1-score.](images/3_heatmap_pr_model.png){ width=80% fig-align="center" }
+På trods af XGBoost gode resultater blev Random Forest valgt som slutmodel. Dette skyldes modellens kombination af prædiktiv styrke og modelgennemsigtighed, hvilket gør den mere anvendelig i en praktisk kontekst. XGBoost blev fravalgt grundet behovet for yderligere parameteroptimering, som ikke var formålstjenligt inden for projektets rammer. Vi valgte den mest simple af de to modeller, da deres metrikker lå meget tæt.
 
 ![Lineplot over modelperformance. Random Forest og XGBoost opnår høj score på alle tre metrikker, hvilket underbygger deres styrke som robuste og præcise modeller.](images/2_linje_plot.png){ width=80% fig-align="center" }
 
 ## Variable importance og indsigt
 
-Ved hjælp af vip()-pakken blev de mest betydningsfulde variable i Random Forest-modellen identificeret. De fire vigtigste prædiktorer var: hjælp_kategori, har_haft_kontakt, medlem_antal_år og MeetingLength. Disse variable udgør tilsammen et stærkt grundlag for at forstå churn-mekanismer i Business Viborgs medlemsbase og bekræfter den eksplorative analyses fund.
+Ved hjælp af vip()-pakken blev de mest betydningsfulde variable i Random Forest-modellen identificeret. De fire vigtigste prædiktorer var: 
+
+  - deltaget_i_event_Ja
+  - deltaget_i_event_Nej
+  - MeetinLenght
+  - Employees
+  
+Disse variable udgør tilsammen et stærkt grundlag for at forstå churn-mekanismer i Business Viborgs medlemsbase og bekræfter den eksplorative analyses fund.
 
 ![Eventdeltagelse, mødelængde og antal ansatte er blandt de mest betydningsfulde prædiktorer for churn.](images/8_top_10_variabler_rf.png){ width=80% fig-align="center" }
 
@@ -306,22 +311,27 @@ Det betyder, at alle krav i GDPR fortsat er gældende. Organisationen skal sikre
 ## Datasikkerhed og organisatorisk ansvar
 
 I henhold til artikel 32 i GDPR skal Business Viborg etablere passende tekniske og organisatoriske foranstaltninger for at beskytte personoplysninger mod uautoriseret adgang, tab eller misbrug. Dette inkluderer:
-	•	Kryptering og adgangskontrol
-	•	Intern logning af dataadgang
-	•	Uddannelse af medarbejdere i datasikkerhed
-	•	Regelmæssig evaluering af sikkerhedspolitikker
-	•	Eventuelle databehandleraftaler med eksterne samarbejdspartnere
+	- Kryptering og adgangskontrol
+	- Intern logning af dataadgang
+	- Uddannelse af medarbejdere i datasikkerhed
+	- Regelmæssig evaluering af sikkerhedspolitikker
+	- Eventuelle databehandleraftaler med eksterne samarbejdspartnere
 
 En systematisk tilgang til datasikkerhed er afgørende – ikke blot af juridiske årsager, men også for at opretholde tillid til organisationens datapraksis.
 
 ## Etiske overvejelser og ansvarlig anvendelse
 
 Ud over de juridiske krav bør Business Viborg også forholde sig aktivt til de etiske implikationer ved at anvende en churn-model. Dataetiske principper foreslået af bl.a. Dataetisk Råd anbefaler, at teknologiske løsninger skal:
-	•	Sætte mennesket i centrum
-	•	Undgå diskrimination og skævvridning
-	•	Skabe gennemsigtighed og forklarelige beslutninger
+
+	- Sætte mennesket i centrum
+	- Undgå diskrimination og skævvridning
+	- Skabe gennemsigtighed og forklarelige beslutninger
 
 Det er vigtigt, at modellen ikke bruges til at stigmatisere bestemte medlemsgrupper eller segmenter. Anvendelsen af churn-risiko bør altid ledsages af kritisk refleksion og inddragelse af menneskelig dømmekraft i den endelige beslutning om handling. Medlemsdialogen bør være præget af forståelse og imødekommenhed – ikke automatiseret kategorisering.
+
+## Delkonklusion
+Sammenfattende vurderes det, at Business Viborgs churn-projekt kan gennemføres i overensstemmelse med GDPR og etiske retningslinjer, forudsat at visse betingelser overholdes. Der skal foreligge et klart og dokumenteret behandlingsgrundlag, medlemmerne skal informeres tydeligt og rettidigt, og datasættet skal reduceres til relevante oplysninger i henhold til formålet. Desuden skal organisationen sikre passende tekniske og organisatoriske sikkerhedsforanstaltninger og være opmærksom på, at data fortsat er personhenførbare, selvom de fremstår pseudonymiserede.
+Afslutningsvis bør Business Viborg betragte dette projekt som et skridt mod mere datadrevet medlemsservice – men også som en mulighed for at styrke sin rolle som en ansvarlig og gennemsigtig aktør i det lokale erhvervsliv. Det forudsætter, at juridiske forpligtelser og dataetiske principper ikke ses som forhindringer, men som en integreret del af en moderne og tillidsbaseret organisation.
 
 # Anbefaling
 På baggrund af analysen anbefales det, at Business Viborg anvender den udviklede churn-model som et beslutningsunderstøttende værktøj i det opsøgende medlemsarbejde. Modellen kan identificere virksomheder med høj risiko for udmeldelse og derved muliggøre en mere målrettet og proaktiv indsats fra medlemskonsulenterne. Det foreslås, at:
