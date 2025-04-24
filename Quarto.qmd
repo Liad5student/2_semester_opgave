@@ -233,17 +233,21 @@ En indledende fordeling afslører, at virksomheder uden dokumenteret kontakt ell
 
 ## Egenskaber ved virksomheder med høj churn
 
+For bedre at forstå hvordan forskellige former for engagement påvirker medlemsstatus, har vi kombineret to centrale variabler: kontakt med Business Viborg og deltagelse i events. Dette giver fire grupper, som varierer i deres relation til organisationen. Figuren nedenfor viser tydeligt, hvordan virksomheder med både kontakt og eventdeltagelse i langt højere grad fastholdes som medlemmer, mens fravær af begge faktorer er stærkt forbundet med churn.
+
+![Fravær af begge faktorer er tæt forbundet med udmeldelse, mens dobbelt engagement viser stærk fastholdelse.](images/EDA_5_kombination_kontakt_event.png){ width=80% fig-align="center" }
+
 Virksomheder med begrænset kontakt til organisationen, lav deltagelse i arrangementer og uden dokumenteret interaktion har generelt en markant højere risiko for at opsige deres medlemskab. Dette underbygges af figuren nedenfor, der viser de fem postnumre med den højeste gennemsnitlige churn-risiko. Her ses, at geografiske områder med lav tilknytning til det centrale område udviser særlig høj churn-sandsynlighed.
 
-![Top 5 postnumre med højeste churn risiko](images/6_postnummer_højeste_churn.png){ width=80% fig-align="center" }
+![Geografisk afstand fra Viborgs centrum ser ud til at spille en rolle i udmeldelsestendens.](images/6_postnummer_højeste_churn.png){ width=80% fig-align="center" }
 
 Også på brancheniveau er der tydelige forskelle. Nogle brancher er kendetegnet ved lav netværksværdi og begrænset interaktion med organisationen og har derfor en højere sandsynlighed for medlemsophør. Figuren herunder visualiserer de fem brancher med den højeste gennemsnitlige churn-risiko, hvilket bekræfter tendensen.
 
-![Top 5 brancher med højeste churn](images/5_brancher_højeste_churn.png){ width=80% fig-align="center" }
+![Brancher med lav netværksværdi og specialiserede ydelser udviser generelt højere risiko for medlemsophør.](images/5_brancher_højeste_churn.png){ width=80% fig-align="center" }
 
 Omvendt findes der brancher, hvor medlemmerne i langt højere grad fastholdes. Disse brancher har ofte en mere stabil tilknytning og deltager aktivt i organisationens tilbud. Den følgende visualisering viser de fem brancher, hvor medlemmerne i størst omfang forbliver tilknyttet – hvilket indikerer, at der her eksisterer en stærkere relation og et større udbytte af medlemskabet.
 
-![Top 5 brancher hvor sandsynligheden for churn er lav](images/7_top5_der_ikke_churner.png){ width=80% fig-align="center" }
+![Branchenes høje fastholdelse kan skyldes stærkere relationer og oplevet værdi af netværket.](images/7_top5_der_ikke_churner.png){ width=80% fig-align="center" }
 
 ## Feature engineering
 
@@ -257,21 +261,21 @@ Disse variable blev udledt på baggrund af domæneviden og eksplorativ analyse, 
 
 ## Modelperformance
 
-Seks maskinlæringsmodeller blev afprøvet: Support Vector Machine (SVM), XGBoost, Random Forest, logistisk regression, K-nearest Neighbors (KNN) og Naive Bayes. Blandt disse opnåede SVM den højeste F1-score (0,74) og AUC (0,88), hvilket indikerer en stærk balance mellem præcision og recall.
+Seks maskinlæringsmodeller blev afprøvet: Support Vector Machine (SVM), XGBoost, Random Forest, logistisk regression, K-nearest Neighbors (KNN) og Naive Bayes.
 
-![Model performance – Accuracy, F1 og AUC](images/1_model_performance.png){ width=80% fig-align="center" }
+![Figuren illustrerer variationen i modellernes styrker på tværs af metrikker.](images/1_model_performance.png){ width=80% fig-align="center" }
 
 På trods af SVM’s gode resultater blev Random Forest valgt som slutmodel. Dette skyldes modellens kombination af prædiktiv styrke og modelgennemsigtighed, hvilket gør den mere anvendelig i en praktisk kontekst. XGBoost blev fravalgt grundet behovet for yderligere parameteroptimering, som ikke var formålstjenligt inden for projektets rammer. Vi valgte den mest simple af de to modeller, da deres metrikker lå meget tæt.
 
-![Performance heatmap](images/3_heatmap_pr_model.png){ width=80% fig-align="center" }
+![Farveintensitet viser performance – mørkere felter angiver højere score. Random Forest og SVM scorer generelt højt, mens Naive Bayes udviser lav F1-score.](images/3_heatmap_pr_model.png){ width=80% fig-align="center" }
 
-![Linjeplot med sammenligning af metrikker](images/2_linje_plot.png){ width=80% fig-align="center" }
+![Lineplot over modelperformance. Random Forest og XGBoost opnår høj score på alle tre metrikker, hvilket underbygger deres styrke som robuste og præcise modeller.](images/2_linje_plot.png){ width=80% fig-align="center" }
 
 ## Variable importance og indsigt
 
 Ved hjælp af vip()-pakken blev de mest betydningsfulde variable i Random Forest-modellen identificeret. De fire vigtigste prædiktorer var: hjælp_kategori, har_haft_kontakt, medlem_antal_år og MeetingLength. Disse variable udgør tilsammen et stærkt grundlag for at forstå churn-mekanismer i Business Viborgs medlemsbase og bekræfter den eksplorative analyses fund.
 
-![Top 10 variabler (Random Forest)](images/8_top_10_variabler_rf.png){ width=80% fig-align="center" }
+![Eventdeltagelse, mødelængde og antal ansatte er blandt de mest betydningsfulde prædiktorer for churn.](images/8_top_10_variabler_rf.png){ width=80% fig-align="center" }
 
 # Juridiske og etiske overvejelser
 
@@ -2136,220 +2140,5 @@ ggsave("images/8_top_10_variabler_rf.png", width = 7, height = 4, dpi = 300)
 #      • "Lav risiko"     → 40-59 %
 #      • "Moderat risiko" → 60-79 %
 #      • "Høj risiko"     → 80 % eller højere
-```
-
-```{r}
-# Loader pakker til Shiny appen
-pacman::p_load(
-  shiny, leaflet, dplyr, readr, shinyWidgets, DT, ggplot2
-)
-
-# Indlæser datasæt
-full_results <- readRDS("data/full_results.rds")
-
-# Postnummer koordinater
-postal_coords <- data.frame(
-  PostalCode = c(8800, 8850, 8830, 7470, 8840, 7800, 8831, 8832, 9632, 7850, 9620, 9500, 8860),
-  lat = c(56.451, 56.532, 56.447, 56.489, 56.472, 56.475, 56.448, 56.449, 56.907, 56.573, 56.824, 57.226, 56.611),
-  lng = c(9.404, 8.486, 9.186, 9.000, 8.662, 9.156, 9.163, 9.171, 9.287, 9.156, 9.388, 9.388, 8.954)
-)
-
-# Klargør data
-full_results$PostalCode <- as.character(full_results$PostalCode)
-postal_coords$PostalCode <- as.character(postal_coords$PostalCode)
-
-data_map <- full_results %>%
-  left_join(postal_coords, by = "PostalCode") %>%
-  mutate(
-    risk_category = case_when(
-      churn_prob > 0.75 ~ "High",
-      churn_prob > 0.5 ~ "Medium",
-      TRUE ~ "Low"
-    ),
-    risk_category = factor(risk_category, levels = c("High", "Medium", "Low"))
-  )
-
-# UI
-ui <- fluidPage(
-  tags$head(
-    tags$link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap"),
-    tags$style(HTML("
-      body {
-        background: linear-gradient(to bottom, #0b2e2a 0%, #12483e 40%, #1a5d4b 70%, #2f7561 100%);
-        font-family: 'Open Sans', sans-serif;
-        color: #ffffff;
-      }
-      h1, h2, h3, h4, h5 {
-        font-weight: 600;
-        color: #90c73e;
-      }
-      .container-fluid, .main-panel, .well, .panel, .tab-pane {
-        background-color: transparent;
-        padding: 20px;
-      }
-      .sidebarPanel {
-        background-color: #103a33;
-        padding: 20px;
-        border-radius: 10px;
-        border-left: 5px solid #90c73e;
-      }
-      .info-box { 
-        background-color: #103a33; 
-        border-left: 5px solid #90c73e; 
-        padding: 15px;
-        margin-bottom: 15px;
-        color: #ffffff;
-      }
-      .btn, .btn-primary, .btn-warning, .btn-danger {
-        background-color: #90c73e !important;
-        color: #0b2e2a !important;
-        font-weight: 600;
-        border: none;
-        border-radius: 4px;
-      }
-      .btn:hover {
-        background-color: #a7db50 !important;
-      }
-      .radioButtons .btn, .checkboxGroupButtons .btn {
-        background-color: #18453e !important;
-        color: #ffffff !important;
-        border: 1px solid #90c73e;
-      }
-      .radioButtons .active, .checkboxGroupButtons .active {
-        background-color: #90c73e !important;
-        color: #0b2e2a !important;
-      }
-      .tabbable > .nav > li[class=active] > a {
-        background-color: #90c73e !important;
-        color: #0b2e2a !important;
-      }
-      .dataTables_wrapper .dataTables_length, 
-      .dataTables_wrapper .dataTables_filter, 
-      .dataTables_wrapper .dataTables_info, 
-      .dataTables_wrapper .dataTables_paginate {
-        font-size: 90%;
-      }
-      table.dataTable th, table.dataTable td {
-        white-space: nowrap;
-        padding: 4px 10px;
-        font-size: 90%;
-      }
-      .risk-high { color: #e74c3c; font-weight: bold; }
-      .risk-medium { color: #f39c12; }
-      .risk-low { color: #2ecc71; }
-    "))
-  ),
-
-  div(style = "display: flex; align-items: center; justify-content: space-between; padding: 10px 30px;",
-      img(src = "images/businessviborgny.jpeg", height = "50px"),
-      h2("Medlemsanalyse – Business Viborg")
-  ),
-
-  sidebarLayout(
-    sidebarPanel(
-      width = 3,
-      class = "sidebarPanel",
-
-      div(class = "info-box",
-          h4("Guide"),
-          p("Udforsk medlemmernes churn-risiko efter lokation. Filtrer og analyser data med kontrollerne.")
-      ),
-
-      radioGroupButtons(
-        inputId = "view_by",
-        label = "Visningstilstand:",
-        choices = c("Postnummer" = "PostalCode", "Medlemsnummer" = "PNumber", "Alle medlemmer" = "all"),
-        selected = "all",
-        status = "primary"
-      ),
-
-      conditionalPanel(
-        condition = "input.view_by == 'PostalCode'",
-        pickerInput(
-          inputId = "postal_code",
-          label = "Vælg postnummer:",
-          choices = unique(data_map$PostalCode),
-          multiple = TRUE,
-          options = list(`actionsBox` = TRUE)
-        )
-      ),
-
-      conditionalPanel(
-        condition = "input.view_by == 'PNumber'",
-        selectizeInput(
-          inputId = "member_id",
-          label = "Vælg medlemsnummer:",
-          choices = NULL,
-          multiple = FALSE,
-          options = list(
-            placeholder = 'Skriv for at søge',
-            onInitialize = I('function() { this.setValue(\"\"); }')
-          )
-        )
-      ),
-
-      sliderInput(
-        inputId = "churn_range",
-        label = "Churn sandsynlighed:",
-        min = 0,
-        max = 1,
-        value = c(0, 1),
-        step = 0.01
-      ),
-
-      checkboxGroupButtons(
-        inputId = "risk_categories",
-        label = "Risiko-kategorier:",
-        choices = c("High", "Medium", "Low"),
-        selected = c("High", "Medium", "Low"),
-        status = "primary",
-        checkIcon = list(yes = icon("ok", lib = "glyphicon"))
-      ),
-
-      actionBttn(
-        inputId = "reset_filters",
-        label = "Nulstil filtre",
-        style = "material-flat",
-        color = "warning"
-      ),
-
-      actionBttn(
-        inputId = "show_top10",
-        label = "Vis Top 10 Churn",
-        style = "material-flat",
-        color = "danger"
-      ),
-
-      br(), br(),
-      div(class = "info-box",
-          h5("Business Viborg"),
-          p("Erik Ejegods Vej 16, 2. sal\n8800 Viborg\n+45 87 25 51 51\ninfo@buvi.dk")
-      )
-    ),
-
-    mainPanel(
-      width = 9,
-      tabsetPanel(
-        tabPanel("Kortvisning", leafletOutput("map", height = "700px")),
-        tabPanel("Data", DTOutput("data_table"), downloadButton("download_data", "Download data")),
-        tabPanel("Statistik",
-                 h4("Fordeling af churn-risiko"), plotOutput("risk_distribution", height = "300px"),
-                 h4("Risiko efter postnummer"), plotOutput("postal_code_summary", height = "300px")
-        ),
-        tabPanel("Brancher",
-                 h4("Top 5 brancher med højest churn"),
-                 plotOutput("top_branches", height = "400px")
-        )
-      )
-    )
-  )
-)
-
-# Server og app start
-shinyApp(ui, server)
-
-
-
-
 ```
 
