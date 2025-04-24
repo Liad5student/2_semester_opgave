@@ -860,9 +860,735 @@ write_rds(feature_engineering, "data/feature_engineered_data.rds")
 ```
 
 ```{r}
+# Helper-funktion: Henter og opdaterer .rds-filer fra de andre branches
+
+source("load_all_data.R")
+
+# ==============================================================================
+# Eksplorativ Dataanalyse (EDA)
+# ==============================================================================
+
+
+#Medlemsstatus
+# 5.1  Søjlediagram: Fordeling af medlemsstatus
+# 5.2  Boxplot: Medlemsstatus vs. år som medlem
+# 5.3  Histogram: Fordeling af medlemsår
+
+#Adfærd 
+# 5.4  Søjlediagram: Eventdeltagelse blandt aktive medlemmer
+# 5.5  Søjlediagram: Kombination af kontakt og eventdeltagelse vs. medlemsstatus
+# 5.6  Søjlediagram: Hjælpekategorier blandt aktive deltagere vs. ikke-deltagere
+
+#Baggrundssata: Branche og geografi 
+# 5.7  Søjlediagram: Branchefordeling blandt aktive medlemmer
+# 5.8  Søjlediagram: Eventdeltagelse fordelt på branche
+# 5.9  Søjlediagram: Hjælpekategorier fordelt på branche
+# 5.10 Søjlediagram: Eventdeltagelse pr. postnummer      
+
+#Engagement og korrelationer 
+# 5.11 Søjlediagram: Gennemsnitlig mødelængde pr. branche
+# 5.12 Boxplot: Mødelængde vs. eventdeltagelse
+# 5.13 Boxplot: Mødelængde vs. medlemsstatus
+# 5.14 Histogram: Fordeling af mødelængder
+# 5.15 Korrellationsmatrix: Numeriske variable
+
 # ------------------------------------------------------------------------------
-# 5. EDA
+# Indlæs data
 # ------------------------------------------------------------------------------
+featured <- readRDS("data/feature_engineering.rds")
+
+# ------------------------------------------------------------------------------
+# Funktion: Identificer outliers med IQR-metoden
+# ------------------------------------------------------------------------------
+# Vi bruger interkvartil-afstanden (IQR) til at identificere outliers.
+# Observationer udenfor [Q1 - 1.5*IQR, Q3 + 1.5*IQR] regnes som outliers.
+
+find_outliers <- function(x) {
+  iqr <- IQR(x, na.rm = TRUE)
+  lower <- quantile(x, 0.25, na.rm = TRUE) - 1.5 * iqr
+  upper <- quantile(x, 0.75, na.rm = TRUE) + 1.5 * iqr
+  x < lower | x > upper
+}
+
+# ------------------------------------------------------------------------------
+# 5.1 Søjlediagram: Fordeling af medlemsstatus
+# ------------------------------------------------------------------------------
+# En simpel søjlediagram der viser, hvor mange virksomheder der er
+# henholdsvis aktive og stoppede.
+
+featured |> 
+  ggplot(aes(x = factor(churn), fill = factor(churn))) +
+  geom_bar() +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -0.3, size = 5) +
+  scale_fill_manual(
+    values = c("0" = "darkgreen", "1" = "darkred"),
+    labels = c("0" = "Aktiv medlem", "1" = "Stoppet medlem"),
+    name = "Medlemsstatus"
+  ) +
+  labs(
+    title = "Fordeling af medlemmer hos Business Viborg i øjeblikket",
+    x = "Medlemsstatus (0 = medlem, 1 = stoppet)",
+    y = "Antal virksomheder"
+  ) +
+  theme_minimal()
+
+# ------------------------------------------------------------------------------
+# 5.2 Boxplot: Medlemsstatus vs. år som medlem
+# ------------------------------------------------------------------------------
+# Vi tjekker hvor længe virksomheder har været medlem afhængigt af medlemsstatus
+# og tilføjer info om outliers, gennemsnit og antal.
+
+featured <- featured |> 
+  mutate(outlier_medlemsår = find_outliers(medlem_antal_år))
+
+nøgletal <- featured |> 
+  group_by(churn) |> 
+  summarise(
+    antal = n(),
+    gennemsnit = round(mean(medlem_antal_år, na.rm = TRUE), 1),
+    outliers = sum(outlier_medlemsår, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+featured |> 
+  ggplot(aes(x = factor(churn), y = medlem_antal_år, fill = factor(churn))) +
+  geom_boxplot(alpha = 0.8, outlier.color = "blue") +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, color = "darkred") +
+  geom_text(data = nøgletal, aes(x = factor(churn), y = max(featured$medlem_antal_år, na.rm = TRUE) + 1,
+                                 label = paste0("Antal = ", antal)), inherit.aes = FALSE, size = 4) +
+  geom_text(data = nøgletal, aes(x = factor(churn), y = gennemsnit,
+                                 label = paste0("Gns: ", gennemsnit)), inherit.aes = FALSE, color = "darkred", nudge_y = 1.5, size = 4) +
+  geom_text(data = nøgletal, aes(x = factor(churn), y = max(featured$medlem_antal_år, na.rm = TRUE) + 3,
+                                 label = paste0("Outliers: ", outliers)), inherit.aes = FALSE, size = 4, color = "blue") +
+  scale_fill_manual(
+    values = c("0" = "darkgreen", "1" = "darkred"),
+    labels = c("0" = "Aktiv medlem", "1" = "Stoppet medlem"),
+    name = "Medlemsstatus"
+  ) +
+  labs(
+    title = "Antal år som medlem fordelt på medlemsstatus",
+    subtitle = "Rød prik = gennemsnit • Blå prikker = outliers",
+    x = "Medlemsstatus",
+    y = "År som medlem"
+  ) +
+  coord_flip() +
+  theme_minimal()
+
+# ------------------------------------------------------------------------------
+# 5.3 Histogram: Fordeling af medlemsår
+# ------------------------------------------------------------------------------
+
+# Vi visualiserer fordelingen af hvor længe virksomheder har været medlem.
+# Dette giver et billede af om der er mange nye vs. gamle medlemmer.
+
+featured |> 
+  filter(!is.na(medlem_antal_år)) |> 
+  ggplot(aes(x = medlem_antal_år)) +
+  geom_histogram(binwidth = 1, fill = "darkgreen", color = "white", boundary = 0) +
+  labs(
+    title = "Fordeling af antal år som medlem",
+    subtitle = "Histogram med binwidth = 1 år",
+    x = "Antal år som medlem",
+    y = "Antal virksomheder"
+  ) +
+  theme_minimal()
+
+
+# ------------------------------------------------------------------------------
+# 5.4 Søjlediagram: Eventdeltagelse blandt aktive medlemmer
+# ------------------------------------------------------------------------------
+# Visualisering af eventdeltagelse blandt aktive medlemmer
+# Her undersøger vi om virksomheder deltager i events, fordelt på 'Ja' og 'Nej'
+
+featured |> 
+  filter(churn == 0) |> 
+  ggplot(aes(x = deltaget_i_event, fill = deltaget_i_event)) +
+  geom_bar() +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -0.3, size = 5) +
+  scale_fill_manual(values = c("Ja" = "darkgreen", "Nej" = "grey60")) +
+  labs(
+    title = "Eventdeltagelse blandt aktive medlemmer",
+    x = "Deltaget i event?",
+    y = "Antal virksomheder",
+    fill = "Eventdeltagelse"
+  ) +
+  theme_minimal()
+
+# ------------------------------------------------------------------------------
+# 5.5 Søjlediagram: Kombination af kontakt og eventdeltagelse vs. medlemsstatus
+# ------------------------------------------------------------------------------
+
+# Vi undersøger, hvordan kombinationen af kontakt og eventdeltagelse 
+# relaterer sig til medlemsstatus (aktiv eller stoppet).
+# Derfor opretter vi en ny variabel "kontakt_event", der grupperer virksomheder
+# efter disse kombinationer:
+# - Både haft kontakt og deltaget i event
+# - Kun haft kontakt
+# - Kun deltaget i event
+# - Ingen af delene
+
+featured |> 
+  mutate(
+    kontakt_event = case_when(
+      har_haft_kontakt == "Ja" & deltaget_i_event == "Ja"   ~ "Kontakt & Event",    
+      har_haft_kontakt == "Ja" & deltaget_i_event == "Nej"  ~ "Kun kontakt",        
+      har_haft_kontakt == "Nej" & deltaget_i_event == "Ja"  ~ "Kun event",          
+      TRUE ~ "Ingen af delene"                                                   
+    )
+  ) |> 
+  # Visualiser fordelingen med søjlediagram, hvor vi stabler medlemsstatus (churn)
+  ggplot(aes(x = kontakt_event, fill = factor(churn))) +
+  
+  # geom_bar tæller antallet af observationer i hver kontakt_event-kategori,
+  # og stabler dem efter medlemsstatus (aktiv = 0, stoppet = 1)
+  geom_bar(position = "stack") +
+  
+  # Tilføj antals-labels direkte på søjlerne med hvid tekst
+  geom_text(stat = "count", aes(label = ..count..),
+            position = position_stack(vjust = 0.5), color = "white", size = 4) +
+  
+  # Definér farver og labels for churn (medlemsstatus)
+  scale_fill_manual(
+    values = c("0" = "darkgreen", "1" = "darkred"),  # Grøn for aktiv, rød for stoppet
+    labels = c("0" = "Aktiv", "1" = "Stoppet"),
+    name = "Medlemsstatus"
+  ) +
+  
+  # Tilføj titler og akse-labels
+  labs(
+    title = "Kombination af kontakt og eventdeltagelse",
+    subtitle = "Fordelt på medlemsstatus",
+    x = "Kategorier af kontakt og event",
+    y = "Antal virksomheder"
+  ) +
+  
+  # Brug minimalistisk tema
+  theme_minimal() +
+  
+  # Drej x-aksens tekst lidt for bedre læsbarhed
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+
+
+# ------------------------------------------------------------------------------
+# 5.6 Søjlediagram: Hjælpekategori blandt aktive deltagere vs. ikke deltagere
+# ------------------------------------------------------------------------------
+# Vi undersøger hvilke typer hjælp virksomheder har fået.
+# Det opdeles i to grupper:
+# - Aktive medlemmer, der IKKE har deltaget i events
+# - Aktive medlemmer, der HAR deltaget i events
+# På den måde kan vi sammenligne hvilke behov de to grupper har.
+
+
+# Ikke-deltagere i event – hvilke typer hjælp efterspørger de?
+# ------------------------------------------------------------------------------
+featured |> 
+  filter(churn == 0, deltaget_i_event == "Nej") |>               # Kun aktive, ikke-deltagere
+  count(hjælp_kategori, name = "antal") |>                       # Tæl antal pr. hjælpekategori
+  filter(!is.na(hjælp_kategori)) |>                              # Fjern NA
+  ggplot(aes(x = fct_reorder(hjælp_kategori, antal), y = antal)) +
+  geom_col(fill = "darkred") +                                    # Farve: Rød for ikke-deltagere
+  geom_text(aes(label = antal), hjust = -0.1, size = 4) +
+  coord_flip() +                                                 # Vandret søjlediagram
+  labs(
+    title = "Hjælpetyper hos aktive medlemmer der ikke deltager i events",
+    subtitle = "Viser hvilke behov de har uden deltagelse i events",
+    x = "Hjælpekategori",
+    y = "Antal virksomheder"
+  ) +
+  theme_minimal()
+
+# Deltagere i event – hvilke typer hjælp efterspørger de?
+# ------------------------------------------------------------------------------
+featured |> 
+  filter(churn == 0, deltaget_i_event == "Ja") |>                # Kun aktive, deltagere
+  count(hjælp_kategori, name = "antal") |> 
+  filter(!is.na(hjælp_kategori)) |> 
+  ggplot(aes(x = fct_reorder(hjælp_kategori, antal), y = antal)) +
+  geom_col(fill = "darkgreen") +                                 # Farve: grøn for deltagere
+  geom_text(aes(label = antal), hjust = -0.1, size = 4) +
+  coord_flip() +
+  labs(
+    title = "Hjælpetyper hos aktive medlemmer der deltager i events",
+    subtitle = "Viser hvilke behov de har, trods deltagelse i events",
+    x = "Hjælpekategori",
+    y = "Antal virksomheder"
+  ) +
+  theme_minimal()
+
+
+# ------------------------------------------------------------------------------
+# 5.7 Søjlediagram: Branchefordeling blandt aktive medlemmer
+# ------------------------------------------------------------------------------
+
+# Vi undersøger hvilke brancher de *aktive* virksomheder (medlemmer) tilhører.
+# Formålet er at få et overblik over, hvilke brancher der er mest repræsenteret 
+# blandt dem, der stadig er med i fællesskabet (churn == 0).
+# Kun brancher med mindst 10 virksomheder vises, for at sikre et læsbart plot.
+
+featured |> 
+  # Filtrér: medtag kun virksomheder der stadig er medlemmer (aktive)
+  filter(churn == 0) |> 
+  
+  # Tæl antallet af virksomheder pr. branche
+  count(Branche_navn, name = "antal") |> 
+  
+  # Fjern brancher med færre end 10 aktive virksomheder
+  filter(antal >= 10) |> 
+  
+  # Sortér brancherne efter antal, så de vises i rigtig rækkefølge i plottet
+  mutate(Branche_navn = fct_reorder(Branche_navn, antal)) |> 
+  
+  # Visualiser fordelingen med søjlediagram
+  ggplot(aes(x = Branche_navn, y = antal)) +
+  
+  # geom_col bruger vores forudberegnede 'antal' til at tegne søjler
+  geom_col(fill = "darkgreen") +
+  
+  # Tilføj antals-labels til søjlerne (antal virksomheder)
+  geom_text(aes(label = antal), hjust = -0.1, size = 4) +
+  
+  # Vend koordinaterne, så brancherne vises lodret og er nemmere at læse
+  coord_flip() +
+  
+  # Tilføj titel, undertitel og aksetekster
+  labs(
+    title = "Branchefordeling blandt aktive medlemmer",
+    subtitle = "Viser kun brancher med mindst 10 aktive virksomheder",
+    x = "Branche",
+    y = "Antal virksomheder"
+  ) +
+  
+  # Brug minimalistisk tema for et rent visuelt udtryk
+  theme_minimal()
+
+
+# ------------------------------------------------------------------------------
+# 5.8 Søjlediagram: Eventdeltagelse fordelt på branche (kun aktive medlemmer)
+# ------------------------------------------------------------------------------
+
+# Vi undersøger hvordan virksomhedernes deltagelse i events varierer
+# på tværs af brancher.
+# Kun aktive virksomheder (churn == 0) tages med i analysen.
+# Vi vil gerne se, hvor mange fra hver branche der har deltaget /
+# ikke deltaget i events.
+
+brancher_antal <- featured |> 
+  # Filtrér: medtag kun aktive virksomheder
+  filter(churn == 0) |> 
+  
+  # Tæl antallet af virksomheder for hver kombination af branche og eventdeltagelse
+  count(Branche_navn, deltaget_i_event, name = "antal") |> 
+  
+  # Beregn totalen pr. branche (summen af 'Ja' og 'Nej')
+  group_by(Branche_navn) |> 
+  mutate(total = sum(antal)) |> 
+  
+  # Behold kun brancher med mindst 10 aktive virksomheder i alt
+  filter(total >= 10) |> 
+  ungroup()
+
+# Sortér brancher efter hvor mange virksomheder der har deltaget i events ("Ja")
+sortering <- brancher_antal |> 
+  filter(deltaget_i_event == "Ja") |> 
+  arrange(desc(antal)) |> 
+  pull(Branche_navn)
+
+brancher_antal |> 
+  # Sortér brancherne i plottet ud fra antallet af 'Ja'-svar
+  mutate(Branche_navn = factor(Branche_navn, levels = unique(sortering))) |> 
+  
+  # Opret stacked søjlediagram, hvor 'Ja' og 'Nej' ligger oven på hinanden
+  ggplot(aes(x = Branche_navn, y = antal, fill = deltaget_i_event)) +
+  
+  # geom_col tegner søjlerne baseret på vores antal
+  geom_col(position = "stack") +
+  
+  # Tilføj tekstetiketter med antal, centreret i hver del af søjlen
+  geom_text(aes(label = antal), position = position_stack(vjust = 0.5),
+            color = "white", size = 4) +
+  
+  # Vend akserne, så brancherne læses nemmere
+  coord_flip() +
+  
+  # Brug manuelle farver: grøn = deltaget, grå = ikke deltaget
+  scale_fill_manual(values = c("Ja" = "darkgreen", "Nej" = "grey60")) +
+  
+  # Tilføj titler og akse-labels
+  labs(
+    title = "Eventdeltagelse fordelt på branche",
+    subtitle = "Kun aktive medlemmer med min. 10 virksomheder per branche",
+    x = "Branche",
+    y = "Antal virksomheder",
+    fill = "Eventdeltagelse"
+  ) +
+  
+  # Brug minimalistisk ggplot-tema
+  theme_minimal()
+
+
+# ------------------------------------------------------------------------------
+# 5.9 Søjlediagram: Hjælpekategorier fordelt på branche (kun aktive medlemmer)
+# ------------------------------------------------------------------------------
+
+# Vi ønsker at undersøge, hvilke typer hjælp aktive virksomheder efterspørger,
+# og hvordan det varierer på tværs af brancher.
+# Fokus er på aktive medlemmer (churn == 0), og vi ser kun på brancher 
+# med mindst 5 registrerede hjælpetilfælde, for at sikre relevans i plottet.
+
+featured |> 
+  # Filtrér: medtag kun aktive virksomheder og fjern rækker uden hjælpekategori
+  filter(churn == 0, !is.na(hjælp_kategori)) |> 
+  
+  # Tæl antallet af hjælperegistreringer pr. branche og hjælpekategori
+  count(Branche_navn, hjælp_kategori, name = "antal") |> 
+  
+  # Beregn total antal hjælperegistreringer pr. branche
+  group_by(Branche_navn) |> 
+  mutate(total = sum(antal)) |> 
+  ungroup() |> 
+  
+  # Fjern brancher med under 5 hjælperegistreringer
+  filter(total >= 5) |> 
+  
+  # Sortér brancherne efter total, så de vises i rigtig rækkefølge i plottet
+  mutate(Branche_navn = fct_reorder(Branche_navn, total)) |> 
+  
+  # Opret søjlediagram med hjælpekategori som fill (farvelag)
+  ggplot(aes(x = Branche_navn, y = antal, fill = hjælp_kategori)) +
+  
+  # geom_col tegner de stablede søjler (én farve pr. hjælpekategori)
+  geom_col() +
+  
+  # Vend koordinatsystemet, så brancherne er på y-aksen (bedre læsbarhed)
+  coord_flip() +
+  
+  # Tilføj titler og aksetekster
+  labs(
+    title = "Hjælpekategorier fordelt på branche",
+    subtitle = "Kun aktive medlemmer med mindst 5 registrerede hjælpetilfælde",
+    x = "Branche",
+    y = "Antal hjælperegistreringer",
+    fill = "Hjælpekategori"
+  ) +
+  
+  # Brug minimalistisk ggplot-tema og lidt større tekst
+  theme_minimal(base_size = 13) +
+  
+  # Flyt legenden ned under plottet (bedre ved mange kategorier)
+  theme(legend.position = "bottom")
+
+
+# ------------------------------------------------------------------------------
+# 5.10 Søjlediagram: Eventdeltagelse pr. postnummer (Aktive medlemmer)
+# ------------------------------------------------------------------------------
+
+# Vi undersøger, hvordan aktive virksomheders eventdeltagelse fordeler sig geografisk,
+# baseret på postnummer. Vi viser både deltagelse ("Ja") og ikke-deltagelse ("Nej"),
+# og sorterer postnumrene efter hvor stor andelen af 'Ja'-svar er.
+
+# Beregn antal og andel for hver kombination af postnummer og eventdeltagelse
+post_event <- featured |> 
+  # Filtrér: medtag kun aktive virksomheder
+  filter(churn == 0) |> 
+  
+  # Tæl antallet af virksomheder pr. postnummer og eventstatus
+  count(PostalCode, deltaget_i_event, name = "antal") |> 
+  
+  # Beregn total antal og procentuel andel inden for hvert postnummer
+  group_by(PostalCode) |> 
+  mutate(
+    total = sum(antal),                              # Total antal virksomheder
+    andel = round(antal / total * 100, 1)            # Andel i procent
+  ) |> 
+  ungroup()
+
+# Sortér postnumre efter andel af virksomheder der har deltaget i events ("Ja")
+post_order <- post_event |> 
+  filter(deltaget_i_event == "Ja") |> 
+  arrange(desc(andel)) |> 
+  pull(PostalCode)
+
+# Visualiser data som stacked søjlediagram
+post_event |> 
+  # Sortér postnumrene i plottet efter andel 'Ja'
+  mutate(PostalCode = factor(PostalCode, levels = post_order)) |> 
+  
+  # Opret plot med antal virksomheder pr. postnummer, farvet efter eventdeltagelse
+  ggplot(aes(x = PostalCode, y = antal, fill = deltaget_i_event)) +
+  
+  # geom_col tegner stablede søjler
+  geom_col() +
+  
+  # Tilføj antalslabels midt i søjlerne
+  geom_text(aes(label = antal), position = position_stack(vjust = 0.5), 
+            color = "white", size = 3.5) +
+  
+  # Brug manuelle farver: grøn = deltager, grå = deltager ikke
+  scale_fill_manual(values = c("Ja" = "darkgreen", "Nej" = "grey60")) +
+  
+  # Vend koordinatsystemet for bedre læsbarhed
+  coord_flip() +
+  
+  # Tilføj titel, aksetitler og farveforklaring
+  labs(
+    title = "Eventdeltagelse pr. postnummer (aktive virksomheder)",
+    subtitle = "Sorteret efter postnumre med flest 'Ja'-svar",
+    x = "Postnummer",
+    y = "Antal virksomheder",
+    fill = "Eventdeltagelse"
+  ) +
+  
+  # Brug minimalistisk ggplot-tema
+  theme_minimal()
+
+
+# ------------------------------------------------------------------------------
+# 5.11 Søjlediagram: Gennemsnitlig mødelængde pr. branche (kun aktive medlemmer)
+# ------------------------------------------------------------------------------
+
+# Vi undersøger hvor lang tid møderne i gennemsnit varer for hver branche,
+# men ser kun på aktive medlemmer og brancher med tilstrækkeligt datagrundlag.
+# Det giver indsigt i, hvilke brancher der fx kræver mere sparring eller støtte.
+
+featured |> 
+  # Filtrér: medtag kun aktive medlemmer med gyldig mødelængde (> 0 og ikke NA)
+  filter(churn == 0, !is.na(MeetingLength), MeetingLength > 0) |> 
+  
+  # Beregn gennemsnitlig mødelængde og antal møder pr. branche
+  group_by(Branche_navn) |> 
+  summarise(
+    gennemsnit_min = round(mean(MeetingLength, na.rm = TRUE), 1),  # afrundet gennemsnit
+    antal = n(),                                                   # antal møder
+    .groups = "drop"
+  ) |> 
+  
+  # Behold kun brancher med mindst 5 registrerede møder
+  filter(antal >= 1) |> 
+  
+  # Sortér brancherne efter gennemsnitlig mødelængde (fra højest til lavest)
+  arrange(desc(gennemsnit_min)) |> 
+  
+  # Reordn faktorniveauerne så sorteringen overføres til plot
+  mutate(Branche_navn = fct_reorder(Branche_navn, gennemsnit_min)) |> 
+  
+  # Visualiser data med et søjlediagram
+  ggplot(aes(x = Branche_navn, y = gennemsnit_min)) +
+  
+  # geom_col viser gennemsnitlig mødelængde pr. branche
+  geom_col(fill = "darkgreen", alpha = 0.8) +
+  
+  # Tilføj tekstetiketter med mødelængden på hver søjle
+  geom_text(aes(label = paste0(gennemsnit_min, " min")), hjust = -0.1, size = 4) +
+  
+  # Vend koordinaterne så brancherne vises lodret og er nemmere at læse
+  coord_flip() +
+  
+  # Tilføj titler, undertitel og akse-labels
+  labs(
+    title = "Gennemsnitlig mødelængde pr. branche (aktive medlemmer)",
+    subtitle = "Viser kun brancher med mindst 5 registrerede møder",
+    x = "Branche",
+    y = "Gennemsnitlig mødelængde (minutter)"
+  ) +
+  
+  # Brug minimalistisk ggplot-tema og lidt større base-tekst
+  theme_minimal(base_size = 13)
+
+# ------------------------------------------------------------------------------
+# 5.12 Boxplot: Mødelængde vs. eventdeltagelse (kun aktive medlemmer)
+# ------------------------------------------------------------------------------
+
+# Vi undersøger, om der er forskel i mødelængde blandt aktive virksomheder
+# afhængigt af om de har deltaget i events eller ej.
+# Vi visualiserer forskellen med boxplots og markerer både gennemsnit og outliers.
+
+# Gør datasættet klar: filtrér aktive, beregn outliers, og opret grupper
+meeting_event <- featured |> 
+  # Filtrér kun aktive virksomheder med mødelængde registreret
+  filter(churn == 0, !is.na(MeetingLength)) |> 
+  
+  # Opret en ny variabel "Eventgruppe" baseret på om de har deltaget i events
+  mutate(
+    Eventgruppe = if_else(deltaget_i_event == "Ja", "Deltager i event", "Deltager ikke"),
+    
+    # Identificer outliers i mødelængde med IQR-metoden
+    outlier = find_outliers(MeetingLength)
+  )
+
+# Udtræk statistik til annotationer i boxplottet
+meeting_stats <- meeting_event |> 
+  group_by(Eventgruppe) |> 
+  summarise(
+    antal = n(),                                         # Antal observationer pr. gruppe
+    gennemsnit = round(mean(MeetingLength), 1),          # Gennemsnitlig mødelængde
+    outliers = sum(outlier),                             # Antal outliers
+    .groups = "drop"
+  )
+
+# Visualisér forskellen med boxplots
+meeting_event |> 
+  ggplot(aes(x = Eventgruppe, y = MeetingLength, fill = Eventgruppe)) +
+  
+  # Boxplot viser fordeling, median og outliers
+  geom_boxplot(alpha = 0.7, outlier.color = "blue") +
+  
+  # Tilføj en rød prik for gennemsnittet i hver gruppe
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, color = "darkred") +
+  
+  # Annotér med antal virksomheder pr. gruppe (øverst over boxplot)
+  geom_text(data = meeting_stats, aes(x = Eventgruppe, 
+                                      y = max(meeting_event$MeetingLength, na.rm = TRUE) + 5,
+                                      label = paste0("n = ", antal)), size = 4) +
+  
+  # Annotér med gennemsnitlig mødelængde
+  geom_text(data = meeting_stats, aes(x = Eventgruppe, y = gennemsnit,
+                                      label = paste0("Gns: ", gennemsnit, " min")),
+            size = 4, color = "darkred", nudge_y = 5) +
+  
+  # Vend koordinatsystemet, så grupperne vises lodret
+  coord_flip() +
+  
+  # Brug manuelle farver til at skelne mellem deltager/ikke-deltager
+  scale_fill_manual(values = c("Deltager i event" = "darkgreen", "Deltager ikke" = "red")) +
+  
+  # Tilføj titler, aksetitel og undertekst
+  labs(
+    title = "Mødelængde vs. eventdeltagelse (aktive medlemmer)",
+    subtitle = "Rød prik = gennemsnit • Blå prikker = outliers",
+    x = NULL,                        # Ingen x-aksenavn (grupperne forklarer sig selv)
+    y = "Mødelængde (minutter)"
+  ) +
+  
+  # Brug minimalistisk tema med større font
+  theme_minimal(base_size = 13) +
+  
+  # Fjern legend, da den ikke er nødvendig – informationen er allerede tydelig i x-aksen
+  theme(legend.position = "none")
+
+
+# ------------------------------------------------------------------------------
+# 5.13 Boxplot: Mødelængde vs. medlemsstatus
+# ------------------------------------------------------------------------------
+
+# Vi undersøger, om der er forskel i mødelængde mellem aktive og stoppede medlemmer.
+# Dette kan give indsigt i, om engagement (målt som mødetid) har betydning for churn.
+
+# Udregn nøgleoplysninger til visning i plottet
+meeting_churn_stats <- featured |> 
+  filter(!is.na(MeetingLength)) |> 
+  group_by(churn) |> 
+  summarise(
+    n = n(),                                                       # Antal observationer
+    gennemsnit = round(mean(MeetingLength, na.rm = TRUE), 1),      # Gennemsnitlig mødelængde
+    outliers = sum(find_outliers(MeetingLength)),                  # Antal outliers
+    .groups = "drop"
+  ) |> 
+  mutate(churn = factor(churn, levels = c(0, 1), labels = c("Aktiv", "Stoppet")))
+
+# Opret boxplot med medlemsstatus som grupperingsvariabel
+featured |> 
+  filter(!is.na(MeetingLength)) |> 
+  mutate(
+    churn = factor(churn, levels = c(0, 1), labels = c("Aktiv", "Stoppet")),
+    outlier = find_outliers(MeetingLength)
+  ) |> 
+  ggplot(aes(x = churn, y = MeetingLength, fill = churn)) +
+  
+  # Vis fordeling og outliers som boxplot
+  geom_boxplot(alpha = 0.7, outlier.shape = 16, outlier.color = "blue", outlier.size = 2) +
+  
+  # Marker gennemsnittet med en rød prik
+  stat_summary(fun = mean, geom = "point", color = "darkred", size = 3, shape = 18) +
+  
+  # Tilføj tekst med gennemsnitlig mødelængde for hver gruppe
+  geom_text(data = meeting_churn_stats, aes(x = churn, y = gennemsnit,
+                                            label = paste0("Gns: ", gennemsnit, " min")),
+            color = "darkred", size = 4, nudge_y = 5, inherit.aes = FALSE) +
+  
+  # Vis antal observationer som tekst over hver boks
+  geom_text(data = meeting_churn_stats, aes(x = churn, y = max(featured$MeetingLength, na.rm = TRUE) + 5,
+                                            label = paste0("n = ", n)),
+            color = "black", size = 4, inherit.aes = FALSE) +
+  
+  # Vend akserne, så medlemsstatus vises lodret
+  coord_flip() +
+  
+  # Brug farver der skelner aktiv og stoppet medlemsstatus
+  scale_fill_manual(values = c("Aktiv" = "darkgreen", "Stoppet" = "darkred")) +
+  
+  # Tilføj titler og aksetekster
+  labs(
+    title = "Mødelængde vs. medlemsstatus",
+    subtitle = "Rød prik = gennemsnit • Blå prikker = outliers",
+    x = "Medlemsstatus",
+    y = "Mødelængde (minutter)",
+    fill = "Status"
+  ) +
+  
+  # Brug minimalistisk tema og fjern legend
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "none")
+
+# ------------------------------------------------------------------------------
+# 5.14 Histogram: Fordeling af mødelængder
+# ------------------------------------------------------------------------------
+
+# Vi undersøger hvordan mødelængder fordeler sig blandt aktive medlemmer,
+# for at se om der er typiske længder, outliers eller skævhed.
+
+featured |> 
+  filter(churn == 0, !is.na(MeetingLength), MeetingLength > 0) |> 
+  ggplot(aes(x = MeetingLength)) +
+  geom_histogram(binwidth = 10, fill = "darkgreen", color = "white", boundary = 0) +
+  labs(
+    title = "Fordeling af mødelængder (aktive medlemmer)",
+    subtitle = "Histogram med binwidth = 10 minutter",
+    x = "Mødelængde (minutter)",
+    y = "Antal møder"
+  ) +
+  theme_minimal()
+
+# ------------------------------------------------------------------------------
+# 5.15 Korrellationsmatrix: Numeriske variable
+# ------------------------------------------------------------------------------
+
+# Vi ønsker at undersøge, hvordan de numeriske variable i datasættet hænger sammen.
+# Det gør vi ved at udtrække alle numeriske kolonner og beregne en korrelationsmatrix.
+# Denne visualiseres som et cirkelplot med Pearson-korrelationer.
+
+# Udtræk kun de kolonner i datasættet, der er numeriske
+featured_numerisk <- featured |> 
+  select(where(is.numeric)) |> 
+  
+  # Fjern rækker med NA-værdier, da korrelationsberegning kræver komplette værdier
+  drop_na()
+
+# Beregn korrelationsmatrix ved hjælp af Pearson's metode
+cor_matrix <- cor(featured_numerisk, use = "pairwise.complete.obs")
+
+# Afrund korrelationerne til 2 decimaler for pænere visning (valgfrit trin)
+cor_matrix_rounded <- round(cor_matrix, 2)
+
+# Visualisér korrelationerne med et "cirkelplot" fra pakken 'corrplot'
+corrplot::corrplot(
+  cor_matrix,
+  
+  method = "circle",       # Brug cirkler til at vise styrke og retning af korrelation
+  type = "lower",          # Vis kun nederste trekant (mere overskueligt)
+  
+  # Tekst og talindstillinger
+  tl.cex = 0.8,            # Størrelse på tekstetiketter (variabelnavne)
+  tl.col = "black",        # Farve på variabelnavne
+  
+  addCoef.col = "darkgreen"    # Vis selve korrelationstallet inde i cirklerne
+)
+
+
+# ------------------------------------------------------------------------------
+# 5.14 Gem EDA-resultat som RDS-fil til senere brug
+# ------------------------------------------------------------------------------
+
+saveRDS(featured, "data/eda.rds")
 ```
 
 ```{r}
