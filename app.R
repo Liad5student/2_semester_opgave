@@ -7,6 +7,8 @@
 #    https://shiny.posit.co/
 #
 
+library(shiny)
+
 # Loader pakker til Shiny appen
 pacman::p_load(
   shiny, leaflet, dplyr, readr, shinyWidgets, DT, ggplot2
@@ -109,7 +111,7 @@ ui <- fluidPage(
   ),
   
   div(style = "display: flex; align-items: center; justify-content: space-between; padding: 10px 30px;",
-      img(src = "images/businessviborgny.jpeg", height = "50px"),
+      img(src = "businessviborgny.jpeg", height = "50px"),
       h2("Medlemsanalyse – Business Viborg")
   ),
   
@@ -212,6 +214,137 @@ ui <- fluidPage(
     )
   )
 )
+
+# Server logic
+server <- function(input, output, session) {
+  updateSelectizeInput(session, "member_id", choices = unique(data_map$PNumber), server = TRUE)
+  filtered_data <- reactive({
+    data <- data_map %>%
+      filter(churn_prob >= input$churn_range[1], churn_prob <= input$churn_range[2]) %>%
+      filter(risk_category %in% input$risk_categories)
+    if (input$view_by == "PostalCode" && !is.null(input$postal_code)) {
+      data <- data %>% filter(PostalCode %in% input$postal_code)
+    } else if (input$view_by == "PNumber" && !is.null(input$member_id)) {
+      data <- data %>% filter(PNumber == input$member_id)
+    }
+    data
+  })
+  observeEvent(input$reset_filters, {
+    updateSliderInput(session, "churn_range", value = c(0, 1))
+    updateCheckboxGroupButtons(session, "risk_categories", selected = c("High", "Medium", "Low"))
+    updateRadioGroupButtons(session, "view_by", selected = "all")
+    updatePickerInput(session, "postal_code", selected = character(0))
+    updateSelectizeInput(session, "member_id", selected = "")
+  })
+  observeEvent(input$show_top10, {
+    showModal(modalDialog(
+      title = "Top 10 medlemmer med højest churn-risiko",
+      p("Denne tabel viser de 10 medlemmer med størst risiko for at forlade Business Viborg."),
+      DTOutput("top_members_modal"),
+      easyClose = TRUE,
+      footer = modalButton("Luk")
+    ))
+  })
+  output$top_members_modal <- renderDT({
+    filtered_data() %>%
+      arrange(desc(churn_prob)) %>%
+      slice_head(n = 10) %>%
+      dplyr::mutate(churn_prob = churn_prob * 100) %>%
+      dplyr::select(PNumber, PostalCode, churn_prob, risk_category) %>%
+      datatable(
+        rownames = FALSE,
+        colnames = c('Member ID', 'Postal Code', 'Churn Probability (%)', 'Risk Category'),
+        options = list(pageLength = 10, scrollX = FALSE, autoWidth = TRUE),
+        class = 'compact'
+      ) %>%
+      formatRound('churn_prob', 1) %>%
+      formatStyle(
+        'risk_category',
+        backgroundColor = styleEqual(
+          c("High", "Medium", "Low"),
+          c("#e74c3c", "#f39c12", "#2ecc71")
+        )
+      )
+  })
+  # Kort og data/plots - beholdt uændret
+  risk_pal <- colorFactor(palette = c("#e74c3c", "#f39c12", "#2ecc71"), levels = c("High", "Medium", "Low"))
+  output$map <- renderLeaflet({
+    df <- filtered_data()
+    leaflet(df) %>%
+      addProviderTiles(providers$CartoDB.Positron) %>%
+      addCircleMarkers(
+        lng = ~lng,
+        lat = ~lat,
+        radius = ~churn_prob * input$marker_size,
+        color = ~risk_pal(risk_category),
+        fillOpacity = 0.8,
+        stroke = TRUE,
+        weight = 1,
+        label = ~paste0(
+          "Member ID: ", PNumber, "<br>",
+          "Postal Code: ", PostalCode, "<br>",
+          "Churn Risk: ", round(churn_prob * 100, 1), "%<br>",
+          "Category: ", risk_category
+        ),
+        clusterOptions = if(nrow(df) > 100) markerClusterOptions() else NULL
+      ) %>%
+      addLegend(position = "bottomright", pal = risk_pal, values = ~risk_category, title = "Churn Risk", opacity = 1)
+  })
+  output$data_table <- renderDT({
+    datatable(
+      filtered_data() %>%
+        dplyr::mutate(churn_prob = churn_prob * 100) %>%
+        dplyr::select(PNumber, PostalCode, churn_prob, risk_category, lat, lng),
+      rownames = FALSE,
+      colnames = c('Member ID', 'Postal Code', 'Churn Probability', 'Risk Category', 'Latitude', 'Longitude'),
+      filter = 'top',
+      options = list(pageLength = 10, scrollX = TRUE, dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel')),
+      extensions = 'Buttons'
+    ) %>%
+      formatRound('churn_prob', 1) %>%
+      formatStyle('churn_prob', textAlign = 'right', color = 'black') %>%
+      formatStyle('risk_category', backgroundColor = styleEqual(c("High", "Medium", "Low"), c("#e74c3c", "#f39c12", "#2ecc71")))
+  })
+  output$download_data <- downloadHandler(
+    filename = function() { paste("churn_data_", Sys.Date(), ".csv", sep = "") },
+    content = function(file) { write.csv(filtered_data(), file, row.names = FALSE) }
+  )
+  output$risk_distribution <- renderPlot({
+    df <- filtered_data() %>% mutate(churn_prob = churn_prob * 100)
+    ggplot(df, aes(x = churn_prob, fill = risk_category)) +
+      geom_histogram(binwidth = 5, color = "white") +
+      scale_fill_manual(values = c("#e74c3c", "#f39c12", "#2ecc71")) +
+      labs(title = "Distribution of Churn Probabilities", x = "Churn Probability (%)", y = "Count") +
+      theme_minimal() +
+      theme(legend.position = "bottom")
+  })
+  output$postal_code_summary <- renderPlot({
+    df <- filtered_data()
+    if(nrow(df) > 0) {
+      df %>%
+        group_by(PostalCode) %>%
+        summarise(avg_churn = mean(churn_prob) * 100, count = n()) %>%
+        ggplot(aes(x = reorder(PostalCode, avg_churn), y = avg_churn, fill = count)) +
+        geom_col() +
+        coord_flip() +
+        scale_fill_gradient(low = "#d6eaf8", high = "#3498db") +
+        labs(title = "Average Churn Risk by Postal Code", x = "Postal Code", y = "Average Churn Probability (%)") +
+        theme_minimal()
+    }
+  })
+  output$top_branches <- renderPlot({
+    full_results %>%
+      group_by(Branche_navn) %>%
+      summarise(gennemsnitlig_churn = mean(churn_prob) * 100, n = n()) %>%
+      arrange(desc(gennemsnitlig_churn)) %>%
+      slice_head(n = 5) %>%
+      ggplot(aes(x = reorder(Branche_navn, gennemsnitlig_churn), y = gennemsnitlig_churn)) +
+      geom_col(fill = "steelblue") +
+      coord_flip() +
+      labs(title = "Top 5 brancher med højest churn-risiko", x = "Branche", y = "Gns. churn sandsynlighed (%)") +
+      theme_minimal()
+  })
+}
 
 # Server og app start
 shinyApp(ui, server)
