@@ -827,13 +827,16 @@ feature_engineering <- feature_engineering |>
 # Tjek resultatet
 # glimpse(feature_engineering)
 
+# Gemmer PNumber til senere brug (hvis vi kan gøre det, så vi ikke er nødt til
+# at have det med videre i modellerne)
+# pnumbers <- feature_engineering$PNumber
 
 # ------------------------------------------------------------------------------
 # 4.9: Behold kun aktive virksomheder
 # ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |> 
   filter(CompanyStatus %in% c("Aktiv", "NORMAL")) |> 
-  dplyr::select(-CompanyDateStamp, -CompanyId, -CVR, -PNumber, -Country, 
+  dplyr::select(-CompanyDateStamp, -CompanyId, -CVR, -Country, 
     -CompanyStatus, -AdvertisingProtected, -MaxParticipants, -Description,
     -EventLength, -EventId, -Andet) # Sletter de kolonner vi ikke vil bruge
 
@@ -2012,7 +2015,7 @@ full_results <- feature_engineering |>
   bind_cols(all_predictions) |> 
   mutate(
     churn_prob = round(churn_prob * 100, 1)
-  )
+  ) 
 
 # Tilføj churn-risikokategorier tidligt (bruges i visualiseringer og rapporter)
 full_results <- full_results |> 
@@ -2135,6 +2138,9 @@ ggplot(vip_rf, aes(x = reorder(Variable, Importance), y = Importance)) +
 
 # 5. Gem billedet
 ggsave("images/8_top_10_variabler_rf.png", width = 7, height = 4, dpi = 300)
+
+# Gemmer full_results som RDS
+saveRDS(full_results, "full_results.rds")
 
 # -------------------------------------------------------------------------
 # Forklaring af churn-relaterede variabler
