@@ -9,6 +9,16 @@ library(ggplot2)
 # Data
 full_results <- readRDS("data/full_results.rds")
 
+# Debug output to check data
+print(paste("Total records:", nrow(full_results)))
+print(paste("Records with churn==0:", sum(full_results$churn == 0)))
+print(paste("Records with churn_class==1:", sum(full_results$churn_class == 1)))
+print(paste("Records with both:", sum(full_results$churn == 0 & full_results$churn_class == 1)))
+
+# Simple arrange without filtering for now
+full_results <- full_results |> 
+  arrange(desc(churn_prob))
+
 postal_coords <- data.frame(
   PostalCode = c(8800, 8850, 8830, 7470, 8840, 7800, 8831, 8832, 9632, 7850, 9620, 9500, 8860),
   lat = c(56.451, 56.532, 56.447, 56.489, 56.472, 56.475, 56.448, 56.449, 56.907, 56.573, 56.824, 57.226, 56.611),
@@ -132,9 +142,9 @@ ui <- fluidPage(
         inputId = "churn_range",
         label = "Churn sandsynlighed:",
         min = 0,
-        max = 1,
-        value = c(0, 1),
-        step = 0.01
+        max = 100,
+        value = c(0, 100),
+        step = 10
       ),
       
       checkboxGroupButtons(
@@ -164,13 +174,19 @@ ui <- fluidPage(
 )
 
 # SERVER
+# SERVER
 server <- function(input, output, session) {
+  # RETTET: Sikrer kortet virker ved at fjerne rækker uden koordinater
   filtered_data <- reactive({
     data <- data_map %>%
+      filter(!is.na(lat), !is.na(lng)) %>%
       filter(churn_prob >= input$churn_range[1], churn_prob <= input$churn_range[2]) %>%
       filter(risk_category %in% input$risk_categories)
-    if (input$view_by == "PostalCode" && !is.null(input$postal_code)) {
-      data <- data %>% filter(PostalCode %in% input$postal_code)
+    
+    if (input$view_by == "PostalCode") {
+      if (!is.null(input$postal_code) && length(input$postal_code) > 0) {
+        data <- data %>% filter(PostalCode %in% input$postal_code)
+      }
     } else if (input$view_by == "PNumber" && !is.null(input$member_id)) {
       data <- data %>% filter(PNumber == input$member_id)
     }
@@ -179,25 +195,42 @@ server <- function(input, output, session) {
   
   output$map <- renderLeaflet({
     df <- filtered_data()
-    risk_pal <- colorFactor(palette = c("#e74c3c", "#f39c12", "#2ecc71"), levels = c("High", "Medium", "Low"))
-    leaflet(df) %>%
-      addProviderTiles(providers$CartoDB.Positron) %>%
-      addCircleMarkers(
-        lng = ~lng,
-        lat = ~lat,
-        radius = ~churn_prob * 10,
-        color = ~risk_pal(risk_category),
-        fillOpacity = 0.8,
-        stroke = TRUE,
-        weight = 1,
-        label = ~paste0(
-          "Member ID: ", PNumber, "<br>",
-          "Postal Code: ", PostalCode, "<br>",
-          "Churn Risk: ", round(churn_prob * 100, 1), "%<br>",
-          "Category: ", risk_category
+    
+    # Hvis der ingen data er, vis et tomt kort med besked
+    if (nrow(df) == 0) {
+      leaflet() %>%
+        addProviderTiles(providers$Esri.WorldGrayCanvas) %>%  # Bruger Esri's grå kort
+        addPopups(
+          lng = 10.0, lat = 56.45,
+          popup = "Ingen data matcher de valgte filtre."
         )
-      ) %>%
-      addLegend(position = "bottomright", pal = risk_pal, values = ~risk_category, title = "Churn Risk", opacity = 1)
+    } else {
+      leaflet(df) %>%
+        addProviderTiles(providers$Esri.WorldGrayCanvas) %>%  # Skiftet fra CartoDB til Esri Gray Canvas
+        addCircleMarkers(
+          lng = ~lng,
+          lat = ~lat,
+          radius = 5,
+          color = ~case_when(
+            risk_category == "High" ~ "red",
+            risk_category == "Medium" ~ "orange",
+            risk_category == "Low" ~ "green",
+            TRUE ~ "blue"
+          ),
+          stroke = FALSE,
+          fillOpacity = 0.7,
+          label = ~paste0(
+            "Postnummer: ", PostalCode, "<br>",
+            "Medlemsnr.: ", PNumber, "<br>",
+            "Churn sandsynlighed: ", round(churn_prob, 2)
+          ),
+          labelOptions = labelOptions(
+            style = list("font-weight" = "normal", padding = "3px 8px"),
+            textsize = "13px",
+            direction = "auto"
+          )
+        )
+    }
   })
   
   output$data_table <- renderDT({
@@ -209,6 +242,7 @@ server <- function(input, output, session) {
     content = function(file) { write.csv(filtered_data(), file, row.names = FALSE) }
   )
   
+  # RETTET: Øger højden på plottene og tilføjer padding for at undgå "figure margins too large"
   output$risk_distribution <- renderPlot({
     df <- filtered_data()
     ggplot(df, aes(x = churn_prob, fill = risk_category)) +
@@ -251,6 +285,17 @@ server <- function(input, output, session) {
       datatable()
   })
 }
+
+# UI – HER RETTER VI KUN 'Statistik'-fanen:
+# Find denne blok i din eksisterende UI og erstat den:
+
+tabPanel("Statistik",
+         div(style = "padding:20px;",
+             plotOutput("risk_distribution", height = "400px"),
+             plotOutput("postal_code_summary", height = "400px")
+         )
+)
+
 
 # KØR APP
 shinyApp(ui, server)
