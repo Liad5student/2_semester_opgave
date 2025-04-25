@@ -271,16 +271,17 @@ På trods af XGBoost gode resultater blev Random Forest valgt som slutmodel. Det
 
 ## Variable importance og indsigt
 
-Ved hjælp af vip()-pakken blev de mest betydningsfulde variable i Random Forest-modellen identificeret. De fire vigtigste prædiktorer var: 
+Ved hjælp af vip()-pakken blev de mest betydningsfulde variable i Random Forest-modellen identificeret. De fem vigtigste prædiktorer var: 
 
   - deltaget_i_event_Ja
   - deltaget_i_event_Nej
   - MeetinLenght
   - Employees
+  - medlem_antal_år
   
 Disse variable udgør tilsammen et stærkt grundlag for at forstå churn-mekanismer i Business Viborgs medlemsbase og bekræfter den eksplorative analyses fund.
 
-![Eventdeltagelse, mødelængde og antal ansatte er blandt de mest betydningsfulde prædiktorer for churn.](images/8_top_10_variabler_rf.png){ width=80% fig-align="center" }
+![Eventdeltagelse, mødelængde, antal ansatte og medlem_antal_år er blandt de mest betydningsfulde prædiktorer for churn.](images/8_top_10_variabler_rf.png){ width=80% fig-align="center" }
 
 # Juridiske og etiske overvejelser
 
@@ -832,7 +833,7 @@ feature_engineering <- feature_engineering |>
 # ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |> 
   filter(CompanyStatus %in% c("Aktiv", "NORMAL")) |> 
-  dplyr::select(-CompanyDateStamp, -CompanyId, -CVR, -Country, 
+  dplyr::select(-CompanyDateStamp, -CompanyId, -CVR, -PNumber, -Country, 
     -CompanyStatus, -AdvertisingProtected, -MaxParticipants, -Description,
     -EventLength, -EventId, -Andet) # Sletter de kolonner vi ikke vil bruge
 
