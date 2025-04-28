@@ -416,7 +416,10 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.main_tabs == 'analyse'",
         plotOutput("risk_distribution", height = "300px"),
-        plotOutput("postal_code_summary", height = "300px")
+        plotOutput("postal_code_summary", height = "300px"),
+        plotOutput("company_type_churn", height = "300px"),
+        plotOutput("risk_category_distribution", height = "300px"),
+        plotOutput("branche_churn_boxplot", height = "300px")
       ),
       
       conditionalPanel(
@@ -508,18 +511,20 @@ server <- function(input, output, session) {
   
   output$dashboard_table <- renderDT({
     filtered_data() %>%
-      select(Employees, PostalCode, CompanyTypeName, Branche_navn, PNumber, churn_prob) %>%  # eksempel på nye kolonner
+      select(PNumber, CompanyTypeName, Branche_navn, PostalCode, churn_prob) %>%
+      mutate(churn_prob = scales::percent(churn_prob, accuracy = 0.1)) %>%
       arrange(desc(churn_prob)) %>%
       datatable(
         options = list(
-          pageLength = 5,
+          pageLength = 10,
           autoWidth = TRUE,
           searching = FALSE,
           lengthChange = FALSE
         ),
-        rownames = FALSE
+        rownames = TRUE
       )
   })
+  
   
   output$download_data <- downloadHandler(
     filename = function() { paste("churn_data_", Sys.Date(), ".csv", sep = "") },
@@ -529,9 +534,17 @@ server <- function(input, output, session) {
   output$risk_distribution <- renderPlot({
     df <- filtered_data()
     ggplot(df, aes(x = churn_prob, fill = risk_category)) +
-      geom_histogram(binwidth = 0.1) +
-      theme_minimal()
+      geom_histogram(binwidth = 0.1, position = "identity", alpha = 0.6, color = "black") +
+      scale_fill_brewer(palette = "Set2") +
+      labs(
+        title = "Fordeling af churn-sandsynlighed efter risikokategori",
+        x = "Churn-sandsynlighed",
+        y = "Antal virksomheder",
+        fill = "Risikokategori"
+      ) +
+      theme_minimal(base_size = 13)
   })
+  
   
   output$postal_code_summary <- renderPlot({
     df <- filtered_data()
@@ -540,9 +553,66 @@ server <- function(input, output, session) {
       summarise(avg_churn = mean(churn_prob), n = n()) %>%
       ggplot(aes(x = reorder(PostalCode, avg_churn), y = avg_churn)) +
       geom_col(fill = "steelblue") +
+      geom_text(aes(label = paste0(round(avg_churn * 100, 1), "% (n=", n, ")")),
+                hjust = -0.1, size = 3.5) +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
       coord_flip() +
-      theme_minimal()
+      labs(
+        title = "Gennemsnitlig churn-sandsynlighed pr. postnummer",
+        x = "Postnummer",
+        y = "Gennemsnitlig churn (%)"
+      ) +
+      theme_minimal(base_size = 13) +
+      theme(plot.margin = margin(10, 30, 10, 10))  # plads til labels
   })
+  
+  output$company_type_churn <- renderPlot({
+    df <- filtered_data()
+    df %>%
+      group_by(CompanyTypeName) %>%
+      summarise(avg_churn = mean(churn_prob), n = n()) %>%
+      ggplot(aes(x = reorder(CompanyTypeName, avg_churn), y = avg_churn)) +
+      geom_col(fill = "steelblue") +
+      scale_y_continuous(labels = scales::percent) +
+      coord_flip() +
+      labs(
+        title = "Gennemsnitlig churn pr. virksomhedstype",
+        x = "Virksomhedstype",
+        y = "Gennemsnitlig churn (%)"
+      ) +
+      theme_minimal(base_size = 13)
+  })
+  
+  output$risk_category_distribution <- renderPlot({
+    df <- filtered_data()
+    df %>%
+      count(risk_category) %>%
+      ggplot(aes(x = reorder(risk_category, n), y = n, fill = risk_category)) +
+      geom_col(show.legend = FALSE) +
+      geom_text(aes(label = n), vjust = -0.3) +
+      labs(
+        title = "Fordeling af virksomheder efter risikokategori",
+        x = "Risikokategori",
+        y = "Antal virksomheder"
+      ) +
+      scale_fill_brewer(palette = "Set3") +
+      theme_minimal(base_size = 13)
+  })
+ 
+   output$branche_churn_boxplot <- renderPlot({
+    df <- filtered_data()
+    ggplot(df, aes(x = reorder(Branche_navn, churn_prob, FUN = median), y = churn_prob)) +
+      geom_boxplot(fill = "lightblue") +
+      scale_y_continuous(labels = scales::percent) +
+      coord_flip() +
+      labs(
+        title = "Churn-sandsynlighed fordelt på brancher",
+        x = "Branche",
+        y = "Churn (%)"
+      ) +
+      theme_minimal(base_size = 13)
+  })
+  
   
   observeEvent(input$reset_filters, {
     updateSliderInput(session, "churn_range", value = c(0, 1))
@@ -562,16 +632,16 @@ server <- function(input, output, session) {
   
   output$top_members_list <- renderDT({
     filtered_data() %>%
+      mutate(churn_prob = scales::percent(churn_prob, accuracy = 0.1)) %>%
       arrange(desc(churn_prob)) %>%
-      slice_head(n = 10) %>%
-      select(PNumber, CompanyName, CompanyTypeName, Branche_navn, PostalCode, churn_prob) %>%
+      select(PNumber, CompanyTypeName, PostalCode, churn_prob) %>%
       datatable(options = list(pageLength = 10), rownames = FALSE)
-    
   })
   
   output$filtered_list <- renderDT({
     filtered_data() %>%
-      select(PNumber, CompanyName, Branche_navn, CompanyTypeName, PostalCode, churn_prob) %>%
+      select(PNumber, CompanyTypeName, PostalCode, churn_prob) %>%
+      mutate(churn_prob = scales::percent(churn_prob, accuracy = 0.1)) %>%
       arrange(desc(churn_prob)) %>%
       datatable(options = list(pageLength = 10), rownames = FALSE)
   })
