@@ -337,14 +337,13 @@ ui <- fluidPage(
         inputId = "churn_range",
         label = "Churn sandsynlighed:",
         min = 0,
-        max = 1,
-        value = c(0, 1),
-        step = 0.01
+        max = 100,
+        value = c(0, 100),
+        step = 10
       ),
       
       
-      actionButton("reset_filters", "Nulstil filtre", class = "custom-btn"),
-      actionButton("show_top10", "Vis Top 10 Churn", class = "custom-btn"),
+      actionButton("reset_filters", "Nulstil filtre", class = "custom-btn")
       
       
     ),
@@ -384,8 +383,18 @@ ui <- fluidPage(
             div(class = "info-box",
                 h4("Mangler at kontakte"),
                 p("257 dage")
+                
+            ),
+            div(class = "info-box",
+                actionButton("show_top10", "Vis Top 10 Churn", class = "custom-btn"),
             )
-        ),
+        
+      ),
+      br(),  # ← tilføjer lidt luft
+      DT::dataTableOutput("dashboard_table"),  # ← NY TABEL HER
+      br(),
+      
+      
         leafletOutput("map", height = "100px", width = "50%")
       ),
       
@@ -429,9 +438,11 @@ ui <- fluidPage(
 # 3.1 Serverfunktion – Reaktiv filtrering
 #-------------------------------------------------------------------------------
 server <- function(input, output, session) {
+  
+  
   filtered_data <- reactive({
     data <- data_map %>%
-      filter(churn_prob >= input$churn_range[1], churn_prob <= input$churn_range[2]) %>%
+      filter(churn_prob * 100 >= input$churn_range[1], churn_prob * 100 <= input$churn_range[2]) %>%
       filter(risk_category %in% input$risk_categories)
     
     # Filtrér på postnumre hvis ikke "Vælg alle"
@@ -492,6 +503,22 @@ server <- function(input, output, session) {
   
   output$data_table <- renderDT({
     datatable(filtered_data())
+    
+  }) 
+  
+  output$dashboard_table <- renderDT({
+    filtered_data() %>%
+      select(Employees, PostalCode, CompanyTypeName, Branche_navn, PNumber, churn_prob) %>%  # eksempel på nye kolonner
+      arrange(desc(churn_prob)) %>%
+      datatable(
+        options = list(
+          pageLength = 5,
+          autoWidth = TRUE,
+          searching = FALSE,
+          lengthChange = FALSE
+        ),
+        rownames = FALSE
+      )
   })
   
   output$download_data <- downloadHandler(
