@@ -30,11 +30,17 @@ library(readr)
 library(shinyWidgets)
 library(DT)
 library(ggplot2)
+library(tibble)# Tilføjet for simulation
+library(tidymodels)
+#install.packages("ggforce")
+library(ggforce)
+
 
 #-------------------------------------------------------------------------------
 # 1.2 Indlæsning og behandling af data
 #-------------------------------------------------------------------------------
 full_results <- readRDS("data/full_results.rds")
+final_model <- readRDS("models/final_churn_model.rds")
 
 postal_coords <- data.frame(
   PostalCode = c(8800, 8850, 8830, 7470, 8840, 7800, 8831, 8832, 9632, 7850, 9620, 9500, 8860),
@@ -311,7 +317,7 @@ ui <- fluidPage(
         label = "Vælg postnummer:",
         choices = c("Vælg alle" = "ALL", unique(data_map$PostalCode)),
         multiple = TRUE,
-        options = list(`actionsBox` = TRUE, `liveSearch` = TRUE, `title` = "Ingen valgt"), 
+        options = list(`actionsBox` = TRUE, `liveSearch` = TRUE, `title` = "Ingen valgt") 
         
       ),
       
@@ -386,7 +392,7 @@ ui <- fluidPage(
                 
             ),
             div(class = "info-box",
-                actionButton("show_top10", "Vis Top 10 Churn", class = "custom-btn"),
+                actionButton("show_top10", "Vis Top 10 Churn", class = "custom-btn")
             )
         
       ),
@@ -424,7 +430,48 @@ ui <- fluidPage(
       
       conditionalPanel(
         condition = "input.main_tabs == 'simulation'",
-        p("Simulation indhold her")
+        fluidRow(
+          column(
+            width = 6,
+            wellPanel(
+              style = "background: #f8f9fa; border-radius: 8px; padding: 20px;",
+              h4("Simuler Churn for Ny Virksomhed", style = "color: #0e2f33;"),
+              
+              numericInput("sim_employees", "Antal ansatte:", value = 10, min = 1, max = 500),
+              pickerInput("sim_postal", "Postnummer:", choices = unique(data_map$PostalCode)),
+              pickerInput("sim_company_type", "Virksomhedstype:", choices = levels(data_map$CompanyTypeName)),
+              radioGroupButtons("sim_contact", "Har haft kontakt:", 
+                                choices = c("Ja" = "Ja", "Nej" = "Nej"), selected = "Ja"),
+              radioGroupButtons("sim_event", "Deltaget i event:", 
+                                choices = c("Ja" = "Ja", "Nej" = "Nej"), selected = "Nej"),
+              pickerInput("sim_help_category", "Hjælpekategori:", 
+                          choices = levels(data_map$hjælp_kategori)),
+              sliderInput("sim_member_years", "Medlemsantal år:", 
+                          min = 0, max = 20, value = 2),
+              pickerInput("sim_branche", "Branche:", 
+                          choices = levels(data_map$Branche_navn)),
+              numericInput("sim_meeting_length", "Mødelængde (minutter):", 
+                           value = 60, min = 0, max = 300)
+            ),
+            actionButton("run_simulation", "Kør Simulation", 
+                         class = "btn-primary", icon = icon("play"))
+          ),
+          column(
+            width = 6,
+            wellPanel(
+              style = "background: #ffffff; border-radius: 8px; min-height: 400px; padding: 20px;",
+              h4("Simuleringsresultat", style = "color: #0e2f33;"),
+              div(
+                style = "text-align: center; margin-top: 30px;",
+                htmlOutput("simulation_result"),
+                plotOutput("simulation_gauge", height = "200px")
+              ),
+              hr(),
+              h5("Faktorers indflydelse:"),
+              plotOutput("simulation_factors", height = "200px")
+            )
+          )
+        )
       ),
       
       conditionalPanel(
@@ -626,8 +673,7 @@ server <- function(input, output, session) {
     updatePickerInput(
       session,
       inputId = "postal_code",
-      selected = unique(data_map$PostalCode)
-    )
+      selected = unique(data_map$PostalCode))
   })
   
   output$top_members_list <- renderDT({
@@ -645,9 +691,111 @@ server <- function(input, output, session) {
       arrange(desc(churn_prob)) %>%
       datatable(options = list(pageLength = 10), rownames = FALSE)
   })
-  
+ 
+  # Simulation section 
+  output$simulation_result <- renderUI({
+    if (input$run_simulation > 0) {
+      isolate({
+        new_company <- tibble(
+          Employees = input$sim_employees,
+          PostalCode = factor(input$sim_postal, levels = levels(data_map$PostalCode)),
+          CompanyTypeName = factor(input$sim_company_type, levels = levels(data_map$CompanyTypeName)),
+          har_haft_kontakt = factor(input$sim_contact, levels = c("Ja", "Nej")),
+          deltaget_i_event = factor(input$sim_event, levels = c("Ja", "Nej")),
+          hjælp_kategori = factor(input$sim_help_category, levels = levels(data_map$hjælp_kategori)),
+          medlem_antal_år = input$sim_member_years,
+          Branche_navn = factor(input$sim_branche, levels = levels(data_map$Branche_navn)),
+          MeetingLength = input$sim_meeting_length,
+          PNumber = 99999999
+        )
+        
+        # Predict churn probability
+        prediction <- predict(final_model, new_data = new_company(), type = "prob")
+        churn_prob <- prediction$.pred_1
+        risk_category <- ifelse(churn_prob > 0.75, "High",
+                                ifelse(churn_prob > 0.5, "Medium", "Low"))
+        
+        color <- ifelse(risk_category == "High", "#d9534f",
+                        ifelse(risk_category == "Medium", "#f0ad4e", "#5cb85c"))
+        
+        div(
+          style = "margin-bottom: 30px;",
+          h3(paste0("Churn-sandsynlighed: ", round(churn_prob * 100, 1), "%"), 
+             style = paste0("color: ", color, "; text-align: center;")),
+          h4(paste0("Risikokategori: ", risk_category), 
+             style = "text-align: center; font-weight: bold;"),
+          p("Baseret på indtastede parametre", style = "text-align: center; font-style: italic;")
+        )
+        
+      })
+    } else {
+      div(
+        style = "text-align: center; padding-top: 50px; color: #666;",
+        icon("sliders-h", style = "font-size: 50px; margin-bottom: 20px;"),
+        h4("Indtast parametre og klik på 'Kør Simulation'")
+      )
+    }
+  })
+      
+      output$simulation_gauge <- renderPlot({
+        if (input$run_simulation > 0) {
+          isolate({
+            new_company_data <- new_company()
+            prediction <- predict(final_model, new_data = new_company(), type = "prob")
+            churn_prob <- prediction$.pred_1
+        
+            ggplot() +
+              geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0.5, r = 1,
+                               start = 0, end = 2*pi, fill = "lightgrey")) +
+              geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0.5, r = 1,
+                               start = 0, end = 2*pi * churn_prob, 
+                               fill = ifelse(churn_prob > 0.75, "#d9534f",
+                                             ifelse(churn_prob > 0.5, "#f0ad4e", "#5cb85c")))) +
+              geom_text(aes(x = 0, y = 0, 
+                            label = paste0(round(churn_prob * 100, 1), "%")),
+                        size = 8, fontface = "bold") +
+              coord_fixed() +
+              theme_void() +
+              theme(legend.position = "none") +
+              scale_fill_identity()
+          })
+        }
+      })
+      
+      output$simulation_factors <- renderPlot({
+        if (input$run_simulation > 0) {
+          isolate({
+            var_imp <- tibble(
+              factor = c("Medlemsvarighed", "Event-deltagelse", "Kontakt", "Branche", "Ansatte"),
+              importance = c(0.3, 0.25, 0.2, 0.15, 0.1)
+            )
+            
+            ggplot(var_imp, aes(x = reorder(factor, importance), y = importance)) +
+              geom_col(fill = "#0e2f33", width = 0.7) +
+              coord_flip() +
+              labs(x = "", y = "Relativ betydning") +
+              theme_minimal() +
+              scale_y_continuous(labels = scales::percent_format(accuracy = 1))
+          })
+        }
+      })
+      
+      new_company <- reactive({
+        tibble(
+          Employees = input$sim_employees,
+          PostalCode = factor(input$sim_postal, levels = levels(data_map$PostalCode)),
+          CompanyTypeName = factor(input$sim_company_type, levels = levels(data_map$CompanyTypeName)),
+          har_haft_kontakt = factor(input$sim_contact, levels = c("Ja", "Nej")),
+          deltaget_i_event = factor(input$sim_event, levels = c("Ja", "Nej")),
+          hjælp_kategori = factor(input$sim_help_category, levels = levels(data_map$hjælp_kategori)),
+          medlem_antal_år = input$sim_member_years,
+          Branche_navn = factor(input$sim_branche, levels = levels(data_map$Branche_navn)),
+          MeetingLength = input$sim_meeting_length,
+          PNumber = 99999999
+        )
+      })
 }
-
+  
 #-------------------------------------------------------------------------------
 # 4. Kørsel af Shiny-app
 #-------------------------------------------------------------------------------
