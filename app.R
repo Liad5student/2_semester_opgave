@@ -63,8 +63,16 @@ data_map <- full_results %>%
   )
 #-------------------------------------------------------------------------------
 # 2.1 UI layout og styling
+# CSS styling
+#     - Topbar og banner med logo og titel
+#     - Tabs (Dashboard, Map, Analyse, Simulation, Leads)
 #-------------------------------------------------------------------------------
 ui <- fluidPage(
+  
+#-------------------------------------------------------------------------------
+# 2.1.1 CSS styling
+#-------------------------------------------------------------------------------
+  
   tags$head(
     tags$style(HTML("
       body {
@@ -237,12 +245,12 @@ ui <- fluidPage(
    }
 
 
-
-
-
     "))
   ),
-  
+
+#-------------------------------------------------------------------------------
+# 2.1.3 Header-banner med tabs
+#-------------------------------------------------------------------------------
   div(class =  "top-bar",
       style = "display: flex; align-items: center; justify-content: space-between; padding: 20px 30px;",
       
@@ -291,13 +299,25 @@ ui <- fluidPage(
           )
       )
   ),
-  
+#-------------------------------------------------------------------------------
+# 2.2 sidebarPanel – kontrolpanel (filtre, inputs)
+#     - Filtre (risikoniveau, postnummer, virksomhedstype, branche)
+#     - Sliders og knapper (churn-range, reset)
+#     - Info om Business Viborg
+#-------------------------------------------------------------------------------
+
   sidebarLayout(
     sidebarPanel(
       width = 3,
       class = "sidebarPanel",
       
+#-------------------------------------------------------------------------------
+# 2.2.1 Filtre og knapper
+ #------------------------------------------------------------------------------
       
+      # Vis kun filtre i tab "map" og "analyse"
+       conditionalPanel(
+        condition = "input.main_tabs == 'map' || input.main_tabs == 'analyse'",
       div(
         h4(strong("Vælg dine indsigter")),
         p("Brug værktøjerne nedenfor til at filtrere og analysere churn-risiko på tværs af medlemsdata.",
@@ -327,7 +347,7 @@ ui <- fluidPage(
         choices = c("Vælg alle" = "ALL", unique(as.character(data_map$CompanyTypeName))),
         multiple = TRUE,
         options = list(`actionsBox` = TRUE, `liveSearch` = TRUE, `title` = "Ingen valgt")
-        
+      
       ),
       
       pickerInput(
@@ -350,13 +370,48 @@ ui <- fluidPage(
       
       
       actionButton("reset_filters", "Nulstil filtre", class = "custom-btn")
-      
-      
-    ),
+)
+),
+
+
+#-------------------------------------------------------------------------------
+# 2.2.2 Info om Business Viborg
+#-------------------------------------------------------------------------------      
+  # Altid synlig Business Viborg-sektion
+      br(),
+      hr(),
+      div(
+        style = "font-size: 13px; color: #444; margin-top: 15px;",
+        h5(strong("Om Business Viborg")),
+        p("Business Viborg understøtter virksomheder i Viborg Kommune gennem netværk, rådgivning og vækstinitiativer."),
+        p(HTML("Læs mere på: <a href='https://www.businessviborg.dk' target='_blank'>www.businessviborg.dk</a>")),
+        p(strong("Adresse:"), br(),
+          "Erik Ejegods Vej 16, 2. sal", br(),
+          "8800 Viborg"),
+        p(strong("Telefon:"), br(), "+45 87 25 51 51"),
+        p(strong("Email:"), br(), "info@buvi.dk"),
+        p(HTML("LinkedIn: <a href='https://dk.linkedin.com/company/businessviborg' target='_blank'>Business Viborg på LinkedIn</a>")),
+        img(src = "businessviborgny.jpeg", height = "40px", style = "margin-top: 10px;")
+      )
+         ),
+
+#-------------------------------------------------------------------------------
+# 2.3 mainPanel – kort, data og statistik
+#     - Dashboard info-bokse og tabel
+#     - Map-visning og top 10 tabel
+#     - Analyse plots
+#     - Simulationsinput og resultater
+#     - Leads data og download
+#-------------------------------------------------------------------------------
+
     
     mainPanel(
       width = 9,
       
+#-------------------------------------------------------------------------------
+# 2.3.1 Dashboard
+#-------------------------------------------------------------------------------   
+
       conditionalPanel(
         condition = "input.main_tabs == 'dashboard'",
         div(class = "info-box-container",
@@ -403,6 +458,11 @@ ui <- fluidPage(
       
         leafletOutput("map", height = "100px", width = "50%")
       ),
+
+
+#-------------------------------------------------------------------------------
+# 2.3.2 Map
+#-------------------------------------------------------------------------------
       
       conditionalPanel(
         condition = "input.main_tabs == 'map'",
@@ -419,6 +479,11 @@ ui <- fluidPage(
         )
       ),
       
+#-------------------------------------------------------------------------------
+# 2.3.3 Analyse plots
+#-------------------------------------------------------------------------------
+
+
       conditionalPanel(
         condition = "input.main_tabs == 'analyse'",
         plotOutput("risk_distribution", height = "300px"),
@@ -427,7 +492,12 @@ ui <- fluidPage(
         plotOutput("risk_category_distribution", height = "300px"),
         plotOutput("branche_churn_boxplot", height = "300px")
       ),
-      
+
+
+#-------------------------------------------------------------------------------
+# 2.3.4 Simulation input og resultat
+#-------------------------------------------------------------------------------
+
       conditionalPanel(
         condition = "input.main_tabs == 'simulation'",
         fluidRow(
@@ -473,26 +543,18 @@ ui <- fluidPage(
           )
         )
       ),
-      
+
+
+#-------------------------------------------------------------------------------
+# 2.3.5 Leads tab
+#-------------------------------------------------------------------------------      
       conditionalPanel(
         condition = "input.main_tabs == 'leads'",
         DTOutput("data_table"),
         downloadButton("download_data", "Download data")
       )
     )
-  )
-)
-
-      tabPanel("Om Business Viborg",
-         fluidRow(
-           column(12,
-                  h3("Om Business Viborg"),
-                  p("Business Viborg understøtter virksomheder i Viborg Kommune gennem netværk, rådgivning og vækstinitiativer."),
-                  p("Læs mere på: ",
-                    a("www.businessviborg.dk", href = "https://www.businessviborg.dk", target = "_blank"))
-           )
-         )
-      )
+    )   # ← denne lukker sidste conditionalPanel
 
 
 
@@ -534,7 +596,6 @@ server <- function(input, output, session) {
       palette = c("darkred", "yellow", "darkgreen"),
       levels = c("High", "Medium", "Low")
     )
-    
     leaflet(df) %>%
       addProviderTiles(providers$CartoDB.DarkMatter) %>%  # Du kan også bruge: CartoDB.Positron
       addCircleMarkers(
@@ -554,25 +615,25 @@ server <- function(input, output, session) {
       ) %>%
       setView(lng = 10.0, lat = 56.0, zoom = 7,5) %>%  # ← centrér og zoom på Danmark
       addLegend(
-        position = "bottomright",
+        position = "right",
         pal = risk_pal,
-        values = ~risk_category,
+        values = df$risk_category,
         title = "Churn Risiko",
         opacity = 1
       )
   })
   
-  
+
   output$data_table <- renderDT({
     datatable(filtered_data())
     
   }) 
   
   output$dashboard_table <- renderDT({
-    filtered_data() %>%
-      select(PNumber, CompanyTypeName, Branche_navn, PostalCode, churn_prob) %>%
-      mutate(churn_prob = scales::percent(churn_prob, accuracy = 0.1)) %>%
-      arrange(desc(churn_prob)) %>%
+    filtered_data() |>
+      select(PNumber, CompanyTypeName, Branche_navn, PostalCode, churn_prob) |>
+      mutate(churn_prob = scales::percent(churn_prob, accuracy = 0.1)) |>
+      arrange(desc(churn_prob)) |>
       datatable(
         options = list(
           pageLength = 10,
@@ -835,3 +896,4 @@ server <- function(input, output, session) {
 # 4. Kørsel af Shiny-app
 #-------------------------------------------------------------------------------
 shinyApp(ui, server)
+
