@@ -483,6 +483,18 @@ ui <- fluidPage(
   )
 )
 
+      tabPanel("Om Business Viborg",
+         fluidRow(
+           column(12,
+                  h3("Om Business Viborg"),
+                  p("Business Viborg understøtter virksomheder i Viborg Kommune gennem netværk, rådgivning og vækstinitiativer."),
+                  p("Læs mere på: ",
+                    a("www.businessviborg.dk", href = "https://www.businessviborg.dk", target = "_blank"))
+           )
+         )
+      )
+
+
 
 #-------------------------------------------------------------------------------
 # 3.1 Serverfunktion – Reaktiv filtrering
@@ -578,11 +590,16 @@ server <- function(input, output, session) {
     content = function(file) { write.csv(filtered_data(), file, row.names = FALSE) }
   )
   
+  risk_pal <- c("Low" = "#2ca02c",      # grøn
+                   "Medium" = "#ffcc00",   # gul
+                   "High" = "#d62728")     # rød
+  
+  
   output$risk_distribution <- renderPlot({
     df <- filtered_data()
     ggplot(df, aes(x = churn_prob, fill = risk_category)) +
       geom_histogram(binwidth = 0.1, position = "identity", alpha = 0.6, color = "black") +
-      scale_fill_brewer(palette = "Set2") +
+      scale_fill_manual(values = risk_pal) +
       labs(
         title = "Fordeling af churn-sandsynlighed efter risikokategori",
         x = "Churn-sandsynlighed",
@@ -598,11 +615,19 @@ server <- function(input, output, session) {
     df %>%
       group_by(PostalCode) %>%
       summarise(avg_churn = mean(churn_prob), n = n()) %>%
-      ggplot(aes(x = reorder(PostalCode, avg_churn), y = avg_churn)) +
-      geom_col(fill = "steelblue") +
+      mutate(
+        risk_category = case_when(
+          avg_churn < 0.33 ~ "Low",
+          avg_churn < 0.66 ~ "Medium",
+          TRUE ~ "High"
+        )
+      ) %>%
+      ggplot(aes(x = reorder(PostalCode, avg_churn), y = avg_churn, fill = risk_category)) +
+      geom_col() +
       geom_text(aes(label = paste0(round(avg_churn * 100, 1), "% (n=", n, ")")),
                 hjust = -0.1, size = 3.5) +
       scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+      scale_fill_manual(values = risk_pal, name = "Risikokategori") +
       coord_flip() +
       labs(
         title = "Gennemsnitlig churn-sandsynlighed pr. postnummer",
@@ -610,17 +635,26 @@ server <- function(input, output, session) {
         y = "Gennemsnitlig churn (%)"
       ) +
       theme_minimal(base_size = 13) +
-      theme(plot.margin = margin(10, 30, 10, 10))  # plads til labels
+      theme(plot.margin = margin(10, 30, 10, 10))
   })
+  
   
   output$company_type_churn <- renderPlot({
     df <- filtered_data()
     df %>%
       group_by(CompanyTypeName) %>%
       summarise(avg_churn = mean(churn_prob), n = n()) %>%
-      ggplot(aes(x = reorder(CompanyTypeName, avg_churn), y = avg_churn)) +
-      geom_col(fill = "steelblue") +
+      mutate(
+        risk_category = case_when(
+          avg_churn < 0.33 ~ "Low",
+          avg_churn < 0.66 ~ "Medium",
+          TRUE ~ "High"
+        )
+      ) %>%
+      ggplot(aes(x = reorder(CompanyTypeName, avg_churn), y = avg_churn, fill = risk_category)) +
+      geom_col() +
       scale_y_continuous(labels = scales::percent) +
+      scale_fill_manual(values = risk_pal, name = "Risikokategori") +
       coord_flip() +
       labs(
         title = "Gennemsnitlig churn pr. virksomhedstype",
@@ -629,6 +663,7 @@ server <- function(input, output, session) {
       ) +
       theme_minimal(base_size = 13)
   })
+  
   
   output$risk_category_distribution <- renderPlot({
     df <- filtered_data()
@@ -642,14 +677,14 @@ server <- function(input, output, session) {
         x = "Risikokategori",
         y = "Antal virksomheder"
       ) +
-      scale_fill_brewer(palette = "Set3") +
+      scale_fill_manual(values = risk_pal) +
       theme_minimal(base_size = 13)
   })
  
    output$branche_churn_boxplot <- renderPlot({
     df <- filtered_data()
     ggplot(df, aes(x = reorder(Branche_navn, churn_prob, FUN = median), y = churn_prob)) +
-      geom_boxplot(fill = "lightblue") +
+      geom_boxplot(fill = "darkgreen") +
       scale_y_continuous(labels = scales::percent) +
       coord_flip() +
       labs(
