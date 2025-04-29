@@ -17,8 +17,8 @@ format:
     toc-depth: 4
     number-sections: true
     number-depth: 4
-    fontsize: 12pt
-    mainfont: Times New Roman
+    mainfont: "Georgia"
+    fontsize: 11pt
     linestretch: 1.5
     geometry:
       - top=30mm
@@ -26,6 +26,8 @@ format:
       - right=20mm
       - bottom=30mm
       - heightrounded
+    fig-cap-location: bottom
+    fig-numbering: true
 ---
 
 \renewcommand{\contentsname}{Indholdsfortegnelse}
@@ -99,11 +101,11 @@ pacman::p_load(
 \vspace{0.5cm}
 
 {\large \textbf{Forfattere:}}\\
-Line A. Adolph, Maria B. A. Hitz, Maria Cristiana Maxim, Martin Bindner, Abdikadir A. M. H. Omar
+Line A. Adolph, Maria B. A. Hitz, Maria Cristiana Maxim, Martin E. Bindner, Abdikadir A. M. H. Omar
 
 \vspace{0.5cm}
 
-{\large \textbf{1. interne eksamensprojekt}} \\
+{\large \textbf{2. interne eksamensprojekt}} \\
 Vejleder: Simon Bjerrum Eilersen
 
 \vspace{0.5cm}
@@ -112,7 +114,7 @@ Vejleder: Simon Bjerrum Eilersen
 
 \vfill
 
-{\large \textbf{Antal tegn: xx.xxx}}
+{\large \textbf{Antal tegn: xx.xxx + Shiny App}}
 
 \end{center}
 \end{titlepage}
@@ -269,6 +271,10 @@ På trods af XGBoost gode resultater blev Random Forest valgt som slutmodel. Det
 
 ![Lineplot over modelperformance. Random Forest og XGBoost opnår høj score på alle tre metrikker, hvilket underbygger deres styrke som robuste og præcise modeller.](images/2_linje_plot.png){ width=80% fig-align="center" }
 
+## Perspektiv: Modellering af churn over tid
+
+Da vores datasæt ikke indeholdt tidsstempler for, hvornår virksomheder præcist meldte sig ud, har vi arbejdet med churn som en binær klassifikation. Hvis disse oplysninger forelå, ville det være oplagt at anvende time-to-event-modeller som fx Cox proportional hazards-model. Disse modeller gør det muligt at estimere, ikke blot om churn indtræffer, men også hvornår – hvilket kan styrke den opsøgende indsats og skabe bedre timing i medlemspleje. Det vil samtidig muliggøre en dynamisk forståelse af churn-risiko over tid og dermed forbedre prioriteringen af indsatser.
+
 ## Variable importance og indsigt
 
 Ved hjælp af vip()-pakken blev de mest betydningsfulde variable i Random Forest-modellen identificeret. De fem vigtigste prædiktorer var: 
@@ -282,6 +288,12 @@ Ved hjælp af vip()-pakken blev de mest betydningsfulde variable i Random Forest
 Disse variable udgør tilsammen et stærkt grundlag for at forstå churn-mekanismer i Business Viborgs medlemsbase og bekræfter den eksplorative analyses fund.
 
 ![Eventdeltagelse, mødelængde, antal ansatte og medlem_antal_år er blandt de mest betydningsfulde prædiktorer for churn.](images/8_top_10_variabler_rf.png){ width=80% fig-align="center" }
+
+## Fordeling af churn-risiko
+
+For at operationalisere modellen i medlemsarbejdet er alle aktive virksomheder blevet klassificeret i fire risikokategorier baseret på deres sandsynlighed for churn. Som det fremgår af figuren nedenfor, har hovedparten af medlemsbasen en lav eller minimal risiko for udmeldelse, mens en mindre andel er vurderet til at være i moderat eller høj risiko. Denne fordeling giver medlemskonsulenterne et konkret udgangspunkt for at prioritere deres indsats og målrette dialogen mod virksomheder i risikozonen.
+
+![Fordeling af churn-risiko blandt aktive medlemmer baseret på modelprediktioner. Kategorierne “høj risiko” og "moderat risiko" rummer 38 virksomheder. De udgør et vigtigt proaktivt fokuspunkt.](images/9_churn_risikokategorier_aktive.png){ width=80% fig-align="center" }
 
 # Juridiske og etiske overvejelser
 
@@ -336,9 +348,7 @@ Sammenfattende vurderes det, at Business Viborgs churn-projekt kan gennemføres 
 Afslutningsvis bør Business Viborg betragte dette projekt som et skridt mod mere datadrevet medlemsservice – men også som en mulighed for at styrke sin rolle som en ansvarlig og gennemsigtig aktør i det lokale erhvervsliv. Det forudsætter, at juridiske forpligtelser og dataetiske principper ikke ses som forhindringer, men som en integreret del af en moderne og tillidsbaseret organisation.
 
 # Anbefaling
-På baggrund af analysen anbefales det, at Business Viborg anvender den udviklede churn-model som et beslutningsunderstøttende værktøj i det opsøgende medlemsarbejde. Modellen kan identificere virksomheder med høj risiko for udmeldelse og derved muliggøre en mere målrettet og proaktiv indsats fra medlemskonsulenterne. Det foreslås, at:
-## Dashboards og churn-risiko indgår som fast element i konsulenternes arbejdsrutiner og prioritering af medlemmer.
-
+På baggrund af analysen anbefales det, at Business Viborg anvender den udviklede churn-model som et beslutningsunderstøttende værktøj i det opsøgende medlemsarbejde. Modellen kan identificere virksomheder med høj risiko for udmeldelse og derved muliggøre en mere målrettet og proaktiv indsats fra medlemskonsulenterne. Det foreslås, at den udviklede Shiny app indgår som fast element i konsulenternes arbejdsrutiner og prioritering af medlemmer.
 
 ## Medlemspleje prioriteres over for virksomheder uden kontakt, eventdeltagelse eller modtaget hjælp, da disse faktorer er stærkt associeret med churn.
 
@@ -350,13 +360,15 @@ På baggrund af analysen anbefales det, at Business Viborg anvender den udvikled
 
 
 # Konklusion
-Dette projekt har demonstreret, hvordan Business Viborg kan anvende medlemsdata og maskinlæring til at forudsige churn og styrke den strategiske medlemspleje. Med udgangspunkt i en analyse af 2.966 medlemsvirksomheder og afprøvning af seks modeller blev der udviklet en forklarlig og prædiktiv Random Forest-model (F1 = 0,71, AUC = 0,86). Modellen integreres i et dashboard, som giver medlemskonsulenterne mulighed for at prioritere opsøgende indsats på et datadrevet grundlag.
+Projektet har vist, hvordan Business Viborg med et afgrænset datagrundlag og begrænsede ressourcer kan anvende maskinlæring som et konkret værktøj til medlemsfastholdelse. Gennem analyse af 2.966 medlemsvirksomheder og systematisk afprøvning af seks modeller blev der udviklet en forklarlig Random Forest-model med stærke prædiktive egenskaber (F1 = 0,71, AUC = 0,86). Modellen er operationaliseret i et interaktivt dashboard, der giver medlemskonsulenterne et datadrevet grundlag for at prioritere og målrette deres opsøgende indsats.
 
-Analysen viser, at variabler relateret til kontakt, eventdeltagelse og modtaget erhvervshjælp er blandt de vigtigste drivere for fastholdelse – i tråd med både tidligere analyser og forretningsmæssig intuition. Løsningen er udviklet med respekt for GDPR og dataetik og udgør et realistisk og skalerbart værktøj for medlemsorganisationer, der ønsker at arbejde mere strategisk med churn.
+Resultaterne peger entydigt på, at fravær af kontakt, manglende eventdeltagelse og manglende erhvervshjælp er tæt knyttet til udmeldelse. Samtidig viser analysen, at en langvarig relation og relationel dybde – målt gennem fx mødelængde – hænger tæt sammen med fastholdelse. Denne indsigt skaber en direkte kobling mellem data og daglig praksis i medlemsarbejdet.
 
-Det vurderes, at modellens præcision kunne forbedres yderligere, hvis der var adgang til oplysninger om, hvornår udmeldelser fandt sted (Timestamp). Denne information kunne give indblik i, hvordan churn-risikoen udvikler sig over tid og bidrage til en endnu mere målrettet indsats.
+Modellen er udviklet med udgangspunkt i GDPR og principper om ansvarlig dataanvendelse. Det understreger, at datadrevne løsninger godt kan gå hånd i hånd med transparens, etik og tillid. Der er taget højde for både behandlingsgrundlag, oplysningspligt og identifikationsrisici – og løsningen kan derfor fungere som en ansvarlig prototype, der med de rette tekniske og organisatoriske rammer kan bringes i anvendelse.
 
-Projektet besvarer dermed problemformuleringen ved at kombinere teknisk modeludvikling med brugervenlig formidling og ansvarlig dataanvendelse. Perspektiverende åbner det op for en bredere anvendelse af datadrevne beslutningsstøttesystemer i mindre organisationer med store medlemsmæssige ambitioner.
+Et oplagt næste skridt er at inddrage tidsstempler for udmeldelse. Det vil muliggøre brugen af survival analysis, som ikke blot estimerer risikoen for churn, men også hvornår den mest sandsynligt vil indtræffe. Dette vil give Business Viborg mulighed for at arbejde endnu mere præcist og rettidigt med medlemspleje og beslutningsunderstøttelse.
+
+Samlet set besvarer projektet sin problemformulering ved at kombinere teknisk analyse, brugervenlig formidling og etisk ansvarlighed. Det peger samtidig frem mod en bredere anvendelse af datadrevne beslutningsværktøjer i medlemsorganisationer, der ønsker at arbejde strategisk og relationsbaseret – uden at give køb på tillid, menneskelig dømmekraft og lokal forankring.
 
 \newpage
 
@@ -383,11 +395,62 @@ Konsolideret og officielt dokument om databeskyttelse i EU. Anvendes som juridis
 Tilgængelig via:
 https://eur-lex.europa.eu/legal-content/DA/TXT/?uri=CELEX%3A32016R0679
 
--   Bilag 2: x
--   Bilag 3: x
--   Bilag 4: x
--   Bilag 5: x
--   Bilag 6: x
+Anvendt i forbindelse med udarbejdelse og forståelse af datasættet:
+
+-   Bilag 2: Fordeling af medlemmer hos Business Viborg
+(filnavn: EDA_1_fordeling_medlemmer.png)
+
+-   Bilag 3: Antal år som medlem (boksplot)
+(filnavn: EDA_2_antal_år_medlem.png)
+
+-   Bilag 4: Fordeling af antal år som medlem
+(filnavn: EDA_3_fordeling_antal_år.png)
+
+-   Bilag 5: Eventdeltagelse blandt aktive medlemmer
+(filnavn: EDA_4_eventdeltagelse.png)
+
+-   Bilag 6: Hjælpetyper hos aktive medlemmer der ikke deltager i events
+(filnavn: EDA_6_deltager_ikke_events.png)
+
+-   Bilag 7: Hjælpetyper hos aktive medlemmer der deltager i events
+(filnavn: EDA_6_1_deltager_i_events.png)
+
+-   Bilag 8: Branchefordeling blandt aktive medlemmer
+(filnavn: EDA_7_branchefordeling.png)
+
+-   Bilag 9: Eventdeltagelse fordelt på branche
+(filnavn: EDA_8_eventdeltagelse_branche.png)
+
+-   Bilag 10: Hjælpekategorier fordelt på branche
+(filnavn: EDA_9_hjælpekategorier_branche.png)
+
+-   Bilag 11: Eventdeltagelse pr. postnummer
+(filnavn: EDA_10_eventdeltagelse_postnummer.png)
+
+-  	Bilag 12: Gennemsnitlig mødelængde pr. branche
+(filnavn: EDA_11_mødelængde.png)
+
+-   Bilag 13: Mødelængde vs. eventdeltagelse
+(filnavn: EDA_12_mødelængde_eventdeltagelse.png)
+
+-   Bilag 14: Mødelængde vs. medlemsstatus
+(filnavn: EDA_13_mødelængde_medlemsstatus.png)
+
+-   Bilag 15: Fordeling af mødelængder
+(filnavn: EDA_14_fordeling_mødelængder.png)
+
+-   Bilag 16: Korrellationsmatrix for numeriske variable
+(filnavn: EDA_15_korrellationsmatrix.png)
+
+Modelvisualiseringer
+
+Anvendt i forbindelse med udvikling og evaluering af maskinlæringsmodeller:
+
+-   Bilag 17: Model performance (Accuracy, F1 og ROC AUC)
+(filnavn: 1_model_performance.png)
+
+-   Bilag 18: Top 10 vigtigste variabler pr. model
+(filnavn: 4_top_10_variabler_pr_model.png)
 
 \newpage
 
@@ -2028,9 +2091,36 @@ full_results <- full_results |>
     )
   )
 
+# ------------------------------------------------------------------------------
+# 11.3 Visualisering: Fordeling af churn-risikokategorier (kun aktive medlemmer)
+# ------------------------------------------------------------------------------
+
+full_results |> 
+  filter(churn == 0) |>  
+  count(churn_risiko) |> 
+  ggplot(aes(x = reorder(churn_risiko, -n), y = n, fill = churn_risiko)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = n), vjust = -1, size = 5) +
+  scale_fill_manual(values = c(
+    "Minimal risiko" = "darkgreen",
+    "Lav risiko"     = "green4",
+    "Moderat risiko" = "orange",
+    "Høj risiko"     = "darkred"
+  )) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +  
+  coord_cartesian(clip = "off") +
+  labs(
+    title = "Fordeling af churn-risiko blandt aktive medlemmer",
+    subtitle = "Kategorier: Minimal (<40%), Lav (40–59.9%), Moderat (60–79.9%), Høj (80–100%)",
+    x = "Risikokategori",
+    y = "Antal virksomheder"
+  ) +
+  theme_minimal()
+
+ggsave("images/9_churn_risikokategorier_aktive.png", width = 7, height = 4, dpi = 300)
 
 # ------------------------------------------------------------------------------
-# 11.3 Churn-risiko: Filtrér medlemmer (churn == 0) med høj risiko (churn_class == 1)
+# 11.4 Churn-risiko: Filtrér medlemmer (churn == 0) med høj risiko (churn_class == 1)
 # ------------------------------------------------------------------------------
 
 top_risiko_medlemmer <- full_results |> 
@@ -2039,7 +2129,7 @@ top_risiko_medlemmer <- full_results |>
   slice_head(n = 20)  # Call to action: top 20
 
 # ------------------------------------------------------------------------------
-# 11.4 Visualiseringer: Brancher og postnumre med høj churn
+# 11.5 Visualiseringer: Brancher og postnumre med høj churn
 # ------------------------------------------------------------------------------
 
 # Brancher med højest gennemsnitlig churn
@@ -2071,7 +2161,7 @@ full_results |>
 ggsave("images/6_postnummer_højeste_churn.png", width = 7, height = 4, dpi = 300)
 
 # ------------------------------------------------------------------------------
-# 11.5 Hvad kendetegner virksomheder der IKKE churner?
+# 11.6 Hvad kendetegner virksomheder der IKKE churner?
 # ------------------------------------------------------------------------------
 
 full_results |> 
@@ -2104,7 +2194,7 @@ full_results |>
   )
 
 # ------------------------------------------------------------------------------
-# 11.6 Hvad er de vigtigste parametre
+# 11.7 Hvad er de vigtigste parametre
 # ------------------------------------------------------------------------------
 
 # 1. Udtræk tuning-resultater og workflow
