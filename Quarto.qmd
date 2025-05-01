@@ -350,19 +350,19 @@ Afslutningsvis bør Business Viborg betragte dette projekt som et skridt mod mer
 # Anbefaling
 På baggrund af analysen anbefales det, at Business Viborg anvender den udviklede churn-model som et beslutningsunderstøttende værktøj i det opsøgende medlemsarbejde. Modellen kan identificere virksomheder med høj risiko for udmeldelse og derved muliggøre en mere målrettet og proaktiv indsats fra medlemskonsulenterne. Det foreslås, at den udviklede Shiny app indgår som fast element i konsulenternes arbejdsrutiner og prioritering af medlemmer.
 
-## Medlemspleje prioriteres over for virksomheder uden kontakt, eventdeltagelse eller modtaget hjælp, da disse faktorer er stærkt associeret med churn.
+ -    Medlemspleje prioriteres over for virksomheder uden kontakt, eventdeltagelse eller modtaget hjælp, da disse faktorer er stærkt associeret med churn. Særligt events er relevante for at bibeholde medlemmerne. De har allerede mange events, men det kunne anbefales at lave flere skræddersyede events, så man sænker risikoen for churn på samtlige medlemmer.
 
 
-## Løbende opdatering af modellen sikres ved at integrere churn-værktøjet i Business Viborgs CRM eller medlemsdatabase, så nye data automatisk indgår i fremtidige analyser.
+ -    Løbende opdatering af modellen sikres ved at integrere churn-værktøjet i Business Viborgs CRM eller medlemsdatabase, så nye data automatisk indgår i fremtidige analyser.
 
 
-## Etisk og transparent kommunikation om brugen af data indgår i medlemsdialogen for at styrke tilliden og sikre overholdelse af GDPR.
+ -    Etisk og transparent kommunikation om brugen af data indgår i medlemsdialogen for at styrke tilliden og sikre overholdelse af GDPR.
 
 
 # Konklusion
-Projektet har vist, hvordan Business Viborg med et afgrænset datagrundlag og begrænsede ressourcer kan anvende maskinlæring som et konkret værktøj til medlemsfastholdelse. Gennem analyse af 2.966 medlemsvirksomheder og systematisk afprøvning af seks modeller blev der udviklet en forklarlig Random Forest-model med stærke prædiktive egenskaber (F1 = 0,71, AUC = 0,86). Modellen er operationaliseret i et interaktivt dashboard, der giver medlemskonsulenterne et datadrevet grundlag for at prioritere og målrette deres opsøgende indsats.
+Projektet har vist, hvordan Business Viborg med et afgrænset datagrundlag og begrænsede ressourcer kan anvende machine learning som et konkret værktøj til medlemsfastholdelse. Gennem analyse af 2.966 medlemsvirksomheder og systematisk afprøvning af seks modeller blev der udviklet en forklarlig Random Forest-model med stærke prædiktive egenskaber (F1 = 0,71, AUC = 0,86). Modellen er operationaliseret i et interaktivt dashboard, der giver medlemskonsulenterne og ledelse et datadrevet grundlag for at prioritere og målrette deres opsøgende indsats.
 
-Resultaterne peger entydigt på, at fravær af kontakt, manglende eventdeltagelse og manglende erhvervshjælp er tæt knyttet til udmeldelse. Samtidig viser analysen, at en langvarig relation og relationel dybde – målt gennem fx mødelængde – hænger tæt sammen med fastholdelse. Denne indsigt skaber en direkte kobling mellem data og daglig praksis i medlemsarbejdet.
+Resultaterne peger entydigt på, at fravær af kontakt, manglende eventdeltagelse og manglende erhvervshjælp er tæt knyttet til udmeldelse. Samtidig viser analysen, at en langvarig relation og relationel dybde – målt gennem fx mødelængde – hænger tæt sammen med fastholdelse. Denne indsigt skaber en direkte kobling mellem data og daglig praksis i medlemsarbejdet. Den største faktor er deltagelse i events og der kan med fordel udvikles skræddersyede events, der skaber værdi og dermed fastholdelse af flere medlemmer.
 
 Modellen er udviklet med udgangspunkt i GDPR og principper om ansvarlig dataanvendelse. Det understreger, at datadrevne løsninger godt kan gå hånd i hånd med transparens, etik og tillid. Der er taget højde for både behandlingsgrundlag, oplysningspligt og identifikationsrisici – og løsningen kan derfor fungere som en ansvarlig prototype, der med de rette tekniske og organisatoriske rammer kan bringes i anvendelse.
 
@@ -376,80 +376,83 @@ Samlet set besvarer projektet sin problemformulering ved at kombinere teknisk an
 
 **AI**
 
-OpenAI. (2025). ChatGPT (4.0). <https://chatgpt.com/>
+OpenAI. (2025). ChatGPT (version 4.0). Hentet fra https://chatgpt.com/
 
 **Bøger**
 
+Wickham, H., Çetinkaya-Rundel, M., & Grolemund, G. (2023). R for Data Science (2. udg.). O’Reilly Media. Hentet fra https://r4ds.hadley.nz/
+
+Wickham, H. (2016). ggplot2: Elegant Graphics for Data Analysis (2. udg.). Springer. Hentet fra https://ggplot2-book.org/
+
+Kuhn, M., & Silge, J. (2022). Tidy Modeling with R. O’Reilly Media. Hentet fra https://www.tmwr.org/
+
 **WWW-dokumenter**
 
-**Undervisningsmaterialer**
+Europa-Parlamentet og Rådet. (2016). Forordning (EU) 2016/679 – Generel forordning om databeskyttelse (GDPR). Hentet fra https://eur-lex.europa.eu/legal-content/DA/TXT/?uri=CELEX%3A32016R0679
+
+Erhvervsstyrelsen. (2025). Vejledning til bogføringsloven. Hentet fra https://erhvervsstyrelsen.dk/vejledning-bogfoeringsloven
+
+Dataetisk Råd. (2025). Officielt websted for Dataetisk Råd. Hentet fra https://dataetiskraad.dk/
 
 \newpage
 
 # Bilagsoversigt
 
--   Bilag 1: GDPR – Europa-Parlamentets og Rådets Forordning (EU) 2016/679
-
-Konsolideret og officielt dokument om databeskyttelse i EU. Anvendes som juridisk referenceramme i projektets afsnit om etiske og juridiske overvejelser.
-
-Tilgængelig via:
-https://eur-lex.europa.eu/legal-content/DA/TXT/?uri=CELEX%3A32016R0679
-
 Anvendt i forbindelse med udarbejdelse og forståelse af datasættet:
 
--   Bilag 2: Fordeling af medlemmer hos Business Viborg
+-   Bilag 1: Fordeling af medlemmer hos Business Viborg
 (filnavn: EDA_1_fordeling_medlemmer.png)
 
--   Bilag 3: Antal år som medlem (boksplot)
+-   Bilag 2: Antal år som medlem (boksplot)
 (filnavn: EDA_2_antal_år_medlem.png)
 
--   Bilag 4: Fordeling af antal år som medlem
+-   Bilag 3: Fordeling af antal år som medlem
 (filnavn: EDA_3_fordeling_antal_år.png)
 
--   Bilag 5: Eventdeltagelse blandt aktive medlemmer
+-   Bilag 4: Eventdeltagelse blandt aktive medlemmer
 (filnavn: EDA_4_eventdeltagelse.png)
 
--   Bilag 6: Hjælpetyper hos aktive medlemmer der ikke deltager i events
+-   Bilag 5: Hjælpetyper hos aktive medlemmer der ikke deltager i events
 (filnavn: EDA_6_deltager_ikke_events.png)
 
--   Bilag 7: Hjælpetyper hos aktive medlemmer der deltager i events
+-   Bilag 6: Hjælpetyper hos aktive medlemmer der deltager i events
 (filnavn: EDA_6_1_deltager_i_events.png)
 
--   Bilag 8: Branchefordeling blandt aktive medlemmer
+-   Bilag 7: Branchefordeling blandt aktive medlemmer
 (filnavn: EDA_7_branchefordeling.png)
 
--   Bilag 9: Eventdeltagelse fordelt på branche
+-   Bilag 8: Eventdeltagelse fordelt på branche
 (filnavn: EDA_8_eventdeltagelse_branche.png)
 
--   Bilag 10: Hjælpekategorier fordelt på branche
+-   Bilag 9: Hjælpekategorier fordelt på branche
 (filnavn: EDA_9_hjælpekategorier_branche.png)
 
--   Bilag 11: Eventdeltagelse pr. postnummer
+-   Bilag 10: Eventdeltagelse pr. postnummer
 (filnavn: EDA_10_eventdeltagelse_postnummer.png)
 
--  	Bilag 12: Gennemsnitlig mødelængde pr. branche
+-  	Bilag 11: Gennemsnitlig mødelængde pr. branche
 (filnavn: EDA_11_mødelængde.png)
 
--   Bilag 13: Mødelængde vs. eventdeltagelse
+-   Bilag 12: Mødelængde vs. eventdeltagelse
 (filnavn: EDA_12_mødelængde_eventdeltagelse.png)
 
--   Bilag 14: Mødelængde vs. medlemsstatus
+-   Bilag 13: Mødelængde vs. medlemsstatus
 (filnavn: EDA_13_mødelængde_medlemsstatus.png)
 
--   Bilag 15: Fordeling af mødelængder
+-   Bilag 14: Fordeling af mødelængder
 (filnavn: EDA_14_fordeling_mødelængder.png)
 
--   Bilag 16: Korrellationsmatrix for numeriske variable
+-   Bilag 15: Korrellationsmatrix for numeriske variable
 (filnavn: EDA_15_korrellationsmatrix.png)
 
 Modelvisualiseringer
 
 Anvendt i forbindelse med udvikling og evaluering af maskinlæringsmodeller:
 
--   Bilag 17: Model performance (Accuracy, F1 og ROC AUC)
+-   Bilag 16: Model performance (Accuracy, F1 og ROC AUC)
 (filnavn: 1_model_performance.png)
 
--   Bilag 18: Top 10 vigtigste variabler pr. model
+-   Bilag 17: Top 10 vigtigste variabler pr. model
 (filnavn: 4_top_10_variabler_pr_model.png)
 
 \newpage
