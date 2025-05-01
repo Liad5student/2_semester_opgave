@@ -978,7 +978,7 @@ write_rds(feature_engineering, "data/feature_engineered_data.rds")
 # ------------------------------------------------------------------------------
 # Indlæs data
 # ------------------------------------------------------------------------------
-featured <- readRDS("data/feature_engineering.rds")
+featured <- feature_engineering
 
 # ------------------------------------------------------------------------------
 # Funktion: Identificer outliers med IQR-metoden
