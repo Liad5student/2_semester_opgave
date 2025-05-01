@@ -945,12 +945,9 @@ write_rds(feature_engineering, "data/feature_engineered_data.rds")
 ```
 
 ```{r}
-# Helper-funktion: Henter og opdaterer .rds-filer fra de andre branches
-
 # ==============================================================================
 # 5. Eksplorativ Dataanalyse (EDA)
 # ==============================================================================
-
 
 #Medlemsstatus
 # 5.1  Søjlediagram: Fordeling af medlemsstatus
@@ -2234,38 +2231,4 @@ ggsave("images/8_top_10_variabler_rf.png", width = 7, height = 4, dpi = 300)
 
 # Gemmer full_results som RDS
 saveRDS(full_results, "full_results.rds")
-
-# -------------------------------------------------------------------------
-# Forklaring af churn-relaterede variabler
-# -------------------------------------------------------------------------
-
-# 1. churn:
-#    Den faktiske status for virksomheden ifølge databasen.
-#    0 = Virksomheden er stadig medlem.
-#    1 = Virksomheden har meldt sig ud (churnet).
-#    Dette er det "rigtige facit", vi forsøger at forudsige.
-
-# 2. .pred_0:
-#    Modellens vurdering af sandsynligheden for, at virksomheden IKKE churner.
-#    Fx 0.93 betyder: modellen mener der er 93 % chance for, at virksomheden bliver medlem.
-#    OBS: Denne bruges mest til teknisk forståelse – i praksis bruger vi oftest churn_prob i stedet.
-
-# 3. churn_prob:
-#    Modellens vurdering af sandsynligheden for churn – konverteret til procent.
-#    Fx 6.1 betyder: modellen vurderer, at der er 6,1 % risiko for, at virksomheden churner.
-#    Denne kolonne er lettest at forstå og bruge i praksis.
-
-# 4. churn_class:
-#    Modellens endelige beslutning: churn eller ej?
-#    1 = modellen tror virksomheden churner
-#    0 = modellen tror virksomheden bliver
-#    Beslutningen bygger på en tærskel, typisk 50 %
-
-# 5. churn_risiko:
-#    Kategori baseret på churn_prob – lavet for at gøre det endnu mere overskueligt.
-#    Fx:
-#      • "Minimal risiko" → under 40 %
-#      • "Lav risiko"     → 40-59 %
-#      • "Moderat risiko" → 60-79 %
-#      • "Høj risiko"     → 80 % eller højere
 ```
