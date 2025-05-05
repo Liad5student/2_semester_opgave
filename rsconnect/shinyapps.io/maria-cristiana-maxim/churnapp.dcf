@@ -1,0 +1,12 @@
+name: churnapp
+title: churnapp
+username: maria-cristiana-maxim
+account: maria-cristiana-maxim
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14675607
+bundleId: 10231022
+url: https://maria-cristiana-maxim.shinyapps.io/churnapp/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

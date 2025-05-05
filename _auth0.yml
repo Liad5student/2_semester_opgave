@@ -1,0 +1,11 @@
+name: ChurnApp
+remote_url: 'https://maria-cristiana-maxim.shinyapps.io/churnapp'
+auth0_config:
+  api_url: !expr paste0('https://', Sys.getenv('AUTH0_USER'), '.auth0.com')
+  credentials:
+    key: !expr Sys.getenv("AUTH0_KEY")
+    secret: !expr Sys.getenv("AUTH0_SECRET")
+  logout_url: http://localhost:8080
+  remote_url: http://localhost:8080
+  scope: "openid profile email" 
+  audience: https://shinyapp.io
