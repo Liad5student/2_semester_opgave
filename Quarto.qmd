@@ -96,7 +96,7 @@ pacman::p_load(
 \begin{titlepage}
 \begin{center}
 
-\includegraphics[width=18cm]{images/churn_cover.png}
+\includegraphics[width=15cm]{images/forside_logo_oval.png}
 
 \vspace{0.5cm}
 
@@ -235,7 +235,7 @@ En indledende fordeling afslører, at virksomheder uden dokumenteret kontakt ell
 
 For bedre at forstå hvordan forskellige former for engagement påvirker medlemsstatus, har vi kombineret to centrale variabler: kontakt med Business Viborg og deltagelse i events. Dette giver fire grupper, som varierer i deres relation til organisationen. Figuren nedenfor viser tydeligt, hvordan virksomheder med både kontakt og eventdeltagelse i langt højere grad fastholdes som medlemmer, mens fravær af begge faktorer er stærkt forbundet med churn.
 
-![Fravær af begge faktorer er tæt forbundet med udmeldelse, mens dobbelt engagement viser stærk fastholdelse.](images/EDA_5_kombination_kontakt_event.png){ width=80% fig-align="center" }
+![Fravær af begge faktorer er tæt forbundet med udmeldelse, mens dobbelt engagement viser stærk fastholdelse.](images/EDA_3_kombination_kontakt_event.png){ width=80% fig-align="center" }
 
 Virksomheder med begrænset kontakt til organisationen, lav deltagelse i arrangementer og uden dokumenteret interaktion har generelt en markant højere risiko for at opsige deres medlemskab. Dette underbygges af figuren nedenfor, der viser de fem postnumre med den højeste gennemsnitlige churn-risiko. Her ses, at geografiske områder med lav tilknytning til det centrale område (8800 Viborg) udviser særlig høj churn-sandsynlighed.
 
@@ -403,56 +403,29 @@ Anvendt i forbindelse med udarbejdelse og forståelse af datasættet:
 -   Bilag 1: Fordeling af medlemmer hos Business Viborg
 (filnavn: EDA_1_fordeling_medlemmer.png)
 
--   Bilag 2: Antal år som medlem (boksplot)
-(filnavn: EDA_2_antal_år_medlem.png)
+-   Bilag 2: Eventdeltagelse blandt aktive medlemmer
+(filnavn: EDA_2_eventdeltagelse.png)
 
--   Bilag 3: Fordeling af antal år som medlem
-(filnavn: EDA_3_fordeling_antal_år.png)
+-   Bilag 4: Branchefordeling blandt aktive medlemmer
+(filnavn: EDA_4_branchefordeling.png)
 
--   Bilag 4: Eventdeltagelse blandt aktive medlemmer
-(filnavn: EDA_4_eventdeltagelse.png)
+-   Bilag 5: Eventdeltagelse pr. postnummer
+(filnavn: EDA_5_eventdeltagelse_postnummer.png)
 
--   Bilag 5: Hjælpetyper hos aktive medlemmer der ikke deltager i events
-(filnavn: EDA_6_deltager_ikke_events.png)
+-   Bilag 6: Korrellationsmatrix for numeriske variable
+(filnavn: EDA_6_korrellationsmatrix.png)
 
--   Bilag 6: Hjælpetyper hos aktive medlemmer der deltager i events
-(filnavn: EDA_6_1_deltager_i_events.png)
-
--   Bilag 7: Branchefordeling blandt aktive medlemmer
-(filnavn: EDA_7_branchefordeling.png)
-
--   Bilag 8: Eventdeltagelse fordelt på branche
-(filnavn: EDA_8_eventdeltagelse_branche.png)
-
--   Bilag 9: Hjælpekategorier fordelt på branche
-(filnavn: EDA_9_hjælpekategorier_branche.png)
-
--   Bilag 10: Eventdeltagelse pr. postnummer
-(filnavn: EDA_10_eventdeltagelse_postnummer.png)
-
--  	Bilag 11: Gennemsnitlig mødelængde pr. branche
-(filnavn: EDA_11_mødelængde.png)
-
--   Bilag 12: Mødelængde vs. eventdeltagelse
-(filnavn: EDA_12_mødelængde_eventdeltagelse.png)
-
--   Bilag 13: Mødelængde vs. medlemsstatus
-(filnavn: EDA_13_mødelængde_medlemsstatus.png)
-
--   Bilag 14: Fordeling af mødelængder
-(filnavn: EDA_14_fordeling_mødelængder.png)
-
--   Bilag 15: Korrellationsmatrix for numeriske variable
-(filnavn: EDA_15_korrellationsmatrix.png)
+-   Bilag 7: Mødelængde vs. eventdeltagelse
+(filnavn: EDA_7_mødelængde_eventdeltagelse.png)
 
 Modelvisualiseringer
 
 Anvendt i forbindelse med udvikling og evaluering af maskinlæringsmodeller:
 
--   Bilag 16: Model performance (Accuracy, F1 og ROC AUC)
+-   Bilag 8: Model performance (Accuracy, F1 og ROC AUC)
 (filnavn: 1_model_performance.png)
 
--   Bilag 17: Top 10 vigtigste variabler pr. model
+-   Bilag 9: Top 10 vigtigste variabler pr. model
 (filnavn: 4_top_10_variabler_pr_model.png)
 
 \newpage
@@ -1011,7 +984,7 @@ featured |>
   ) +
   theme_minimal()
 
-ggsave("images/EDA_4_eventdeltagelse.png", width = 7, height = 4, dpi = 300)
+ggsave("images/EDA_2_eventdeltagelse.png", width = 7, height = 4, dpi = 300)
 
 # ------------------------------------------------------------------------------
 # 5.3 Søjlediagram: Kombination af kontakt og eventdeltagelse vs. medlemsstatus
@@ -1067,7 +1040,7 @@ featured |>
   # Drej x-aksens tekst lidt for bedre læsbarhed
   theme(axis.text.x = element_text(angle = 20, hjust = 1))
 
-ggsave("images/EDA_5_kombination_kontakt_event.png", width = 7, height = 4, dpi = 300)
+ggsave("images/EDA_3_kombination_kontakt_event.png", width = 7, height = 4, dpi = 300)
 
 # ------------------------------------------------------------------------------
 # 5.4 Søjlediagram: Branchefordeling blandt aktive medlemmer
@@ -1114,7 +1087,7 @@ featured |>
   # Brug minimalistisk tema for et rent visuelt udtryk
   theme_minimal()
 
-ggsave("images/EDA_7_branchefordeling.png", width = 7, height = 4, dpi = 300)
+ggsave("images/EDA_4_branchefordeling.png", width = 7, height = 4, dpi = 300)
 
 # ------------------------------------------------------------------------------
 # 5.5 Søjlediagram: Eventdeltagelse pr. postnummer (Aktive medlemmer)
@@ -1179,7 +1152,7 @@ post_event |>
   # Brug minimalistisk ggplot-tema
   theme_minimal()
 
-ggsave("images/EDA_10_eventdeltagelse_postnummer.png", width = 7, height = 4, dpi = 300)
+ggsave("images/EDA_5_eventdeltagelse_postnummer.png", width = 7, height = 4, dpi = 300)
 
 # ------------------------------------------------------------------------------
 # 5.6 Korrellationsmatrix: Numeriske variable
@@ -1216,7 +1189,99 @@ corrplot::corrplot(
   addCoef.col = "darkgreen"    # Vis selve korrelationstallet inde i cirklerne
 )
 
-ggsave("images/EDA_15_korrellationsmatrix.png", width = 7, height = 4, dpi = 300)
+ggsave("images/EDA_6_korrellationsmatrix.png", width = 7, height = 4, dpi = 300)
+
+
+# ------------------------------------------------------------------------------
+# 5.7 Boxplot: Mødelængde vs. eventdeltagelse (kun aktive medlemmer)
+# ------------------------------------------------------------------------------
+
+# Outlier-funktion med IQR-metoden
+find_outliers <- function(x) {
+  iqr <- IQR(x, na.rm = TRUE)
+  lower <- quantile(x, 0.25, na.rm = TRUE) - 1.5 * iqr
+  upper <- quantile(x, 0.75, na.rm = TRUE) + 1.5 * iqr
+  x < lower | x > upper
+}
+
+# Gør datasættet klar: filtrér aktive, identificér outliers og opret grupper
+meeting_event <- featured |> 
+  filter(churn == 0, !is.na(MeetingLength)) |> 
+  mutate(
+    Eventgruppe = fct_relevel(
+      if_else(deltaget_i_event == "Ja", "Deltager i event", "Deltager ikke"),
+      "Deltager i event", "Deltager ikke"
+    ),
+    outlier = find_outliers(MeetingLength)
+  )
+
+# Statistik til annotationer
+meeting_stats <- meeting_event |> 
+  group_by(Eventgruppe) |> 
+  summarise(
+    antal = n(),
+    gennemsnit = round(mean(MeetingLength), 1),
+    outliers = sum(outlier),
+    .groups = "drop"
+  )
+
+# Brug max-værdi til annotation
+max_y <- max(meeting_event$MeetingLength, na.rm = TRUE) + 5
+
+# Visualisering
+meeting_event |> 
+  ggplot(aes(x = Eventgruppe, y = MeetingLength, fill = Eventgruppe)) +
+  
+  # Boxplot uden standard outliers
+  geom_boxplot(alpha = 0.7, outlier.shape = NA) +
+
+  # Manuelle outliers med jitter
+  geom_point(data = filter(meeting_event, outlier),
+             aes(x = Eventgruppe, y = MeetingLength),
+             color = "blue", alpha = 0.6, size = 2,
+             position = position_jitter(width = 0.2)) +
+  
+  # Rød prik for gennemsnit
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, 
+               color = "darkred") +
+  
+  # Annotér antal pr. gruppe
+  geom_text(data = meeting_stats, aes(x = Eventgruppe, y = max_y,
+                                      label = paste0("n = ", antal)),
+            size = 4) +
+  
+  # Annotér gennemsnit
+  geom_text(data = meeting_stats, aes(x = Eventgruppe, y = gennemsnit,
+                                      label = paste0("Gns: ", gennemsnit, 
+                                                     " min")),
+            size = 4, color = "darkred", nudge_y = 5) +
+  
+  # Vend akser
+  coord_flip() +
+  
+  # Farver
+  scale_fill_manual(values = c("Deltager i event" = "darkgreen", 
+                               "Deltager ikke" = "red")) +
+  
+  # Titler og akser
+  labs(
+    title = "Mødelængde vs. eventdeltagelse (aktive medlemmer)",
+    subtitle = "Rød prik = gennemsnit • Blå prikker = outliers",
+    x = NULL,
+    y = "Mødelængde (minutter)"
+  ) +
+  
+  # Tema og layoutjusteringer
+  theme_minimal(base_size = 13) +
+  theme(
+  legend.position = "none",
+  plot.title = element_text(face = "bold"),
+  plot.subtitle = element_text(margin = unit(c(0, 0, 10, 0), "pt")),
+  axis.title.y = element_text(margin = unit(c(0, 10, 0, 0), "pt"))
+  )
+
+ggsave("images/EDA_7_mødelængde_eventdeltagelse.png", width = 7, height = 4, 
+       dpi = 300)
 ```
 
 ```{r}
@@ -1331,13 +1396,10 @@ autoplot(churn_results, select_best = TRUE)
 
 ```{r}
 # ------------------------------------------------------------------------------
-# 9. Visualiseringer
-# -------------------------------------------------------------------------
-# Plot modeller efter deres performance
-# -------------------------------------------------------------------------
+# 9. Plot modeller efter deres performance
+# ------------------------------------------------------------------------------
 
-
-# Din tibble, hvis ikke du allerede har den i en variabel:
+# Tibble
 metrics_df <- tibble::tibble(
   wflow_id = c("churn_recipe_rf", "churn_recipe_xgboost", "churn_recipe_svm_rbf",
                "churn_recipe_logistic", "churn_recipe_knn", "churn_recipe_naive_bayes"),
@@ -1352,7 +1414,7 @@ metrics_df <- tibble::tibble(
 metrics_long <- metrics_df %>%
   pivot_longer(cols = -wflow_id, names_to = "metric", values_to = "score")
 
-# Gør labels lidt pænere
+# Gør labels pænere
 metrics_focus <- metrics_long %>%
   filter(metric %in% c("accuracy", "f_meas", "roc_auc")) %>%
   mutate(metric = case_when(
@@ -1362,7 +1424,9 @@ metrics_focus <- metrics_long %>%
     TRUE ~ metric
   ))
 
-# Nr. 1: BarPlot med værdier for denne 3 metrikker
+# ------------------------------------------------------------------------------
+# 9.1 BarPlot med værdier for denne 3 metrikker
+# ------------------------------------------------------------------------------
 
 ggplot(metrics_focus, aes(x = metric, y = score, fill = metric)) +
   geom_col(show.legend = FALSE) +
@@ -1383,7 +1447,9 @@ ggplot(metrics_focus, aes(x = metric, y = score, fill = metric)) +
 
 ggsave("images/1_model_performance.png", width = 7, height = 4, dpi = 300)
 
-# Nr. 2: Linje plot 
+# ------------------------------------------------------------------------------
+# 9.2 Linjeplot
+# ------------------------------------------------------------------------------
 
 ggplot(metrics_focus, aes(x = wflow_id, y = score, color = metric, group = metric)) +
   geom_line(size = 1) +
@@ -1403,7 +1469,9 @@ ggplot(metrics_focus, aes(x = wflow_id, y = score, color = metric, group = metri
 
 ggsave("images/2_linje_plot.png", width = 7, height = 4, dpi = 300)
 
-# Nr. 3: Heatmap pr. model og metrik 
+# ------------------------------------------------------------------------------
+# 9.3 Heatmap pr. model og metrik
+# ------------------------------------------------------------------------------
 
 ggplot(metrics_focus, aes(x = metric, y = wflow_id, fill = score)) +
   geom_tile(color = "white") +
@@ -1420,7 +1488,7 @@ ggplot(metrics_focus, aes(x = metric, y = wflow_id, fill = score)) +
 ggsave("images/3_heatmap_pr_model.png", width = 7, height = 4, dpi = 300)
 
 # -------------------------------------------------------------------------
-# Plot for xgboost og Random forest med de vigtigste variabler 
+# 9.4 Plot for xgboost og Random forest med de vigtigste variabler 
 # -------------------------------------------------------------------------
 
 # Hent tuning-resultater for rf og xgboost
@@ -1479,24 +1547,24 @@ ggsave("images/4_top_10_variabler_pr_model.png", width = 7, height = 4, dpi = 30
 # 10. Endelig model – Finetuning af Random Forest
 # -------------------------------------------------------
 
-# undersøg kun på hele datasæt
+# Undersøg på hele datasæt
 
-# 1. Lav et workflow set med kun én model: Random Forest
+# 10.1 Vi laver et workflow med kun én model: Random Forest
 churn_workflow_set_rf <- workflow_set(
   preproc = list(churn_recipe = churn_recipe),
   models  = list(rf = rf_spec)  # kun én model
 )
 
-# 2. Tænd for parallelisering
+# 10.2 Tænd for parallelisering
 plan(multisession)
 
-# 3. Start tidstagning
+# 10.3 Start tidstagning
 strt.time <- Sys.time()
 ```
 
 
 ```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
-# 4. Tuning af kun Random Forest med 25 kombinationer
+# 10.4 Tuning af kun Random Forest med 25 kombinationer
 churn_results_rf <- churn_workflow_set_rf |>  # <-- her var der fejl i dit input
   workflow_map(
     resamples = churn_folds,
@@ -1509,20 +1577,20 @@ churn_results_rf <- churn_workflow_set_rf |>  # <-- her var der fejl i dit input
 
 
 ```{r}
-# 5. Tid brugt
+# 10.5 Tid brugt
 Sys.time() - strt.time
 
-# 6. Sluk for parallelisering
+# 10.6 Sluk for parallelisering
 plan(sequential)
 
-# 7. Vis bedste resultater pr. metrik
+# 10.7 Vis bedste resultater pr. metrik
 churn_results_rf |> 
   rank_results(select_best = TRUE) |> 
   select(wflow_id, .metric, mean) |> 
   pivot_wider(names_from = .metric, values_from = mean) |> 
   arrange(-f_meas)
 
-# 8. Visualisér den bedste model
+# 10.8 Visualisér den bedste model
 autoplot(churn_results_rf, select_best = TRUE)
 ```
 
