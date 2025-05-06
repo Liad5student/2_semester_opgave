@@ -114,7 +114,7 @@ pacman::p_load(
 
 {\large \textbf{Afleveringsdato: 9. maj 2025}}\\
 \vfill
-\text{Antal tegn: xx.xxx + Shiny App}
+\text{Antal tegn: 84.354 + Shiny App}
 
 \end{center}
 \end{titlepage}
@@ -359,19 +359,19 @@ På baggrund af analysen anbefales det, at Business Viborg anvender den udvikled
 
 
 # Konklusion
-Projektet har vist, hvordan Business Viborg med et afgrænset datagrundlag og begrænsede ressourcer kan anvende machine learning som et konkret værktøj til medlemsfastholdelse. Gennem analyse af 2.966 medlemsvirksomheder og systematisk afprøvning af seks modeller blev der udviklet en forklarlig Random Forest-model med stærke prædiktive egenskaber (F1 = 0,71, AUC = 0,86). Modellen er operationaliseret i et interaktivt dashboard, der giver medlemskonsulenterne og ledelse et datadrevet grundlag for at prioritere og målrette deres opsøgende indsats.
+Projektet har vist, hvordan Business Viborg med et afgrænset datagrundlag og begrænsede ressourcer kan anvende machine learning som et konkret værktøj til medlemsfastholdelse. Gennem analyse af 2.966 medlemsvirksomheder og systematisk afprøvning af seks modeller blev der udviklet en forklarlig Random Forest-model med stærke prædiktive egenskaber (F1 = 0,71, AUC = 0,86). Modellen er operationaliseret i et interaktivt dashboard, som giver medlemskonsulenterne og ledelse et datadrevet grundlag for at prioritere og målrette deres opsøgende indsats. (se bilag 10)
 
 Resultaterne peger entydigt på, at fravær af kontakt, manglende eventdeltagelse og manglende erhvervshjælp er tæt knyttet til udmeldelse. Samtidig viser analysen, at en langvarig relation og relationel dybde – målt gennem fx mødelængde – hænger tæt sammen med fastholdelse. Denne indsigt skaber en direkte kobling mellem data og daglig praksis i medlemsarbejdet. Den største faktor er deltagelse i events og der kan med fordel udvikles skræddersyede events, der skaber værdi og dermed fastholdelse af flere medlemmer.
 
 Modellen er udviklet med udgangspunkt i GDPR og principper om ansvarlig dataanvendelse. Det understreger, at datadrevne løsninger godt kan gå hånd i hånd med transparens, etik og tillid. Der er taget højde for både behandlingsgrundlag, oplysningspligt og identifikationsrisici – og løsningen kan derfor fungere som en ansvarlig prototype, der med de rette tekniske og organisatoriske rammer kan bringes i anvendelse.
 
-Et oplagt næste skridt er at inddrage tidsstempler for udmeldelse. Det vil muliggøre brugen af survival analysis, som ikke blot estimerer risikoen for churn, men også hvornår den mest sandsynligt vil indtræffe. Dette vil give Business Viborg mulighed for at arbejde endnu mere præcist og rettidigt med medlemspleje og beslutningsunderstøttelse.
+Et naturligt næste skridt er at inddrage tidsstempler for udmeldelser. Det vil gøre det muligt ikke kun at vurdere risikoen for churn, men også at estimere, hvornår en udmeldelse sandsynligvis vil finde sted. Dermed får Business Viborg et endnu bedre grundlag for at igangsætte målrettede og rettidige indsatser over for medlemmer i risiko.
 
 Samlet set besvarer projektet sin problemformulering ved at kombinere teknisk analyse, brugervenlig formidling og etisk ansvarlighed. Det peger samtidig frem mod en bredere anvendelse af datadrevne beslutningsværktøjer i medlemsorganisationer, der ønsker at arbejde strategisk og relationsbaseret – uden at give køb på tillid, menneskelig dømmekraft og lokal forankring.
 
 \newpage
 
-# Literaturliste
+# Litteraturliste
 
 **AI**
 
@@ -397,35 +397,53 @@ Dataetisk Råd. (2025). Officielt websted for Dataetisk Råd. Hentet fra https:/
 
 # Bilagsoversigt
 
+## Bilag 1–7: Eksplorativ dataanalyse
+
 Anvendt i forbindelse med udarbejdelse og forståelse af datasættet:
 
--   Bilag 1: Fordeling af medlemmer hos Business Viborg
-(filnavn: EDA_1_fordeling_medlemmer.png)
+- **Bilag 1:** Fordeling af medlemmer hos Business Viborg  
+  *(filnavn: `EDA_1_fordeling_medlemmer.png`)*
+  
+- **Bilag 2:** Eventdeltagelse blandt aktive medlemmer  
+  *(filnavn: `EDA_2_eventdeltagelse.png`)*
+  
+- **Bilag 4:** Branchefordeling blandt aktive medlemmer  
+  *(filnavn: `EDA_4_branchefordeling.png`)*
+  
+- **Bilag 5:** Eventdeltagelse pr. postnummer  
+  *(filnavn: `EDA_5_eventdeltagelse_postnummer.png`)*
+  
+- **Bilag 6:** Korrellationsmatrix for numeriske variable  
+  *(filnavn: `EDA_6_korrellationsmatrix.png`)*
+  
+- **Bilag 7:** Mødelængde vs. eventdeltagelse  
+  *(filnavn: `EDA_7_mødelængde_eventdeltagelse.png`)*
 
--   Bilag 2: Eventdeltagelse blandt aktive medlemmer
-(filnavn: EDA_2_eventdeltagelse.png)
+## Bilag 8–9: Modeludvikling og evaluering
 
--   Bilag 4: Branchefordeling blandt aktive medlemmer
-(filnavn: EDA_4_branchefordeling.png)
+Anvendt i forbindelse med udvikling og evaluering af ML-modeller:
 
--   Bilag 5: Eventdeltagelse pr. postnummer
-(filnavn: EDA_5_eventdeltagelse_postnummer.png)
+- **Bilag 8:** Model performance (Accuracy, F1 og ROC AUC)  
+  *(filnavn: `1_model_performance.png`)*
+  
+- **Bilag 9:** Top 10 vigtigste variabler pr. model  
+  *(filnavn: `4_top_10_variabler_pr_model.png`)*
 
--   Bilag 6: Korrellationsmatrix for numeriske variable
-(filnavn: EDA_6_korrellationsmatrix.png)
+## Bilag 10: Adgang til interaktivt churn-dashboard
 
--   Bilag 7: Mødelængde vs. eventdeltagelse
-(filnavn: EDA_7_mødelængde_eventdeltagelse.png)
+Som led i projektet er der udviklet et interaktivt dashboard, der visualiserer churn-risiko og centrale medlemsdata. Dashboardet er udviklet i R Shiny og gør det muligt at filtrere, prioritere og analysere medlemmer med henblik på fastholdelse.
 
-Modelvisualiseringer
+**Adgangsoplysninger:**
 
-Anvendt i forbindelse med udvikling og evaluering af maskinlæringsmodeller:
+- **Link:** [https://maria-cristiana-maxim.shinyapps.io/churnapp/](https://maria-cristiana-maxim.shinyapps.io/churnapp/)  
+- **Brugernavn:** `admin@businessviborg.com`  
+- **Adgangskode:** `Test1234`
 
--   Bilag 8: Model performance (Accuracy, F1 og ROC AUC)
-(filnavn: 1_model_performance.png)
+> *Dashboardet er en prototype og bør anvendes til demonstrationsformål. Ved implementering i praksis anbefales det at justere adgangskontrol, datasikkerhed og systemintegration.*
 
--   Bilag 9: Top 10 vigtigste variabler pr. model
-(filnavn: 4_top_10_variabler_pr_model.png)
+:::{.text-center}
+![QR-kode til churn-dashboard](images/churn_dashboard_qr.png){width=20%}
+:::
 
 \newpage
 
@@ -1538,7 +1556,7 @@ ggplot(vip_combined, aes(x = reorder(Variable, Importance), y = Importance, fill
   scale_y_continuous(expand = expansion(mult = c(0, 0.10))) #ektra space til labels
 
 ggsave("images/4_top_10_variabler_pr_model.png", width = 7, height = 4, dpi = 300)
-# ------------------------------------------------------------------------------
+
 ```
 
 ```{r}
