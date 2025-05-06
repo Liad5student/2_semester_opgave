@@ -96,7 +96,7 @@ pacman::p_load(
 \begin{titlepage}
 \begin{center}
 
-\includegraphics[width=10cm]{images/forside_logo_oval.png}
+\includegraphics[width=20cm]{images/forside_logo_5.png}
 
 \vfill
 
