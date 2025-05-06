@@ -96,29 +96,28 @@ pacman::p_load(
 \begin{titlepage}
 \begin{center}
 
-\includegraphics[width=15cm]{images/forside_logo_oval.png}
-
-\vspace{0.5cm}
-
-{\large \textbf{Forfattere:}}\\
-Line A. Adolph, Maria B. A. Hitz, Maria Cristiana Maxim, Martin E. Bindner, Abdikadir A. M. H. Omar
-
-\vspace{0.5cm}
-
-{\large \textbf{2. interne eksamensprojekt}} \\
-Vejleder: Simon Bjerrum Eilersen
-
-\vspace{0.5cm}
-
-{\large \textbf{Dato: 9. maj 2025}}
+\includegraphics[width=10cm]{images/forside_logo_oval.png}
 
 \vfill
 
-{\large \textbf{Antal tegn: xx.xxx + Shiny App}}
+{\Large \textbf{2. semesters eksamensopagve 2025}}\\
+\vspace{0cm}
+\textit{Vejleder: Simon Bjerrum Eilersen}
+
+\vfill
+
+{\large \textbf{Forfattere:}}\\
+\vspace{0cm}
+\textit{Line A. Adolph, Maria B. A. Hitz, Maria Cristiana Maxim, Martin E. Bindner og Abdikadir A. M. H. Omar}
+
+\vfill
+
+{\large \textbf{Afleveringsdato: 9. maj 2025}}\\
+\vfill
+\text{Antal tegn: xx.xxx + Shiny App}
 
 \end{center}
 \end{titlepage}
-
 \newpage
 
 \tableofcontents
