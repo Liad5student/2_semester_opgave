@@ -13,6 +13,7 @@ library(tidymodels)      # Modellering og machine learning framework
 library(plotly)          # Interaktive grafer
 library(ggforce)         # For geom_arc_bar
 library(auth0)           # Authentication og authorization
+library (shinyalert)     # Pop-up beskeder
 
 #-------------------------------------------------------------------------------
 # 1.1. Tjekker Renvironment og indlæser auto0-variabler
@@ -28,6 +29,7 @@ Sys.getenv("AUTH0_USER")
 # 1.2 Indlæsning af datasæt og churn-model
 #-------------------------------------------------------------------------------
 full_results <- readRDS("data/full_results.rds")           # RDS-fil med medlems- og churndata
+event_list <- read.csv("data/events.csv", stringsAsFactors = FALSE)
 final_model <- readRDS("models/final_churn_model.rds")     # RDS-fil med trænet model
 
 #-------------------------------------------------------------------------------
@@ -44,6 +46,7 @@ postal_coords <- data.frame(
 #-------------------------------------------------------------------------------
 full_results$PostalCode <- as.character(full_results$PostalCode)
 postal_coords$PostalCode <- as.character(postal_coords$PostalCode)
+event_list$dato <- as.Date(event_list$dato)
 
 #-------------------------------------------------------------------------------
 # 1.5 Join datasæt og tildel risikokategorier
@@ -417,6 +420,21 @@ ui <- fluidPage(
   .well .form-group label {
    color: #0e2f33 !important;
   }
+  
+  /* =====================================================
+       Funktioner til at åbne links i ny fane
+    ===================================================== */
+  
+  Shiny.addCustomMessageHandler('open_url', function(message) {
+      window.open(message, '_blank');
+    });
+    
+    Shiny.addCustomMessageHandler('disableMeeting', function(disable) {
+    var input = document.getElementById('sim_meeting_length');
+    if (input) {
+      input.disabled = disable;
+    }
+  });
   
   "))
   ),
@@ -794,10 +812,21 @@ ui <- fluidPage(
                               )
                              )
                  )
-              )
-      )
-    ),
-
+              ),
+        
+        tabPanel("Events",
+                 div(style = "display: flex; align-items: center; gap: 10px;",
+                     tags$label("Vælg event:", style = "margin-bottom: 0; font-weight: bold;"),
+                     selectInput("event_selector", label = NULL,
+                                 choices = setNames(event_list$id, event_list$navn),
+                                 width = "250px")),
+                 
+                 uiOutput("event_details"),
+        )
+  
+   )
+ ),
+  
   # ----------------------------------------------------------------------------
   # FOOTER: Info om Business Viborg + deres hjemmesiden
   # ----------------------------------------------------------------------------
@@ -814,7 +843,6 @@ ui <- fluidPage(
       )
     )
   )
- 
 #-------------------------------------------------------------------------------
 # Afslutning på UI 
 #------------------------------------------------------------------------------- 
@@ -877,6 +905,31 @@ ui <- fluidPage(
     print(paste("Antal rækker i filtered_data:", nrow(data)))
     
     data
+  })
+  
+  #-----------------------------------------------
+  #Reactive funktion til at vise eventdetaljer
+  #-----------------------------------------------
+  
+  next_event <- reactive({
+    req(nrow(event_list) > 0)
+    event_list %>% arrange(dato) %>% slice(1)
+  })
+  
+  selected_event_detail <- reactive({
+    req(input$selected_event_detail)
+    event_list %>% filter(id == input$selected_event_detail)
+  })
+  
+  selected_company <- reactive({
+    selected_row <- input$dashboard_table_rows_selected
+    if (length(selected_row)) {
+      return(filtered_data()[selected_row, ])
+    } else if (input$search_pnumber != "") {
+      return(searched_company())
+    } else {
+      return(NULL)
+    }
   })
   
   
@@ -1357,7 +1410,7 @@ ui <- fluidPage(
                                       ),
                                       tags$tr(
                                         tags$td(style = "font-weight: 600; padding-right: 20px;", "Bidrag/måned:"),
-                                        tags$td(paste0("Kr. ", format(fee, big.mark = ".")))
+                                        tags$td(paste0("Kr. ", format(fee, big.mark = ".", decimal.mark = ",")))
                                       )
                            )
                        ),
@@ -1401,10 +1454,19 @@ ui <- fluidPage(
                        # CTA: Invitation til event
                        div(class = "info-box2",
                            h2("Inviter til event"),
-                           h4("Næste event: 1. juni – AL kursus"),
+                           
+                           selectInput("selected_event_detail", "Vælg event:",
+                                       choices = setNames(event_list$id, event_list$navn),
+                                       selected = event_list$id[1]),
+                           
                            actionButton("send_event_invite", "Send invitation",
-                                        style = "background-color: #88c5aa !important; color: #0e2f33 !important; width:100%; margin-bottom:5px; font-weight: bold;")
+                                        style = "background-color: #88c5aa !important; 
+                          color: #0e2f33 !important; 
+                          width:100%; 
+                          margin-top:10px; 
+                          font-weight: bold;")
                        ),
+                       
                        
                        # CTA: Kontaktmuligheder
                        div(class = "info-box2",
@@ -1413,7 +1475,7 @@ ui <- fluidPage(
                                         style = "background-color: #88c5aa !important; color: #0e2f33 !important; width:100%; margin-bottom:5px; font-weight: bold;"),
                            actionButton("send_email", "Send mail",
                                         style = "background-color: #88c5aa !important; color: #0e2f33 !important; width:100%; margin-bottom:5px; font-weight: bold;"),
-                           actionButton("book_meeting", "Book møde",
+                           actionButton("book_meeting", "Book meeting",
                                         style = "background-color: #88c5aa !important; color: #0e2f33 !important; width:100%; margin-bottom:5px; font-weight: bold;")
                        ),
                        
@@ -1512,9 +1574,9 @@ ui <- fluidPage(
                        
                        div(class = "info-box2", style = "background-color: #B43C37;", 
                            p("Tabspotentiale i måneden:"),
-                           h2(paste0("Kr. ", format(tabspotentiale, big.mark = ".")))),
+                           h2(paste0("Kr. ", format(tabspotentiale, big.mark = ".", decimal.mark = ",")))),
                        
-                       plotlyOutput("gauge_company_detail", height = "200px"),
+                       plotOutput("gauge_company_detail", height = "220px"),
                        
                        div(style = "text-align:center; margin-top: -10px;",
                            h4(paste0(round(churn_prob * 100, 1), "% – ", risk),
@@ -1538,6 +1600,68 @@ ui <- fluidPage(
       # Hvis intet er valgt eller fundet
       h4("Vælg en virksomhed i tabellen i 'Indsigt'-fanen for at se detaljer.")
     }
+  })
+  
+  output$event_details <- renderUI({
+    req(input$event_selector)
+    evt <- event_list %>% filter(id == input$event_selector)
+    
+    tagList(
+      h4(evt$navn),
+      p(strong("Dato:"), format(evt$dato, "%d.%m.%Y")),
+      p(strong("Tidspunkt:"), evt$tidspunkt),
+      p(strong("Sted:"), evt$sted),
+      p(strong("Ledige pladser:"), evt$pladser),
+      p(strong("Beskrivelse:"), evt$beskrivelse)
+    )
+  })
+  
+  # -----------------------------------------------
+  # Popup-beskeder ved klik på knapper i detaljer
+  # -----------------------------------------------
+  
+  observeEvent(input$send_event_invite, {
+    d <- selected_company()
+    req(d)
+    evt <- event_list %>% filter(id == input$event_selector)
+    
+    shinyalert(
+      title = "Invitation sendt",
+      text = paste0("Virksomheden (", d$CompanyTypeName, 
+                    ") er inviteret til:\n\n", evt$navn, "\n",
+                    format(evt$dato, "%d.%m.%Y"), " kl. ", evt$tidspunkt, "\n",
+                    "Sted: ", evt$sted),
+      type = "success"
+    )
+  })
+  
+  
+  observeEvent(input$book_meeting, {
+    shinyalert(
+      title = "Møde-booking",
+      text = "Vi giver konsulenten besked om at kontakte virksomheden.",
+      type = "info"
+    )
+  })
+  
+  observeEvent(input$call_now, {
+    shinyalert(
+      title = "Opkald på vej",
+      text = "Vi giver konsulenten besked om at kontakte virksomheden.",
+      type = "info"
+    )
+  })
+  
+  observeEvent(input$send_mail, {
+    d <- selected_company()
+    req(d)
+    email_adresse <- "kontakt@firma.dk"  # ← Udskift med rigtig email, fx `d$email`
+    subject <- URLencode("Invitation til event")
+    body <- URLencode(paste0("Hej ", d$CompanyTypeName, ",\n\nVi inviterer jer til næste event..."))
+    
+    mailto_link <- paste0("mailto:", email_adresse, "?subject=", subject, "&body=", body)
+    
+    session$sendCustomMessage(type = 'open_url', message = mailto_link)
   })
   
   # ---------------------------------------------
@@ -1627,30 +1751,12 @@ ui <- fluidPage(
     }
   })
   
-  # ---------------------------------------------
-  # Plot: Gauge (måler) der viser churn-risiko visuelt
-  # ---------------------------------------------
-  output$simulation_gauge <- renderPlot({
-    if (input$run_simulation > 0) {
-      isolate({
-        prediction <- predict(final_model, new_data = new_company(), type = "prob")
-        churn_prob <- prediction$.pred_1
-        
-        ggplot() +
-          ggforce::geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0.5, r = 1,
-                                    start = 0, end = 2*pi, fill = "lightgrey")) +
-          ggforce::geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0.5, r = 1,
-                                    start = 0, end = 2*pi * churn_prob, 
-                                    fill = ifelse(churn_prob > 0.75, "#d9534f",
-                                                  ifelse(churn_prob > 0.5, "#f0ad4e", "#5cb85c")))) +
-          geom_text(aes(x = 0, y = 0, 
-                        label = paste0(round(churn_prob * 100, 1), "%")),
-                    size = 8, fontface = "bold") +
-          coord_fixed() +
-          theme_void() +
-          theme(legend.position = "none") +
-          scale_fill_identity()
-      })
+  observeEvent(input$sim_contact, {
+    if (input$sim_contact == "Nej") {
+      updateNumericInput(session, "sim_meeting_length", value = 0)
+      session$sendCustomMessage("disableMeeting", TRUE)
+    } else {
+      session$sendCustomMessage("disableMeeting", FALSE)
     }
   })
   
@@ -1772,43 +1878,22 @@ ui <- fluidPage(
   # ---------------------------------------------
   # Plotly: Gauge til visning af churn-risiko (virksomhedsdetalje)
   # ---------------------------------------------
-  output$gauge_company_detail <- renderPlotly({
+  output$gauge_company_detail <- renderPlot({
     selected_row <- input$dashboard_table_rows_selected
     if (length(selected_row)) {
-      d <- filtered_data()[selected_row, ]
-      churn_prob <- round(d$churn_prob * 100, 0)
+      selected_pnum <- filtered_data()[selected_row, ]$PNumber
+      d <- data_map %>% filter(PNumber == selected_pnum)
+      churn_prob <- round(d$churn_prob, 3)  # keep it as decimal
       
-      risk <- ifelse(churn_prob > 75, "Høj risiko",
-                     ifelse(churn_prob > 50, "Mellem risiko", "Lav risiko"))
+      risk_color <- ifelse(churn_prob > 0.75, "#d9534f",
+                           ifelse(churn_prob > 0.5, "#f0ad4e", "#5cb85c"))
       
-      risk_color <- switch(risk,
-                           "Lav risiko" = "#5cb85c",
-                           "Mellem risiko" = "#f0ad4e",
-                           "Høj risiko" = "#d9534f")
-      
-      plot_ly(
-        type = "indicator",
-        mode = "gauge",
-        value = churn_prob,
-        title = list(text = "", font = list(size = 1)),  # skjul titel
-        gauge = list(
-          axis = list(range = list(0, 100), tickwidth = 1, tickcolor = "#888"),
-          bar = list(color = risk_color, thickness = 0.3),
-          bgcolor = "#f9f9f9",
-          borderwidth = 1,
-          bordercolor = "#ccc",
-          steps = list(
-            list(range = c(0, 50), color = "#5cb85c"),
-            list(range = c(50, 75), color = "#f0ad4e"),
-            list(range = c(75, 100), color = "#d9534f")
-          )
-        ),
-        domain = list(x = c(0, 1), y = c(0, 1))
-      ) %>%
-        layout(
-          margin = list(l = 10, r = 10, t = 10, b = 10),
-          paper_bgcolor = "#fdfdfd"
-        )
+      ggplot(data.frame(x = 1, y = churn_prob), aes(x = "", y = y)) +
+        geom_bar(stat = "identity", width = 1, fill = risk_color) +
+        geom_bar(aes(y = 1 - y), stat = "identity", width = 1, fill = "lightgrey", position = position_stack(reverse = TRUE)) +
+        coord_polar("y") +
+        theme_void() +
+        geom_text(aes(label = paste0(round(churn_prob * 100, 1), "%")), x = 1.3, y = 0.5, size = 8, fontface = "bold", color = "#0e2f33")
     }
   })
   
@@ -1821,6 +1906,7 @@ ui <- fluidPage(
   })
   
     outputOptions(output, "noCompanySelected", suspendWhenHidden = FALSE)
+    
 }
 
 #-------------------------------------------------------------------------------
