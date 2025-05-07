@@ -294,6 +294,48 @@ For at operationalisere modellen i medlemsarbejdet er alle aktive virksomheder b
 
 ![Fordeling af churn-risiko blandt aktive medlemmer baseret på modelprediktioner. Kategorierne “høj risiko” og "moderat risiko" rummer 38 virksomheder. De udgør et vigtigt proaktivt fokuspunkt.](images/9_churn_risikokategorier_aktive.png){ width=80% fig-align="center" }
 
+# Anvendelse af dashboard i medlemsarbejdet
+
+Som led i samarbejdet med Business Viborg har vi udviklet et interaktivt dashboard, der omsætter churn-modellens output til konkret medlemsindsigt. Dashboardet er målrettet konsulenterne og ledelsen og gør det muligt at identificere medlemmer med høj risiko for at opsige deres medlemskab. Derudover kan den enkelte virksomhed analyseres i dybden med forslag til kontakt og opfølgning. Visualiseringen er designet til at passe ind i konsulenternes arbejdsgange og skabe et klart beslutningsgrundlag i hverdagen.
+
+**Adgangsoplysninger:**
+
+- **Link:** [https://maria-cristiana-maxim.shinyapps.io/churnapp/](https://maria-cristiana-maxim.shinyapps.io/churnapp/)  
+- **Brugernavn:** `admin@businessviborg.com`  
+- **Adgangskode:** `Test1234`
+
+> *Dashboardet er en prototype og bør anvendes til demonstrationsformål. Ved implementering i praksis anbefales det at justere adgangskontrol, datasikkerhed og systemintegration.*
+
+:::{.text-center}
+![QR-kode til churn-dashboard](images/churn_dashboard_qr.png){width=10%}
+:::
+
+![Efter login mødes konsulenten af en oversigt over churn-relaterede nøgletal og fordelingsgrafer. Denne forside fungerer som et hurtigt overblik over medlemsstatus, risikoprofil og udviklingstendenser blandt virksomhederne.](images/Dash_frontpage.png){ width=80% fig-align="center" }
+
+## Simulation
+
+Simulationsmodulet gør det muligt for konsulenten at indtaste oplysninger om en hypotetisk virksomhed og straks få et estimat på sandsynligheden for churn. Det giver værdi i dialog med nye eller potentielle medlemmer, da konsulenten kan synliggøre deres risikoprofil ud fra relevante karakteristika såsom antal ansatte, branche, postnummer og interaktionshistorik. Værktøjet kan dermed anvendes som beslutningsstøtte i rådgivningssamtaler, ved vurdering af outreach-strategi eller i forbindelse med onboarding af nye medlemmer, hvor det er relevant at forudse behov og risici.
+
+![Simulationsmodulet i dashboardet giver mulighed for at estimere churn-risiko for en hypotetisk virksomhed ud fra bl.a. størrelse, branche, kontakt- og eventhistorik. Brugeren får et visuelt og numerisk estimat på risikoen og tilhørende anbefalinger.](images/Dash_simulation.png){ width=80% fig-align="center" }
+
+## Indsigt
+
+Indsigtsmodulet giver konsulenten mulighed for hurtigt at filtrere medlemsvirksomheder baseret på churn-sandsynlighed, risikoniveau, branche, virksomhedstype og postnummer. Dette gør det nemt at identificere medlemmer med høj risiko for churn og skabe målrettede indsatser. Værktøjet er særligt nyttigt i daglig drift, hvor konsulenten kan prioritere sin indsats og kontakte de mest udsatte virksomheder først – fx dem, der ikke har været i kontakt eller deltaget i events i længere tid.
+
+![Indsigtsmodulet giver overblik over churn-sandsynligheden (churn_prob) for hver virksomhed og gør det muligt at filtrere og identificere de virksomheder med størst risiko for udmeldelse.](images/Dash_indsigt.png){ width=80% fig-align="center" }
+
+## Detaljer
+
+Detaljemodulet viser en dybdegående profil af en enkelt virksomhed og samler al relevant information ét sted. Her kan konsulenten se virksomhedens bidrag, medlemskabslængde, historik, kontaktstatus og anbefalede next steps. Churn-risikoen præsenteres sammen med konkrete strategiske handlinger, såsom invitation til event, opfølgende møde eller personlig kontakt. Modulet fungerer som en praktisk forberedelse før dialog og giver et klart billede af virksomhedens situation.
+
+![Detaljevisningen giver et samlet overblik over en specifik medlemsvirksomhed med fokus på churn-risiko, kontaktstatus og strategiske anbefalinger. Her fremgår både virksomhedens økonomiske bidrag, churn-analyse og foreslåede call-to-action for konsulenten.](images/Dash_detaljer.png){ width=80% fig-align="center" }
+
+## Indsigt og analyse
+
+Analysemodulet visualiserer churn-sandsynlighed på tværs af virksomheder og gør det muligt at identificere tendenser og mønstre – fx hvilke postnumre, brancher eller virksomhedstyper der har højest gennemsnitlig risiko. For konsulenten er det et redskab til strategisk overblik og prioritering. Det kan eksempelvis bruges til at målrette kampagner eller identificere strukturelle forhold, der kræver særlige indsatser – både på kort og lang sigt.
+
+![Visualiseringer, der hjælper konsulenten med hurtigt at identificere risikoområder og målrette indsatsen mod brancher, postnumre eller virksomhedstyper med høj churn-sandsynlighed.](images/Dash_indsigt_analyse.png){ width=80% fig-align="center" }
+
 # Juridiske og etiske overvejelser
 
 ## Juridiske og etiske forhold i churn-projektet for Business Viborg
@@ -790,9 +832,6 @@ feature_engineering <- feature_engineering |>
 # ------------------------------------------------------------------------------
 feature_engineering <- feature_engineering |>
   mutate(deltaget_i_event = if_else(as.numeric(EventLength) > 0, "Ja", "Nej"))
-
-
-
 
 # ------------------------------------------------------------------------------
 # 4.8: Skaber kategorier der viser virksomhedens behov for hjælp
