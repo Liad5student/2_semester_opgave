@@ -320,7 +320,7 @@ Simulationsmodulet gør det muligt for konsulenten at indtaste oplysninger om en
 
 ## Indsigt
 
-Indsigtsmodulet giver konsulenten mulighed for hurtigt at filtrere medlemsvirksomheder baseret på churn-sandsynlighed, risikoniveau, branche, virksomhedstype og postnummer. Dette gør det nemt at identificere medlemmer med høj risiko for churn og skabe målrettede indsatser. Værktøjet er særligt nyttigt i daglig drift, hvor konsulenten kan prioritere sin indsats og kontakte de mest udsatte virksomheder først – fx dem, der ikke har været i kontakt eller deltaget i events i længere tid.
+Indsigtsmodulet giver konsulenten mulighed for hurtigt at filtrere medlemsvirksomheder baseret på churn-sandsynlighed, risikoniveau, branche, virksomhedstype og postnummer. Dette gør det nemt at identificere medlemmer med høj risiko for churn og skabe målrettede indsatser. Værktøjet er særligt nyttigt i daglig drift, hvor konsulenten kan prioritere sin indsats og kontakte de mest udsatte virksomheder først. Eksempelvis dem med størst sandsynlighed for at churne i fremtiden.
 
 ![Indsigtsmodulet giver overblik over churn-sandsynligheden (churn_prob) for hver virksomhed og gør det muligt at filtrere og identificere de virksomheder med størst risiko for udmeldelse.](images/Dash_indsigt.png){ width=80% fig-align="center" }
 
