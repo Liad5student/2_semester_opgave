@@ -96,7 +96,7 @@ pacman::p_load(
 \begin{titlepage}
 \begin{center}
 
-\includegraphics[width=20cm]{images/forside_logo_5.png}
+\includegraphics[width=20cm]{images/forside_logo.png}
 
 \vfill
 
@@ -401,7 +401,7 @@ På baggrund af analysen anbefales det, at Business Viborg anvender den udvikled
 
 
 # Konklusion
-Projektet har vist, hvordan Business Viborg med et afgrænset datagrundlag og begrænsede ressourcer kan anvende machine learning som et konkret værktøj til medlemsfastholdelse. Gennem analyse af 2.966 medlemsvirksomheder og systematisk afprøvning af seks modeller blev der udviklet en forklarlig Random Forest-model med stærke prædiktive egenskaber (F1 = 0,71, AUC = 0,86). Modellen er operationaliseret i et interaktivt dashboard, som giver medlemskonsulenterne og ledelse et datadrevet grundlag for at prioritere og målrette deres opsøgende indsats. (se bilag 10)
+Projektet har vist, hvordan Business Viborg med et afgrænset datagrundlag og begrænsede ressourcer kan anvende machine learning som et konkret værktøj til medlemsfastholdelse. Gennem analyse af 2.966 medlemsvirksomheder og systematisk afprøvning af seks modeller blev der udviklet en forklarlig Random Forest-model med stærke prædiktive egenskaber (F1 = 0,79, AUC = 0,93). Modellen er operationaliseret i et interaktivt dashboard, som giver medlemskonsulenterne og ledelse et datadrevet grundlag for at prioritere og målrette deres opsøgende indsats.
 
 Resultaterne peger entydigt på, at fravær af kontakt, manglende eventdeltagelse og manglende erhvervshjælp er tæt knyttet til udmeldelse. Samtidig viser analysen, at en langvarig relation og relationel dybde – målt gennem fx mødelængde – hænger tæt sammen med fastholdelse. Denne indsigt skaber en direkte kobling mellem data og daglig praksis i medlemsarbejdet. Den største faktor er deltagelse i events og der kan med fordel udvikles skræddersyede events, der skaber værdi og dermed fastholdelse af flere medlemmer.
 
@@ -470,6 +470,27 @@ Anvendt i forbindelse med udvikling og evaluering af ML-modeller:
   
 - **Bilag 9:** Top 10 vigtigste variabler pr. model  
   *(filnavn: `4_top_10_variabler_pr_model.png`)*
+  
+- **Bilag 10:** Sammenlignende heatmap over modeller
+  *(filnavn: 3_heatmap_pr_model.png)*
+  
+- **Bilag 11:** Udvikling over tid – churn-risiko
+  *(filnavn: 2_linje_plot.png)*
+	
+- **Bilag 12:** Brancher med højest churn-rate
+  *(filnavn: 5_brancher_højeste_churn.png)*
+  
+- **Bilag 13:** Postnumre med højest churn-rate
+  *(filnavn: 6_postnummer_højeste_churn.png)*
+
+- **Bilag 14:** Top 5 segmenter som ikke churner
+  *(filnavn: 7_top5_der_ikke_churner.png)*
+
+- **Bilag 15:** Churn-risikokategorier for aktive kunder
+  *(filnavn: 9_churn_risikokategorier_aktive.png)*
+
+- **Bilag 16:** Top 10 variable i Random Forest modellen
+  *(filnavn: 8_top_10_variable_rf.png)*
 
 ## Bilag 10: Adgang til interaktivt churn-dashboard
 
@@ -1354,6 +1375,7 @@ churn_folds <- vfold_cv(churn_train, v = 10, strata = churn)
 
 churn_recipe <- 
   recipe(churn ~ ., data = churn_train) |>
+  update_role(PNumber, new_role = "ID") |>  # PNumber bevares, men bruges ikke som predictor
   step_novel(all_nominal_predictors()) |> 
   step_dummy(all_nominal_predictors(), one_hot = TRUE) |>
   step_zv(all_predictors()) |> 
@@ -1621,7 +1643,7 @@ strt.time <- Sys.time()
 
 ```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
 # 10.4 Tuning af kun Random Forest med 25 kombinationer
-churn_results_rf <- churn_workflow_set_rf |>  # <-- her var der fejl i dit input
+churn_results_rf <- churn_workflow_set_rf |>
   workflow_map(
     resamples = churn_folds,
     grid = 25,
@@ -1709,7 +1731,6 @@ new_company <- tibble(
 # Forudsiger klassifikation og sandsynlighed
 predict(final_model, new_company)                    # 0 = bliver, 1 = churn
 predict(final_model, new_company, type = "prob")     # churn-sandsynlighed
-
 
 # ------------------------------------------------------------------------------
 # 11.2 Forudsig churn for ALLE virksomheder og tilføj resultater
