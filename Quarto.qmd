@@ -114,7 +114,7 @@ pacman::p_load(
 
 {\large \textbf{Afleveringsdato: 9. maj 2025}}\\
 \vfill
-\text{Antal tegn: 84.354 + Shiny App (75.000)}
+\text{Antal tegn: 88.710 + Shiny App (80.320)}
 
 \end{center}
 \end{titlepage}
