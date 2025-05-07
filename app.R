@@ -884,7 +884,9 @@ ui <- fluidPage(
   filtered_data <- reactive({
     data <- data_map %>%
       filter(churn_prob * 100 >= input$churn_range[1], churn_prob * 100 <= input$churn_range[2]) %>%
-      filter(risk_category %in% input$risk_categories)
+      filter(risk_category %in% input$risk_categories) %>%
+      filter(churn == 0)
+    
     
     # Filtrér på postnumre hvis ikke "Vælg alle"
     if (!is.null(input$postal_code) && !("ALL" %in% input$postal_code)) {
@@ -958,8 +960,8 @@ ui <- fluidPage(
   # Gennemsnitlig churn-risiko (i procent)
   # ---------------------------------------------
   output$info_avg_risk_score <- renderText({
-    paste0(round(mean(filtered_data()$churn_prob, na.rm = TRUE) * 100, 1), "%")
-  })
+    paste0(floor(mean(filtered_data()$churn_prob, na.rm = TRUE) * 1000) / 10, "%")
+    })
   
   # ---------------------------------------------
   # Gennemsnitlig loyalitet i måneder
