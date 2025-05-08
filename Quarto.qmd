@@ -42,7 +42,7 @@ format:
 pacman::p_load(
     dplyr,         # til datamanipulation
     tidyr,         # til fx split af kolonner
-    stringr,        # til teksthåndtering
+    stringr,       # til teksthåndtering
     tidyverse,     # samlet pakke til dataanalyse (inkl. ggplot2, tibble, mm.)
     ggpubr,        # ggplot med publikationstema
     ggfortify,     # autoplot til modeller
@@ -401,32 +401,35 @@ Dataetisk Råd. (2025). Officielt websted for Dataetisk Råd. Hentet fra https:/
 
 Anvendt i forbindelse med udarbejdelse og forståelse af datasættet:
 
-- **Bilag 1:** Fordeling af medlemmer hos Business Viborg  
+**Bilag 1:** Fordeling af medlemmer hos Business Viborg  
 
 ![](images/EDA_1_fordeling_medlemmer.png){ width=80% fig-align="center" }
 \newpage  
-- **Bilag 2:** Eventdeltagelse blandt aktive medlemmer
+**Bilag 2:** Eventdeltagelse blandt aktive medlemmer
 ![](images/EDA_2_eventdeltagelse.png){ width=80% fig-align="center" }
 \newpage  
-- **Bilag 3:** Branchefordeling blandt aktive medlemmer
+**Bilag 3:** Branchefordeling blandt aktive medlemmer
 ![](images/EDA_4_branchefordeling.png){ width=80% fig-align="center" }
 \newpage  
-- **Bilag 4:** Eventdeltagelse pr. postnummer 
+**Bilag 4:** Eventdeltagelse pr. postnummer 
 ![](images/EDA_5_eventdeltagelse_postnummer.png){ width=80% fig-align="center" }
 \newpage  
-- **Bilag 5:** Korrellationsmatrix for numeriske variabler
+**Bilag 5:** Korrellationsmatrix for numeriske variabler
 ![](images/EDA_6_korrellationsmatrix.png){ width=80% fig-align="center" }
 \newpage  
-- **Bilag 6:** Mødelængde vs. eventdeltagelse  
+**Bilag 6:** Mødelængde vs. eventdeltagelse  
   ![](images/EDA_7_mødelængde_eventdeltagelse.png){ width=80% fig-align="center" }
+
+\newpage  
+
 ## Bilag 7–8: Modeludvikling og evaluering
 
 Anvendt i forbindelse med udvikling og evaluering af ML-modeller:
 
-- **Bilag 7:** Model performance (Accuracy, F1 og ROC AUC)  
+**Bilag 7:** Model performance (Accuracy, F1 og ROC AUC)  
     ![](images/1_model_performance.png){ width=80% fig-align="center" }
 \newpage  
-- **Bilag 8:** Top 10 vigtigste variabler pr. model  
+**Bilag 8:** Top 10 vigtigste variabler pr. model  
   ![](images/4_top_10_variabler_pr_model.png){ width=80% fig-align="center" }
 
 
