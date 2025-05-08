@@ -679,64 +679,6 @@ server <- function(input, output, session) {
         plot.margin = margin(10, 20, 10, 10)
       )
   })
-  
-  
-
-  output$help_needed_plot <- renderPlot({
-    data_map %>%
-      count(hjælp_kategori, sort = TRUE) %>%
-      top_n(10) %>%
-      ggplot(aes(x = reorder(hjælp_kategori, n), y = n)) +
-      geom_col(fill = "#7FC8A3") +
-      coord_flip() +
-      labs(title = "Virksomheders efterspurgte hjælp",
-           x = "Hjælpeområde",
-           y = "Antal virksomheder") +
-      theme_minimal(base_size = 13) +
-      dark_theme
-  })
-  
-
-  output$plot_risk_category <- renderPlot({
-    data_map %>%
-    ggplot(df, aes(x = risk_category, fill = risk_category)) +
-      geom_bar() +
-      scale_fill_manual(values = c("Low" = "#5cb85c", "Medium" = "#f0ad4e", "High" = "#d9534f")) +
-      labs(title = "Fordeling på churn-risikokategori", x = "Kategori", y = "Antal") +
-      dark_theme
-  })
-  
-
-  output$top_members_list <- renderDT({
-    data_map %>%
-      mutate(churn_prob = scales::percent(churn_prob, accuracy = 0.1)) %>%
-      arrange(desc(churn_prob)) %>%
-      select(PNumber, CompanyTypeName, PostalCode, churn_prob) %>%
-      datatable(options = list(pageLength = 10), rownames = FALSE)
-  })
-
-
-  output$filtered_list <- renderDT({
-    data_map %>%
-      select(PNumber, CompanyTypeName, PostalCode, churn_prob) %>%
-      mutate(churn_prob = scales::percent(churn_prob, accuracy = 0.1)) %>%
-      arrange(desc(churn_prob)) %>%
-      datatable(options = list(pageLength = 10), rownames = FALSE)
-  })
-  
-
-  output$plot_event_churn <- renderPlot({
-    df <- data_map
-    df$deltaget_i_event <- factor(df$deltaget_i_event)
-    df %>%
-      group_by(deltaget_i_event) %>%
-      summarise(avg = mean(churn_prob)) %>%
-      ggplot(aes(x = deltaget_i_event, y = avg, fill = deltaget_i_event)) +
-      geom_col() +
-      labs(title = "Eventdeltagelse vs. Churn", x = "", y = "Churn") +
-      theme_minimal() +
-      guides(fill = FALSE)
-  })
 
   output$simulation_factors <- renderPlot({
     req(input$run_simulation)
@@ -754,8 +696,6 @@ server <- function(input, output, session) {
       scale_y_continuous(labels = scales::percent_format(accuracy = 1))
   })
   
-  
-
 #Simuliation-------------------------------------------------------------------- 
 
   output$simulation_result <- renderUI({
