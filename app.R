@@ -724,27 +724,22 @@ server <- function(input, output, session) {
       isolate({
         new_company_data <- new_company()
         prediction <- predict(final_model, new_data = new_company(), type = "prob")
-        churn_prob <- prediction$.pred_1 * 100  # Gør det til procent
+        churn_prob <- prediction$.pred_1
         
-        # Farve baseret på risiko
-        risk_color <- ifelse(churn_prob > 75, "#d9534f",
-                             ifelse(churn_prob > 50, "#f0ad4e", "#5cb85c"))
-        
-        # Data til "gauge"
-        gauge_data <- tibble(
-          x = c("Risk", "Empty"),
-          value = c(churn_prob, 100 - churn_prob),
-          fill = c(risk_color, "lightgrey")
-        )
-        
-        ggplot(gauge_data, aes(x = "", y = value, fill = fill)) +
-          geom_col(width = 1, color = "white") +
-          coord_polar(theta = "y", start = pi, direction = -1) +
-          geom_text(aes(label = paste0(round(churn_prob, 1), "%")), 
-                    x = 1.3, y = 0, inherit.aes = FALSE, size = 8, fontface = "bold", color = risk_color) +
-          scale_fill_identity() +
+        ggplot() +
+          geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0.5, r = 1,
+                           start = 0, end = 2*pi, fill = "lightgrey")) +
+          geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0.5, r = 1,
+                           start = 0, end = 2*pi * churn_prob, 
+                           fill = ifelse(churn_prob > 0.75, "#d9534f",
+                                         ifelse(churn_prob > 0.5, "#f0ad4e", "#5cb85c")))) +
+          geom_text(aes(x = 0, y = 0, 
+                        label = paste0(round(churn_prob * 100, 1), "%")),
+                    size = 8, fontface = "bold") +
+          coord_fixed() +
           theme_void() +
-          theme(legend.position = "none")
+          theme(legend.position = "none") +
+          scale_fill_identity()
       })
     }
   })
