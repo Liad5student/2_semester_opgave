@@ -44,19 +44,13 @@ pacman::p_load(
     tidyr,         # til fx split af kolonner
     stringr,        # til teksthåndtering
     tidyverse,     # samlet pakke til dataanalyse (inkl. ggplot2, tibble, mm.)
-    skimr,         # oversigtsstatistik
-    readxl,        # læsning af Excel-filer
-    hms,           # håndtering af tid
     ggpubr,        # ggplot med publikationstema
     ggfortify,     # autoplot til modeller
     GGally,        # udvidelse af ggplot, fx ggpairs
     gridExtra,     # arrangering af plots
     hrbrthemes,    # moderne ggplot-temaer
-    table1,        # flot tabel 1 output
     tidymodels,    # samlet ML-framework
     themis,        # håndtering af ubalancerede data
-    broom,         # konvertering af modeller til tidy-format
-    caret,         # klassisk ML-framework
     discrim,       # diskriminantanalyse
     glmnet,        # regulerede regressioner
     kknn,          # k-NN klassifikation/regression
@@ -67,15 +61,6 @@ pacman::p_load(
     gbm,           # gradient boosting machines
     randomForest,  # klassisk random forest
     rpart,         # beslutningstræer
-    leaps,         # modelselektionsmetoder
-    car,           # diagnostik for lineære modeller
-    PerformanceAnalytics, # performance-metrics (især finans)
-    rvest,         # web scraping
-    httr,          # HTTP requests
-    jsonlite,      # arbejde med JSON
-    rjson,         # alternativ JSON-pakke
-    rlist,         # listehåndtering
-    Rcrawler,      # web crawling
     rmarkdown,     # rapportgenerering
     knitr,         # knit Rmd-dokumenter
     future,        # parallelisering og asynkron kodning
@@ -106,7 +91,7 @@ pacman::p_load(
 
 {\large \textbf{Afleveringsdato: 9. maj 2025}}\\
 \vfill
-\text{Antal tegn: 88.710 + Shiny App (80.320)}
+\text{Antal tegn: 77.429}
 
 \end{center}
 \end{titlepage}
@@ -254,13 +239,22 @@ Disse variabler blev udledt på baggrund af domæneviden og eksplorativ analyse,
 
 ## Modelperformance
 
-Seks machine learning modeller blev afprøvet: Support Vector Machine (SVM), XGBoost, Random Forest, logistisk regression, K-nearest Neighbors (KNN) og Naive Bayes.
+I analysen blev seks ML-modeller evalueret: Support Vector Machine (SVM), XGBoost, Random Forest, logistisk regression, K-nearest Neighbors (KNN) og Naive Bayes. Formålet var at identificere den mest pålidelige og praktisk anvendelige model til forudsigelse af churn.
 
 ![Farveintensitet viser performance – mørkere felter angiver højere score. Random Forest og XGBoost scorer generelt højt, mens Naive Bayes udviser lav F1-score.](images/3_heatmap_pr_model.png){ width=80% fig-align="center" }
+Heatmappet ovenfor giver et overblik over, hvordan modellerne klarer sig på tre centrale metrikker: Accuracy, F1-score og ROC AUC. Særligt Random Forest og XGBoost markerer sig med høje scorer på tværs af alle mål, mens Naive Bayes skiller sig negativt ud med markant lav F1-score og lav balance i præcision og recall.
 
-På trods af XGBoost gode resultater blev Random Forest valgt som slutmodel. Dette skyldes modellens kombination af prædiktiv styrke og modelgennemsigtighed, hvilket gør den mere anvendelig i en praktisk kontekst. XGBoost blev fravalgt grundet behovet for yderligere parameteroptimering, som ikke var formålstjenligt inden for projektets rammer. Vi valgte den mest simple af de to modeller, da deres metrikker lå meget tæt.
+For at komme et spadestik dybere i vurderingen blev modellerne yderligere testet ud fra et bredere metrikgrundlag, som inkluderer sensitivitet (recall), specificitet, f-measure og ROC AUC – alle med tilhørende konfidensintervaller. Denne tilgang gav mulighed for at vurdere robustheden af hver model i forhold til forskellige fejlkilder.
+
+Figuren herunder præsenterer de seks bedst rangerede workflows baseret på gennemsnitlig placering og usikkerhed:
+
+![Workflow rank](images/10_workflow_rank.png){ width=80% fig-align="center" }
+Random Forest og XGBoost indtager igen en dominerende position. De kombinerer høj nøjagtighed med en balanceret håndtering af både falsk positive og falsk negative, hvilket gør dem særligt anvendelige i forretningsmæssige beslutningssituationer, hvor både præcision og stabilitet vægtes højt.
+
+Trods den stærke præstation fra begge modeller blev Random Forest valgt som slutmodel. Valget skyldes modellens transparens og lavere behov for tunet optimering sammenlignet med XGBoost, der kræver mere kompleks finjustering for at nå sit fulde potentiale – noget der lå uden for projektets afgrænsning.
 
 ![Lineplot over modelperformance. Random Forest og XGBoost opnår høj score på alle tre metrikker, hvilket underbygger deres styrke som robuste og præcise modeller.](images/2_linje_plot.png){ width=80% fig-align="center" }
+Linjeplottet bekræfter, at Random Forest og XGBoost leverer på alle nøglemetrikker og overgår de øvrige modeller markant. Da forskellen mellem de to var marginal, blev den enkleste og mest fortolkelige løsning valgt – hvilket også sikrer lettere kommunikation af resultaterne til ikke-tekniske interessenter.
 
 ## Perspektiv: Modellering af churn over tid
 
@@ -297,10 +291,6 @@ Som led i samarbejdet med Business Viborg har vi udviklet et interaktivt dashboa
 - **Adgangskode:** `Test1234`
 
 > *Dashboardet er en prototype og bør anvendes til demonstrationsformål. Ved implementering i praksis anbefales det at justere adgangskontrol, datasikkerhed og systemintegration.*
-
-:::{.text-center}
-![QR-kode til churn-dashboard](images/churn_dashboard_qr.png){width=10%}
-:::
 
 # Juridiske og etiske overvejelser
 
@@ -364,18 +354,20 @@ På baggrund af analysen anbefales det, at Business Viborg anvender den udvikled
 
 
  -    Etisk og transparent kommunikation om brugen af data indgår i medlemsdialogen for at styrke tilliden og sikre overholdelse af GDPR.
+ 
+Et naturligt næste skridt er at inddrage tidsstempler for udmeldelser. Det vil gøre det muligt ikke kun at vurdere risikoen for churn, men også at estimere, hvornår en udmeldelse sandsynligvis vil finde sted. Dermed får Business Viborg et endnu bedre grundlag for at igangsætte målrettede og rettidige indsatser over for medlemmer i risiko.
 
 
 # Konklusion
-Projektet har vist, hvordan Business Viborg med et afgrænset datagrundlag og begrænsede ressourcer kan anvende machine learning som et konkret værktøj til medlemsfastholdelse. Gennem analyse af 2.966 medlemsvirksomheder og systematisk afprøvning af seks modeller blev der udviklet en forklarlig Random Forest-model med stærke prædiktive egenskaber (F1 = 0,79, AUC = 0,93). Modellen er operationaliseret i et interaktivt dashboard, som giver medlemskonsulenterne og ledelse et datadrevet grundlag for at prioritere og målrette deres opsøgende indsats.
+Dette projekt har vist, hvordan Business Viborg med fordel kan analysere og anvende deres medlemsdata til at udvikle et beslutningsunderstøttende dashboard, der forudsiger churn og synliggør centrale risikofaktorer. Gennem en grundig eksplorativ analyse blev det tydeligt, at medlemmer med lavt mødeengagement, kort medlemsanciennitet og svag eventaktivitet oftere forlader foreningen.
 
-Resultaterne peger entydigt på, at fravær af kontakt, manglende eventdeltagelse og manglende erhvervshjælp er tæt knyttet til udmeldelse. Samtidig viser analysen, at en langvarig relation og relationel dybde – målt gennem fx mødelængde – hænger tæt sammen med fastholdelse. Denne indsigt skaber en direkte kobling mellem data og daglig praksis i medlemsarbejdet. Den største faktor er deltagelse i events og der kan med fordel udvikles skræddersyede events, der skaber værdi og dermed fastholdelse af flere medlemmer.
+Til at modellere churn blev seks forskellige machine learning-algoritmer testet og sammenlignet. Random Forest blev valgt som slutmodel, da den kombinerede høj præcision med stærk generaliserbarhed. Modellen opnåede en ROC AUC på 0.931, hvilket indikerer fremragende evne til at adskille churnere fra loyale medlemmer. Desuden blev der opnået en accuracy på 0.863, en F1-score på 0.789, samt balancerede værdier for sensitivitet (0.868) og specificitet (0.861) – hvilket betyder, at modellen er robust ift. både at identificere churnere og undgå falske alarmer.
 
-Modellen er udviklet med udgangspunkt i GDPR og principper om ansvarlig dataanvendelse. Det understreger, at datadrevne løsninger godt kan gå hånd i hånd med transparens, etik og tillid. Der er taget højde for både behandlingsgrundlag, oplysningspligt og identifikationsrisici – og løsningen kan derfor fungere som en ansvarlig prototype, der med de rette tekniske og organisatoriske rammer kan bringes i anvendelse.
+Resultaterne er blevet omsat til et brugervenligt dashboard, der gør det muligt for medlemskonsulenter og ledelse at identificere risikoprofiler og handle proaktivt. Dashboardet er udviklet med fokus på transparens og praktisk anvendelighed, hvilket understøtter en mere målrettet og datadrevet tilgang til medlemsfastholdelse.
 
-Et naturligt næste skridt er at inddrage tidsstempler for udmeldelser. Det vil gøre det muligt ikke kun at vurdere risikoen for churn, men også at estimere, hvornår en udmeldelse sandsynligvis vil finde sted. Dermed får Business Viborg et endnu bedre grundlag for at igangsætte målrettede og rettidige indsatser over for medlemmer i risiko.
+Projektet adresserede også væsentlige juridiske og etiske hensyn. Brugen af medlemsdata til churnforudsigelse kræver skærpet opmærksomhed på GDPR, dataminimering og formålsbegrænsning. Den valgte løsning er udviklet med henblik på at sikre lovlig og ansvarlig brug, herunder gennemsigtighed i datagrundlag og modelvalg.
 
-Samlet set besvarer projektet sin problemformulering ved at kombinere teknisk analyse, brugervenlig formidling og etisk ansvarlighed. Det peger samtidig frem mod en bredere anvendelse af datadrevne beslutningsværktøjer i medlemsorganisationer, der ønsker at arbejde strategisk og relationsbaseret – uden at give køb på tillid, menneskelig dømmekraft og lokal forankring.
+Samlet viser projektet, at Business Viborg har et solidt udgangspunkt for at anvende machine learning som strategisk redskab i fastholdelsesindsatsen – baseret på valide data, veldokumenteret metode og forretningsforståelse.
 
 \newpage
 
@@ -412,53 +404,31 @@ Anvendt i forbindelse med udarbejdelse og forståelse af datasættet:
 - **Bilag 1:** Fordeling af medlemmer hos Business Viborg  
 
 ![](images/EDA_1_fordeling_medlemmer.png){ width=80% fig-align="center" }
-  
+\newpage  
 - **Bilag 2:** Eventdeltagelse blandt aktive medlemmer
 ![](images/EDA_2_eventdeltagelse.png){ width=80% fig-align="center" }
-  
+\newpage  
 - **Bilag 3:** Branchefordeling blandt aktive medlemmer
 ![](images/EDA_4_branchefordeling.png){ width=80% fig-align="center" }
-  
+\newpage  
 - **Bilag 4:** Eventdeltagelse pr. postnummer 
 ![](images/EDA_5_eventdeltagelse_postnummer.png){ width=80% fig-align="center" }
-  
+\newpage  
 - **Bilag 5:** Korrellationsmatrix for numeriske variabler
 ![](images/EDA_6_korrellationsmatrix.png){ width=80% fig-align="center" }
-  
+\newpage  
 - **Bilag 6:** Mødelængde vs. eventdeltagelse  
   ![](images/EDA_7_mødelængde_eventdeltagelse.png){ width=80% fig-align="center" }
-
-## Bilag 7–15: Modeludvikling og evaluering
+## Bilag 7–8: Modeludvikling og evaluering
 
 Anvendt i forbindelse med udvikling og evaluering af ML-modeller:
 
 - **Bilag 7:** Model performance (Accuracy, F1 og ROC AUC)  
     ![](images/1_model_performance.png){ width=80% fig-align="center" }
-  
+\newpage  
 - **Bilag 8:** Top 10 vigtigste variabler pr. model  
   ![](images/4_top_10_variabler_pr_model.png){ width=80% fig-align="center" }
-  
-  
-- **Bilag 9:** Sammenlignende heatmap over modeller
-  ![](images/3_heatmap_pr_model.png){ width=80% fig-align="center" }
-  
-- **Bilag 10:** Udvikling over tid – churn-risiko
-  ![](images/2_linje_plot.png){ width=80% fig-align="center" }
-	
-- **Bilag 11:** Brancher med højest churn-rate
-  ![](images/5_brancher_højeste_churn.png){ width=80% fig-align="center" }
-  
-- **Bilag 12:** Postnumre med højest churn-rate
-  ![](images/6_postnummer_højeste_churn.png){ width=80% fig-align="center" }
 
-- **Bilag 13:** Top 5 segmenter som ikke churner
-  ![](images/7_top5_der_ikke_churner.png){ width=80% fig-align="center" }
-
-- **Bilag 14:** Churn-risikokategorier for aktive kunder
-  ![](images/9_churn_risikokategorier_aktive.png){ width=80% fig-align="center" }
-
-- **Bilag 15:** Top 10 variable i Random Forest modellen
-  ![](images/8_top_10_variable_rf.png){ width=80% fig-align="center" }
 
 \newpage
 
@@ -495,8 +465,7 @@ event_participants_unique <- event_participants |>
   group_by(Cvr) |> 
   summarise(across(everything(), first))    # Første deltagerinfo pr. virksomhed
 
-
-# 2.2: Saml alle datasæt med left_join og ryd op i dubletter
+# 2.2: Samler alle datasæt med left_join og rydder op i dubletter
 merged_df <- all_companies |> 
   left_join(company_contacts, by = "CompanyId") |>     # Join kontaktpersoner
   left_join(all_contact, by = "contactId") |>          # Join kontaktinfo
@@ -508,15 +477,11 @@ merged_df <- all_companies |>
   select(-ends_with(".y"), -ends_with(".x"))           # Fjerner dublet-kolonner
 
 
-# 2.3: Klargør datasæt: fjern anonyme oplysninger og omdøb kolonnenavne
-
-# Fokus: Unikke virksomheder via PNumber (produktionsenhedsnummer)
-# Det giver os 2966 unikke observationer.
+# 2.3: Fjerner anonyme oplysninger og omdøber kolonnenavne
 merged_df <- merged_df |> 
   select(-z_companies_1_Firmanavn_1, -z_contacts_1_Email_1)  
-# Fjerner anonymiserede data
 
-# Standardiser kolonnenavne for overskuelighed
+# Standardiserer kolonnenavne for overskuelighed
 colnames(merged_df) <- c(
   "BusinessCouncilMember", "CompanyDateStamp", "CompanyId", "CompanyType",
   "CVR", "Employees", "PostalCode", "CompanyTypeName", "PNumber", "Country",
@@ -527,14 +492,10 @@ colnames(merged_df) <- c(
   "MaxParticipants", "EventLength", "EventId"
 )
 
-# 2.4: Fjern dubletter og irrelevante kolonner
-
-# Beholder unikke virksomheder, fjerner irrelevante kolonner,
-# og udfylder NA i eventdata
+# 2.4: Fjerner dubletter og irelevante kolonner
 merged_unique <- merged_df |>
   distinct(PNumber, .keep_all = TRUE) |>  # Beholder én række pr. PNumber
-  select(-TitleChanged, -LocationChanged, -CreatedBy, -Firstname,  
-         # Fjerner irrelevante variabler
+  select(-TitleChanged, -LocationChanged, -CreatedBy, -Firstname,
          -UserRole, -Initials, -ContactLastUpdated) |>
   mutate(across(  # Erstatter NA i event-kolonner med "Ingen event"
     c(MeetingLength, EventExternalId, EventPublicId, Description, 
@@ -542,7 +503,7 @@ merged_unique <- merged_df |>
     ~ if_else(is.na(.), "Ingen event", as.character(.))
   ))
 
-# Rens MeetingLength og konverter til numerisk (fjern " mins")
+# Renser MeetingLength og konverterer til numeriske værdier
 merged_unique <- merged_unique |> 
   mutate(
     MeetingLength = ifelse(MeetingLength == "Ingen event", "0 mins", 
@@ -551,22 +512,14 @@ merged_unique <- merged_unique |>
   )
 
 # 2.5: Splitter NACECode i kode og beskrivelse, 
-# fjern original kolonne og NA-rækker
-
 merged_unique <- merged_unique |>
   mutate(
     Employees   = if_else(is.na(Employees), "Ukendt", as.character(Employees)),
-    # NA -> "Ukendt"
-    
     NACECode    = if_else(is.na(NACECode),  "Ukendt", as.character(NACECode)),
-    # NA -> "Ukendt"
-    
     Nacecode    = if_else(NACECode == "Ukendt", "Ukendt", 
-                          str_extract(NACECode, "^[0-9]+")),                 
-    # Hent kode
+                          str_extract(NACECode, "^[0-9]+")),    # Henter kode
     Nacebranche = if_else(NACECode == "Ukendt", "Ukendt", 
-                          str_remove(NACECode, "^[0-9]+\\s*"))               
-    # Hent branche
+                          str_remove(NACECode, "^[0-9]+\\s*"))  # Henter branche
   ) |>
   select(-NACECode) |>  # Fjerner original NACECode-kolonne
   na.omit()             # Fjerner rækker med NA-værdier
@@ -574,14 +527,10 @@ merged_unique <- merged_unique |>
 # 2.6: Tjek for tilbageværende NA-værdier
 # colSums(is.na(merged_unique))
 
-
 # 2.7: Gem det rensede datasæt til senere brug
-
 saveRDS(merged_unique, "merged_unique.rds")
 
 # 2.8: Merge old_projects (frivillig) med virksomhedsdata
-
-# Omdøb SMVContactId til ContactId
 old_projects <- old_projects |>
   rename(ContactId = SMVContactId) # Omdøb kolonne for at matche join
 
@@ -599,7 +548,6 @@ merged_unique_old_projects <- merged_unique |>
 
 
 # 2.9: Tjek for NA-værdier i det udvidede datasæt
-
 # colSums(is.na(merged_unique_old_projects))
 
 merge_datasets <- merged_unique_old_projects
@@ -616,10 +564,7 @@ merge_datasets <- merged_unique_old_projects
 # glimpse(merge_datasets)
 
 
-# 3.2: Tæl hvor mange NA (manglende værdier) der findes i hver kolonne
-# Dette er nyttigt for at forstå, hvor der evt. skal renses eller imputeres
-
-# Tjekker for manglende værdier (NA) i alle variabler
+# 3.2: Tæller hvor mange NA (manglende værdier) der findes i hver kolonne
 na_count <- merge_datasets |> 
   summarise(across(everything(), ~ sum(is.na(.)))) |> 
   pivot_longer(everything(), names_to = "variable", values_to = "na_count")
@@ -636,16 +581,10 @@ names(merge_datasets) <- names(merge_datasets) |>
   str_remove("_$") |>                 # Fjerner underscore i slutningen
   str_trim()                          # Trim whitespace
 
-# Udskriver de rensede kolonnenavne
-# print(names(merge_datasets))
-
-# 3.4: Fjern irrelevante kolonner (ID’er og tekniske felter)
-# Disse kolonner bruges ikke i analysen og fjernes derfor fra datasættet
-
+# 3.4: Fjern irrelevante kolonner
 clean_data <- merge_datasets |> 
   dplyr::select(-ContactId, -CompanyOwnerId, -EventExternalId,
                 -EventPublicId, -LocationId, -Tekstfelt, -CompanyType)
-
 
 # 3.5: Erstatning og konvertering af værdier
 # - Tekst som "Tom", "Ukendt" og "Ingen event" → NA
@@ -660,20 +599,15 @@ clean_data <- clean_data |>
         EventLength, Employees), ~ as.numeric(ifelse(.x %in% c(" ", "", "Tom", 
                                             "Ukendt", "Ingen event"), NA, .x))
     ),
-    across(where(is.character), ~ replace_na(.x, "Ukendt")), # Tekst: NA → 
-    # "Ukendt"
-    across(where(is.numeric), ~ replace_na(.x, 0))             # Tal: NA → 0
+    across(where(is.character), ~ replace_na(.x, "Ukendt")),
+    across(where(is.numeric), ~ replace_na(.x, 0))            
   )
 
-
 # 3.6: Konverter dato-kolonner til rigtig datoformat
-
 CompanyDateStamp <- as.Date(clean_data$CompanyDateStamp, format = "%Y-%m-%d")
 Kontaktdato      <- as.Date(clean_data$Kontaktdato, format = "%Y-%m-%d")
 
-
 # 3.7: # Viser datastruktur efter rensning
-
 # glimpse(clean_data)
 ```
 
@@ -682,16 +616,12 @@ Kontaktdato      <- as.Date(clean_data$Kontaktdato, format = "%Y-%m-%d")
 # 4. Feature Engineering
 # ------------------------------------------------------------------------------
 
-# 4.1: # Viser datastruktur efter rensning
-
-
-# glimpse(clean_data) # Bruger glimpse til at få et hurtigt overblik over data
-
+# 4.1: Viser datastruktur efter rensning
+# glimpse(clean_data)
 
 # 4.2: Opretter en ny variabel, der beregner hvor mange år 
 # en virksomhed har været medlem. Vi bruger CompanyDateStamp (oprettelsesdato)
 # og beregner forskellen til dags dato.
-
 feature_engineering <- clean_data |>
   mutate(
     medlem_antal_år = round(
@@ -701,12 +631,10 @@ feature_engineering <- clean_data |>
     )
   )
   
-
 # 4.3: Rensning af Employees-kolonnen (antal ansatte). 
 # Nogle gange kan tal være formateret med punktummer (f.eks. "1.000") 
 # eller mellemrum (f.eks. "1 000"). 
 # Disse fjernes, så kolonnen kan konverteres til numerisk format
-
 feature_engineering <- feature_engineering |>
   mutate(
     Employees = Employees |> 
@@ -715,28 +643,24 @@ feature_engineering <- feature_engineering |>
       as.numeric()                        # Konverterer til tal
   )
 
-
-# 4.4: Oversættelse af virksomhedstyper til mere læsbare formater
-# Eksempel: "A/S" bliver til "Aktieselskab"
-
-feature_engineering <- feature_engineering |>
-  mutate(
-CompanyTypeName = str_replace_all(CompanyTypeName, "A/S", "Aktieselskab"),
-CompanyTypeName = str_replace_all(CompanyTypeName, "ApS", "Anpartsselskab"),
-CompanyTypeName = str_replace_all(CompanyTypeName, "IVS", "Iværksætterselskab"),
-CompanyTypeName = str_replace_all(CompanyTypeName, "P/S", "Partnerselskab"),
-CompanyTypeName = str_replace_all(CompanyTypeName, "K/S", "Kommanditselskab")
-  )
-
+# # 4.4: Oversættelse af virksomhedstyper til mere læsbare formater
+# # Eksempel: "A/S" bliver til "Aktieselskab"
+# 
+# feature_engineering <- feature_engineering |>
+#   mutate(
+# CompanyTypeName = str_replace_all(CompanyTypeName, "A/S", "Aktieselskab"),
+# CompanyTypeName = str_replace_all(CompanyTypeName, "ApS", "Anpartsselskab"),
+# CompanyTypeName = str_replace_all(CompanyTypeName, "IVS", "Iværksætterselskab"),
+# CompanyTypeName = str_replace_all(CompanyTypeName, "P/S", "Partnerselskab"),
+# CompanyTypeName = str_replace_all(CompanyTypeName, "K/S", "Kommanditselskab")
+#   )
 
 # 4.5: Tilføj branchebetegnelse baseret på NACE-koder
 # NACE er en standard for brancheklassifikation (fx "01 Landbrug")
 # Vi bruger de første to cifre til at matche mod en lookup-tabel med branchenavne
-
 nace_lookup <- read_delim("data/nace_branchenavne.csv", delim = ";") |> 
   select(KODE, TITEL) |> 
   rename(Nace_kort = KODE, Branche_navn = TITEL)
-
 
 # Tilføj branchebetegnelse baseret på Nacecode og fjern overflødige kolonner
 # Lav en ny kolonne med de første to cifre af Nacecode
@@ -753,12 +677,9 @@ feature_engineering <- feature_engineering |>
   select(-Nacecode, -Nace_kort) |>         # Fjerner unødvendige kolonner
   relocate(Branche_navn, .after = PNumber) # Flytter Branche_navn efter PNumber
 
-
-
 # 4.6: Opretter 2. feature/variabel – har virksomheden haft kontakt?
 # Vi kigger på flere kolonner og vurderer: 
 # hvis mindst én ikke er "Tom", så har der været kontakt
-
 feature_engineering <- feature_engineering |>
   mutate(
     har_haft_kontakt = if_else(
@@ -771,10 +692,8 @@ feature_engineering <- feature_engineering |>
 
 # 4.7: Opretter 3. feature/variabel – har virksomheden deltaget i event?
 # Hvis EventLength er større end 0, siger vi "Ja", ellers "Nej"
-
 feature_engineering <- feature_engineering |>
   mutate(deltaget_i_event = if_else(as.numeric(EventLength) > 0, "Ja", "Nej"))
-
 
 # 4.8: Skaber kategorier der viser virksomhedens behov for hjælp
 # Her grupperes TRUE/FALSE-kolonner i temaer som Strategi, Jura, Økonomi osv.
@@ -869,7 +788,6 @@ feature_engineering <- feature_engineering |>
 # pnumbers <- feature_engineering$PNumber
 
 # 4.9: Behold kun aktive virksomheder
-
 feature_engineering <- feature_engineering |> 
   filter(CompanyStatus %in% c("Aktiv", "NORMAL")) |> 
   dplyr::select(-CompanyDateStamp, -CompanyId, -CVR, -Country, 
@@ -881,7 +799,6 @@ feature_engineering <- feature_engineering |>
 # Hvis BusinessCouncilMember er TRUE (virksomheden er medlem), sættes churn = 0
 # Hvis BusinessCouncilMember er FALSE (virksomheden har forladt fællesskabet), 
 # sættes churn = 1
-
 feature_engineering <- feature_engineering |>
   mutate(churn = if_else(BusinessCouncilMember == TRUE, 0, 1)) |>
   select(-BusinessCouncilMember)
@@ -893,7 +810,6 @@ feature_engineering <- feature_engineering |>
 # virksomhedsformer (ApS, A/S, IVS osv.)
 # I maskinlæring skal sådanne kolonner være faktorer, 
 # så algoritmerne forstår dem som kategorier og ikke som tekst.
-
 feature_engineering <- feature_engineering |> 
   mutate(
     CompanyTypeName = as.factor(CompanyTypeName),
@@ -904,11 +820,8 @@ feature_engineering <- feature_engineering |>
     churn = as.factor(churn)
   )
 
-
 # 4.12: Gem det færdigbehandlede datasæt til senere analyse eller modellering
-
 write_rds(feature_engineering, "data/feature_engineered_data.rds")
-
 ```
 
 ```{r}
@@ -917,7 +830,6 @@ write_rds(feature_engineering, "data/feature_engineered_data.rds")
 # ------------------------------------------------------------------------------
 
 # Indlæs data
-
 featured <- feature_engineering
 
 # Funktion: Identificer outliers med IQR-metoden
@@ -932,12 +844,7 @@ find_outliers <- function(x) {
   x < lower | x > upper
 }
 
-
 # 5.1 Søjlediagram: Fordeling af medlemsstatus
-
-# En simpel søjlediagram der viser, hvor mange virksomheder der er
-# henholdsvis aktive og stoppede.
-
 featured |> 
   ggplot(aes(x = factor(churn), fill = factor(churn))) +
   geom_bar() +
@@ -956,12 +863,7 @@ featured |>
 
 ggsave("images/EDA_1_fordeling_medlemmer.png", width = 7, height = 4, dpi = 300)
 
-
 # 5.2 Søjlediagram: Eventdeltagelse blandt aktive medlemmer
-
-# Visualisering af eventdeltagelse blandt aktive medlemmer
-# Her undersøger vi om virksomheder deltager i events, fordelt på 'Ja' og 'Nej'
-
 featured |>
   filter(churn == 0) |>
   ggplot(aes(x = deltaget_i_event, fill = deltaget_i_event)) +
@@ -978,19 +880,7 @@ featured |>
 
 ggsave("images/EDA_2_eventdeltagelse.png", width = 7, height = 4, dpi = 300)
 
-
 # 5.3 Søjlediagram: Kombination af kontakt og eventdeltagelse vs. medlemsstatus
-
-
-# Vi undersøger, hvordan kombinationen af kontakt og eventdeltagelse 
-# relaterer sig til medlemsstatus (aktiv eller stoppet).
-# Derfor opretter vi en ny variabel "kontakt_event", der grupperer virksomheder
-# efter disse kombinationer:
-# - Både haft kontakt og deltaget i event
-# - Kun haft kontakt
-# - Kun deltaget i event
-# - Ingen af delene
-
 featured |> 
   mutate(
     kontakt_event = case_when(
@@ -1035,13 +925,6 @@ featured |>
 ggsave("images/EDA_3_kombination_kontakt_event.png", width = 7, height = 4, dpi = 300)
 
 # 5.4 Søjlediagram: Branchefordeling blandt aktive medlemmer
-
-
-# Vi undersøger hvilke brancher de *aktive* virksomheder (medlemmer) tilhører.
-# Formålet er at få et overblik over, hvilke brancher der er mest repræsenteret
-# blandt dem, der stadig er med i fællesskabet (churn == 0).
-# Kun brancher med mindst 10 virksomheder vises, for at sikre et læsbart plot.
-
 featured |>
   # Filtrér: medtag kun virksomheder der stadig er medlemmer (aktive)
   filter(churn == 0) |>
@@ -1080,14 +963,7 @@ featured |>
 
 ggsave("images/EDA_4_branchefordeling.png", width = 7, height = 4, dpi = 300)
 
-
 # 5.5 Søjlediagram: Eventdeltagelse pr. postnummer (Aktive medlemmer)
-
-
-# Vi undersøger, hvordan aktive virksomheders eventdeltagelse fordeler sig geografisk,
-# baseret på postnummer. Vi viser både deltagelse ("Ja") og ikke-deltagelse ("Nej"),
-# og sorterer postnumrene efter hvor stor andelen af 'Ja'-svar er.
-
 # Beregn antal og andel for hver kombination af postnummer og eventdeltagelse
 post_event <- featured |> 
   # Filtrér: medtag kun aktive virksomheder
@@ -1146,11 +1022,6 @@ post_event |>
 ggsave("images/EDA_5_eventdeltagelse_postnummer.png", width = 7, height = 4, dpi = 300)
 
 # 5.6 Korrellationsmatrix: Numeriske variable
-
-# Vi ønsker at undersøge, hvordan de numeriske variable i datasættet hænger sammen.
-# Det gør vi ved at udtrække alle numeriske kolonner og beregne en korrelationsmatrix.
-# Denne visualiseres som et cirkelplot med Pearson-korrelationer.
-
 # Udtræk kun de kolonner i datasættet, der er numeriske
 featured_numerisk <- featured |> 
   select(where(is.numeric)) |> 
@@ -1180,9 +1051,7 @@ corrplot::corrplot(
 
 #ggsave("images/EDA_6_korrellationsmatrix.png", width = 7, height = 4, dpi = 300)
 
-
 # 5.7 Boxplot: Mødelængde vs. eventdeltagelse (kun aktive medlemmer)
-
 # Outlier-funktion med IQR-metoden
 find_outliers <- function(x) {
   iqr <- IQR(x, na.rm = TRUE)
@@ -1290,7 +1159,7 @@ churn_recipe <-
   step_dummy(all_nominal_predictors(), one_hot = TRUE) |>
   step_zv(all_predictors()) |> 
   step_normalize(all_numeric_predictors()) |> 
-  step_downsample(churn)  # Brug evt. step_smote(churn) hvis ekstrem ubalance
+  step_downsample(churn)  # Bruger step_smote(churn) hvis ekstrem ubalance
 ```
 
 ```{r}
@@ -1380,6 +1249,8 @@ churn_results |>
   arrange(-f_meas)
 
 autoplot(churn_results, select_best = TRUE)
+
+ggsave("images/10_workflow_rank.png", width = 7, height = 4, dpi = 300)
 ```
 
 ```{r}
@@ -1413,7 +1284,6 @@ metrics_focus <- metrics_long %>%
   ))
 
 # 9.1 BarPlot med værdier for denne 3 metrikker
-
 ggplot(metrics_focus, aes(x = metric, y = score, fill = metric)) +
   geom_col(show.legend = FALSE) +
   geom_text(aes(label = round(score, 2)), vjust = -0.3, size = 3.5) +
@@ -1433,10 +1303,7 @@ ggplot(metrics_focus, aes(x = metric, y = score, fill = metric)) +
 
 ggsave("images/1_model_performance.png", width = 7, height = 4, dpi = 300)
 
-
 # 9.2 Linjeplot
-
-
 ggplot(metrics_focus, aes(x = wflow_id, y = score, color = metric, group = metric)) +
   geom_line(size = 1) +
   geom_point(size = 3) +
@@ -1455,10 +1322,7 @@ ggplot(metrics_focus, aes(x = wflow_id, y = score, color = metric, group = metri
 
 ggsave("images/2_linje_plot.png", width = 7, height = 4, dpi = 300)
 
-
 # 9.3 Heatmap pr. model og metrik
-
-
 ggplot(metrics_focus, aes(x = metric, y = wflow_id, fill = score)) +
   geom_tile(color = "white") +
   geom_text(aes(label = round(score, 2)), size = 3) +
@@ -1475,8 +1339,6 @@ ggsave("images/3_heatmap_pr_model.png", width = 7, height = 4, dpi = 300)
 
 
 # 9.4 Plot for xgboost og Random forest med de vigtigste variabler 
-
-
 # Hent tuning-resultater for rf og xgboost
 rf_result <- churn_results %>% extract_workflow_set_result("churn_recipe_rf")
 xgb_result <- churn_results %>% extract_workflow_set_result("churn_recipe_xgboost")
@@ -1525,15 +1387,12 @@ ggplot(vip_combined, aes(x = reorder(Variable, Importance), y = Importance, fill
   scale_y_continuous(expand = expansion(mult = c(0, 0.10))) #ektra space til labels
 
 ggsave("images/4_top_10_variabler_pr_model.png", width = 7, height = 4, dpi = 300)
-
 ```
 
 ```{r}
 # ------------------------------------------------------------------------------
 # 10. Endelig model – Finetuning af Random Forest
 # ------------------------------------------------------------------------------
-
-# Undersøg på hele datasæt
 
 # 10.1 Vi laver et workflow med kun én model: Random Forest
 churn_workflow_set_rf <- workflow_set(
@@ -1620,8 +1479,6 @@ saveRDS(final_model, "final_churn_model.rds")
 
 
 # 11.1 Eksempel: Forudsig churn for én ny virksomhed
-
-
 new_company <- tibble(
   Employees = 15,
   PostalCode = factor("8800"),
@@ -1641,8 +1498,6 @@ predict(final_model, new_company, type = "prob")     # churn-sandsynlighed
 
 
 # 11.2 Forudsig churn for ALLE virksomheder og tilføj resultater
-
-
 # Modellen anvendes nu på hele medlemsdatabasen for at identificere churn-risiko
 
 # Forudsiger sandsynlighed og klasse
@@ -1674,10 +1529,7 @@ full_results <- full_results |>
     )
   )
 
-
 # 11.3 Visualisering: Fordeling af churn-risikokategorier (kun aktive medlemmer)
-
-
 full_results |> 
   filter(churn == 0) |>  
   count(churn_risiko) |> 
@@ -1703,8 +1555,6 @@ full_results |>
 ggsave("images/9_churn_risikokategorier_aktive.png", width = 7, height = 4, dpi = 300)
 
 # 11.4 Churn-risiko: Filtrér medlemmer (churn == 0) med høj risiko (churn_class == 1)
-
-
 top_risiko_medlemmer <- full_results |> 
   filter(churn == 0, churn_class == 1) |> 
   arrange(desc(churn_prob)) |> 
@@ -1712,8 +1562,6 @@ top_risiko_medlemmer <- full_results |>
 
 
 # 11.5 Visualiseringer: Brancher og postnumre med høj churn
-
-
 # Brancher med højest gennemsnitlig churn
 full_results |> 
   group_by(Branche_navn) |> 
@@ -1743,7 +1591,6 @@ full_results |>
 ggsave("images/6_postnummer_højeste_churn.png", width = 7, height = 4, dpi = 300)
 
 # 11.6 Hvad kendetegner virksomheder der IKKE churner?
-
 full_results |> 
   filter(churn_class == 0) |>  # Virksomheder som modellen forudser bliver
   count(Branche_navn, sort = TRUE) |> 
@@ -1811,7 +1658,7 @@ ggsave("images/8_top_5_variabler_rf.png", width = 7, height = 4, dpi = 300)
 saveRDS(full_results, "full_results.rds")
 ```
 
-```{r}
+```{r, eval = FALSE, echo = TRUE}
 # ------------------------------------------------------------------------------
 # 12 Churn dashboard til Business Viborg
 # ------------------------------------------------------------------------------
