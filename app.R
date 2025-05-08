@@ -291,14 +291,14 @@ div(class = "top-bar",
         p("Overvåg og analyser churn risiko blandt medlemmer",
           style = "color: #88c5aa; font-size: 18px; margin: 0;")
 ),
-  div(style = "display: flex; align-items: center; gap: 10px;",
-    textInput("search", NULL, placeholder = "Søg...", width = "200px"),
-    tags$div(style = "width: 40px; height: 40px; background-color: #0e2f33;
-                      border-radius: 50%; display: flex; align-items: center;
-                      justify-content: center; color: white; font-size: 18px;",
-             logoutButton(label = "Log ud", style = "background-color: #dc3545; color: white; border: none;"),
-             icon("user"))
-    )
+div(style = "display: flex; flex-direction: column; align-items: flex-end;",
+    div(style = "display: flex; align-items: center; gap: 8px; margin-bottom: 5px;",
+        icon("user"),
+        span(textOutput("user_name"), style = "margin-left: 5px;"),
+        logoutButton(label = "Log ud", style = "background-color: #dc3545; color: white; border: none;")
+    ),
+    textInput("search", NULL, placeholder = "Søg...", width = "200px")
+)
 ),
  
 
