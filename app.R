@@ -1,16 +1,5 @@
-# 1.1 Pakker
-library(shiny)          
-library(leaflet)         
-library(dplyr)           
-library(readr)           
-library(shinyWidgets)    
-library(DT)              
-library(ggplot2)         
-library(tibble)          
-library(tidymodels)
-library(auth0)
-library(ggforce)
-
+pacman::p_load(shiny,leaflet,dplyr,readr,shinyWidgets,
+  DT,ggplot2,tibble,tidymodels,auth0,ggforce, scales)
 
 readRenviron("Renviron.sh")
 options(shiny.port = 8080)
@@ -18,9 +7,7 @@ Sys.getenv("AUTH0_USER")
 
 # 1.2 Datasæt og churn-model
 full_results <- readRDS("data/full_results.rds")          
-final_model <- readRDS("models/final_churn_model.rds")     
-
-unique(full_results$PostalCode)
+final_model <- readRDS("final_churn_model.rds") 
 
 # 1.5 Medlemskabspris - Antal ansatte
 calculate_membership_fee <- function(n) {
@@ -690,17 +677,6 @@ server <- function(input, output, session) {
   output$simulation_result <- renderUI({
     if (input$run_simulation > 0) {
       isolate({
-        new_company <- tibble(
-          Employees = input$sim_employees,
-          PostalCode = factor(input$sim_postal, levels = levels(data_map$PostalCode)),
-          CompanyTypeName = factor(input$sim_company_type, levels = levels(data_map$CompanyTypeName)),
-          har_haft_kontakt = factor(input$sim_contact, levels = c("Ja", "Nej")),
-          deltaget_i_event = factor(input$sim_event, levels = c("Ja", "Nej")),
-          medlem_antal_år = input$sim_member_years,
-          Branche_navn = factor(input$sim_branche, levels = levels(data_map$Branche_navn)),
-          MeetingLength = input$sim_meeting_length,
-          PNumber = 99999999
-        )
         prediction <- predict(final_model, new_data = new_company(), type = "prob")
         churn_prob <- prediction$.pred_1
         risk_category <- ifelse(churn_prob > 0.75, "Høj",
