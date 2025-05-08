@@ -1,4 +1,3 @@
-
 # 1.1 Pakker
 library(shiny)          
 library(leaflet)         
@@ -8,13 +7,18 @@ library(shinyWidgets)
 library(DT)              
 library(ggplot2)         
 library(tibble)          
-library(tidymodels)      
+library(tidymodels)
+library(auth0)
+library(ggforce)
 
+
+readRenviron("Renviron.sh")
+options(shiny.port = 8080)
+Sys.getenv("AUTH0_USER")
 
 # 1.2 Datasæt og churn-model
 full_results <- readRDS("data/full_results.rds")          
 final_model <- readRDS("models/final_churn_model.rds")     
-
 
 # 1.3 Koordinater til postnumre
 postal_coords <- data.frame(
@@ -22,7 +26,6 @@ postal_coords <- data.frame(
   lat = c(56.451, 56.532, 56.447, 56.489, 56.472, 56.475, 56.448, 56.449, 56.907, 56.573, 56.824, 57.226, 56.611),
   lng = c(9.404, 8.486, 9.186, 9.000, 8.662, 9.156, 9.163, 9.171, 9.287, 9.156, 9.388, 9.388, 8.954)
 )
-
 
 # 1.4 Postnumre er i karakterformat 
 full_results$PostalCode <- as.character(full_results$PostalCode)
@@ -57,8 +60,6 @@ data_map <- full_results %>%
 
     membership_fee = if_else(churn == 0, calculate_membership_fee(Employees), NA_real_)
   )
-
-print(head(data_map$churn_prob))
 
 # Farver til risikokategorier
 risk_pal <- c(
@@ -298,9 +299,8 @@ div(style = "display: flex; flex-direction: column; align-items: flex-end;",
         logoutButton(label = "Log ud", style = "background-color: #dc3545; color: white; border: none;")
     ),
     textInput("search", NULL, placeholder = "Søg...", width = "200px")
-)
-),
- 
+   )
+   ),
 
 # 2.5 Tabs
 
@@ -382,7 +382,6 @@ tabPanel("Simulation",
              pickerInput("sim_company_type", "Virksomhedstype:", levels(data_map$CompanyTypeName)),
              radioGroupButtons("sim_contact", "Kontakt:", c("Ja" = "Ja", "Nej" = "Nej"), "Ja"),
              radioGroupButtons("sim_event", "Event:", c("Ja" = "Ja", "Nej" = "Nej"), "Nej"),
-             pickerInput("sim_help_category", "Hjælpekategori:", levels(data_map$hjælp_kategori)),
              sliderInput("sim_member_years", "Medlemsår:", 0, 20, 2),
              pickerInput("sim_branche", "Branche:", levels(data_map$Branche_navn)),
              numericInput("sim_meeting_length", "Mødelængde (min):", 60, 0, 300),
@@ -394,9 +393,7 @@ tabPanel("Simulation",
              h4("Resultat", style = "color:#0e2f33;"),
              div(style = "text-align:center;margin-top:30px;",
                  htmlOutput("simulation_result"),
-                 br(),
-                 h5("Churn-drivere", style = "margin-top:30px; color:#0e2f33;"),
-                 plotOutput("simulation_factors_sim", height = "200px")
+                 plotOutput("simulation_gauge", height = "200px")
              )
            ))
          )
@@ -524,8 +521,8 @@ server <- function(input, output, session) {
   
   output$simulation_factors_dashboard <- renderPlot({
     var_imp <- tibble(
-      factor = c("Medlemsvarighed", "Event-deltagelse", "Kontakt", "Branche", "Ansatte"),
-      importance = c(0.3, 0.25, 0.2, 0.15, 0.1)
+      factor = c("Deltaget i event - Nej", "Deltaget i event - Ja", "Meeting Length", "Employees", "Medlem antal år"),
+      importance = c(0.66, 0.65, 0.28, 0.26, 0.20)
     )
     
     ggplot(var_imp, aes(x = reorder(factor, importance), y = importance)) +
@@ -745,8 +742,8 @@ server <- function(input, output, session) {
     req(input$run_simulation)
     
     var_imp <- tibble(
-      factor = c("Medlemsvarighed", "Event-deltagelse", "Kontakt", "Branche", "Ansatte"),
-      importance = c(0.3, 0.25, 0.2, 0.15, 0.1)
+      factor = c("Deltaget i event - Nej", "Deltaget i event - Ja", "Meeting Length", "Employees", "Medlem antal år"),
+      importance = c(0.66, 0.65, 0.28, 0.26, 0.20)
     )
     
     ggplot(var_imp, aes(x = reorder(factor, importance), y = importance)) +
@@ -770,7 +767,6 @@ server <- function(input, output, session) {
           CompanyTypeName = factor(input$sim_company_type, levels = levels(data_map$CompanyTypeName)),
           har_haft_kontakt = factor(input$sim_contact, levels = c("Ja", "Nej")),
           deltaget_i_event = factor(input$sim_event, levels = c("Ja", "Nej")),
-          hjælp_kategori = factor(input$sim_help_category, levels = levels(data_map$hjælp_kategori)),
           medlem_antal_år = input$sim_member_years,
           Branche_navn = factor(input$sim_branche, levels = levels(data_map$Branche_navn)),
           MeetingLength = input$sim_meeting_length,
@@ -803,22 +799,6 @@ server <- function(input, output, session) {
     }
   })
   
-  output$simulation_factors_sim <- renderPlot({
-    req(input$run_simulation > 0)
-    
-    var_imp <- tibble(
-      factor = c("Medlemsvarighed", "Event-deltagelse", "Kontakt", "Branche", "Ansatte"),
-      importance = c(0.3, 0.25, 0.2, 0.15, 0.1)
-    )
-    
-    ggplot(var_imp, aes(x = reorder(factor, importance), y = importance)) +
-      geom_col(fill = "#0e2f33", width = 0.7) +
-      coord_flip() +
-      labs(x = "", y = "Relativ betydning") +
-      theme_minimal() +
-      scale_y_continuous(labels = scales::percent_format(accuracy = 1))
-  })
-  
 
   new_company <- reactive({
     tibble(
@@ -827,12 +807,36 @@ server <- function(input, output, session) {
       CompanyTypeName = factor(input$sim_company_type, levels = levels(data_map$CompanyTypeName)),
       har_haft_kontakt = factor(input$sim_contact, levels = c("Ja", "Nej")),
       deltaget_i_event = factor(input$sim_event, levels = c("Ja", "Nej")),
-      hjælp_kategori = factor(input$sim_help_category, levels = levels(data_map$hjælp_kategori)),
       medlem_antal_år = input$sim_member_years,
       Branche_navn = factor(input$sim_branche, levels = levels(data_map$Branche_navn)),
       MeetingLength = input$sim_meeting_length,
       PNumber = 99999999
     )
+  })
+  
+  output$simulation_gauge <- renderPlot({
+    if (input$run_simulation > 0) {
+      isolate({
+        new_company_data <- new_company()
+        prediction <- predict(final_model, new_data = new_company(), type = "prob")
+        churn_prob <- prediction$.pred_1
+        
+        ggplot() +
+          geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0.5, r = 1,
+                           start = 0, end = 2*pi, fill = "lightgrey")) +
+          geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0.5, r = 1,
+                           start = 0, end = 2*pi * churn_prob, 
+                           fill = ifelse(churn_prob > 0.75, "#d9534f",
+                                         ifelse(churn_prob > 0.5, "#f0ad4e", "#5cb85c")))) +
+          geom_text(aes(x = 0, y = 0, 
+                        label = paste0(round(churn_prob * 100, 1), "%")),
+                    size = 8, fontface = "bold") +
+          coord_fixed() +
+          theme_void() +
+          theme(legend.position = "none") +
+          scale_fill_identity()
+      })
+    }
   })
 }
 # 4. Kørsel af Shiny-app
