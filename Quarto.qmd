@@ -28,6 +28,7 @@ format:
       - heightrounded
     fig-cap-location: bottom
     fig-numbering: true
+    lang: da
 ---
 
 \renewcommand{\contentsname}{Indholdsfortegnelse}
@@ -361,7 +362,7 @@ Et naturligt næste skridt er at inddrage tidsstempler for udmeldelser. Det vil 
 # Konklusion
 Dette projekt har vist, hvordan Business Viborg med fordel kan analysere og anvende deres medlemsdata til at udvikle et beslutningsunderstøttende dashboard, der forudsiger churn og synliggør centrale risikofaktorer. Gennem en grundig eksplorativ analyse blev det tydeligt, at medlemmer med lavt mødeengagement, kort medlemsanciennitet og svag eventaktivitet oftere forlader foreningen.
 
-Til at modellere churn blev seks forskellige machine learning-algoritmer testet og sammenlignet. Random Forest blev valgt som slutmodel, da den kombinerede høj præcision med stærk generaliserbarhed. Modellen opnåede en ROC AUC på 0.931, hvilket indikerer fremragende evne til at adskille churnere fra loyale medlemmer. Desuden blev der opnået en accuracy på 0.863, en F1-score på 0.789, samt balancerede værdier for sensitivitet (0.868) og specificitet (0.861) – hvilket betyder, at modellen er robust ift. både at identificere churnere og undgå falske alarmer.
+Til at modellere churn blev seks forskellige machine learning-algoritmer testet og sammenlignet. Random Forest blev valgt som slutmodel, da den kombinerede høj præcision med stærk generaliserbarhed. Modellen opnåede en ROC AUC på 0.931, hvilket indikerer fremragende evne til at adskille churnere fra loyale medlemmer. Desuden blev der opnået en accuracy på 0.873, en F1-score på 0.803, samt balancerede værdier for sensitivitet (0.877) og specificitet (0.872) – hvilket betyder, at modellen er robust ift. både at identificere churnere og undgå falske alarmer.
 
 Resultaterne er blevet omsat til et brugervenligt dashboard, der gør det muligt for medlemskonsulenter og ledelse at identificere risikoprofiler og handle proaktivt. Dashboardet er udviklet med fokus på transparens og praktisk anvendelighed, hvilket understøtter en mere målrettet og datadrevet tilgang til medlemsfastholdelse.
 
@@ -646,17 +647,17 @@ feature_engineering <- feature_engineering |>
       as.numeric()                        # Konverterer til tal
   )
 
-# # 4.4: Oversættelse af virksomhedstyper til mere læsbare formater
-# # Eksempel: "A/S" bliver til "Aktieselskab"
-# 
-# feature_engineering <- feature_engineering |>
-#   mutate(
-# CompanyTypeName = str_replace_all(CompanyTypeName, "A/S", "Aktieselskab"),
-# CompanyTypeName = str_replace_all(CompanyTypeName, "ApS", "Anpartsselskab"),
-# CompanyTypeName = str_replace_all(CompanyTypeName, "IVS", "Iværksætterselskab"),
-# CompanyTypeName = str_replace_all(CompanyTypeName, "P/S", "Partnerselskab"),
-# CompanyTypeName = str_replace_all(CompanyTypeName, "K/S", "Kommanditselskab")
-#   )
+# 4.4: Oversættelse af virksomhedstyper til mere læsbare formater
+# Eksempel: "A/S" bliver til "Aktieselskab"
+
+feature_engineering <- feature_engineering |>
+  mutate(
+CompanyTypeName = str_replace_all(CompanyTypeName, "A/S", "Aktieselskab"),
+CompanyTypeName = str_replace_all(CompanyTypeName, "ApS", "Anpartsselskab"),
+CompanyTypeName = str_replace_all(CompanyTypeName, "IVS", "Iværksætterselskab"),
+CompanyTypeName = str_replace_all(CompanyTypeName, "P/S", "Partnerselskab"),
+CompanyTypeName = str_replace_all(CompanyTypeName, "K/S", "Kommanditselskab")
+  )
 
 # 4.5: Tilføj branchebetegnelse baseret på NACE-koder
 # NACE er en standard for brancheklassifikation (fx "01 Landbrug")
@@ -698,75 +699,96 @@ feature_engineering <- feature_engineering |>
 feature_engineering <- feature_engineering |>
   mutate(deltaget_i_event = if_else(as.numeric(EventLength) > 0, "Ja", "Nej"))
 
-# 4.8: Skaber kategorier der viser virksomhedens behov for hjælp
-# Her grupperes TRUE/FALSE-kolonner i temaer som Strategi, Jura, Økonomi osv.
-  # Den viser, hvilken overordnet type hjælp virksomheden har modtaget.
+# # 4.8: Skaber kategorier der viser virksomhedens behov for hjælp
+# # Her grupperes TRUE/FALSE-kolonner i temaer som Strategi, Jura, Økonomi osv.
+#   # Den viser, hvilken overordnet type hjælp virksomheden har modtaget.
+# 
+# feature_engineering <- feature_engineering |>
+#   # Sørg for at konvertere kolonnerne til logiske værdier (TRUE/FALSE)
+#   mutate(across(matches("^\\d+_1"), ~ .x != "FALSE" & .x != "Tom")) |>
+#   mutate(
+#     
+# # Opretter en enkelt variabel, der kategoriserer virksomheden baseret på de 
+#     # 8 områder
+#     hjælp_kategori = case_when(
+# 
+# # Hvis virksomheden har søgt hjælp til strategi/emner som 
+#       # forretningsidé, produkt osv.
+#       (as.logical(Kundeportefølje) | as.logical(Forretningsmodel) | 
+#          as.logical(Forretningsidé) | as.logical(Produktportefølje)) 
+#       ~ "Strategi Udvikling",
+#       
+# # Hvis fokus har været på markedsføring, branding eller PR
+#       (as.logical(Markedsføring) | as.logical(Branding) | 
+#          as.logical(Kommunikation_og_PR)) ~ "Marketing og Kommunikation",
+# 
+# # Hvis der er søgt hjælp til salg, eksport eller markedsposition
+#       (as.logical(Salg) | as.logical(Eksport) | 
+#          as.logical(Markedsposition)) ~ "Salg og Eksport",
+#       
+# # Hvis der har været fokus på ledelse, netværk eller organisation
+#       (as.logical(Medarbejdere) | as.logical(Netværk) | 
+#          as.logical(Samarbejdspartnere) | as.logical(Ejer_og_bestyrelse)) 
+#                                             ~ "Organisation og Ledelse",
+#       
+# # Hvis det handler om økonomi, finansiering eller fonde
+#       (as.logical(Økonomistyring) | as.logical(Finansiering) | 
+#          as.logical(Kapitalfond) | as.logical(Vækstfonden) | 
+#          as.logical(Innovationsfonden)) ~ "Økonomi og Finansiering",
+#       
+# # Hvis det handler om daglig drift, it-systemer eller forretningsgange
+#       (as.logical(Leverance_og_projektstyring) | as.logical(IT_systemer) | 
+#          as.logical(Faciliteter) | 
+#          as.logical(Forretningsgange)) ~ "Drift og Systemer",
+#       
+# # Hvis fokus er på jura, ejerskifte mv.
+#       (as.logical(Juridiske_forhold) | 
+#          as.logical(Ejerskifte_og_generationsskifte)) ~ "Jura og Struktur",
+#     
+# # Hvis der er søgt støtte gennem offentlige ordninger
+#       (as.logical(EU_Kontoret_i_DK_Interreg) | as.logical(Erhvervshuset) | 
+#          as.logical(FN_1) | 
+#          as.logical(Andre_nationale_ordninger)) ~ "Støtteordninger",
+#       
+#       # Tilføjelse af de nye kategorier
+#       (as.logical(Uddannelse_kompetenceudvikling) | 
+#          as.logical(Vidensordninger) | 
+#          as.logical(IV_Vejledning) | 
+#          as.logical(Virksomhedsbesøg_Virksomhed_under_3_år) | 
+#          as.logical(I_Værkstedet) | 
+#          as.logical(Klippekort_Udleveret) | 
+#          as.logical(Væksthjul_Screening) | 
+#          as.logical(Agro_Business_Park) | 
+#          as.logical(Konsulent_virksomhed_uden_for_Kommunen_DK) | 
+#          as.logical(Lokal_konsulent_eller_virksomhed) | 
+#          as.logical(Indenrigsministeriet_The_Trade_Council) | 
+#          as.logical(Produktudviklin)) ~ "Andre Hjælpeordninger",
+#       
+#       TRUE ~ "Ingen specifik hjælp"
+#     )
+#   ) |>
+#   # Ryd op ved at fjerne de originale variabler der er brugt til grupperingen
+#   select(-c(
+#     Kundeportefølje, Forretningsmodel, Forretningsidé, Produktportefølje,
+#     Markedsføring, Branding, Kommunikation_og_PR,
+#     Salg, Eksport, Markedsposition,
+#     Medarbejdere, Netværk, Samarbejdspartnere, Ejer_og_bestyrelse,
+#     Økonomistyring, Finansiering, Kapitalfond, Vækstfonden, Innovationsfonden,
+#     Leverance_og_projektstyring, IT_systemer, Faciliteter, Forretningsgange,
+#     Juridiske_forhold, Ejerskifte_og_generationsskifte,
+#     EU_Kontoret_i_DK_Interreg, Erhvervshuset, FN_1, Andre_nationale_ordninger,
+#     Uddannelse_kompetenceudvikling, Vidensordninger, IV_Vejledning, 
+#     Virksomhedsbesøg_Virksomhed_under_3_år, I_Værkstedet, 
+#     Klippekort_Udleveret, Væksthjul_Screening, Agro_Business_Park, 
+#     Konsulent_virksomhed_uden_for_Kommunen_DK, Lokal_konsulent_eller_virksomhed, 
+#     Indenrigsministeriet_The_Trade_Council, Produktudviklin
+#   ))
 
-feature_engineering <- feature_engineering |>
-  # Sørg for at konvertere kolonnerne til logiske værdier (TRUE/FALSE)
-  mutate(across(matches("^\\d+_1"), ~ .x != "FALSE" & .x != "Tom")) |>
-  mutate(
-    
-# Opretter en enkelt variabel, der kategoriserer virksomheden baseret på de 
-    # 8 områder
-    hjælp_kategori = case_when(
+# Tjek resultatet
+# glimpse(feature_engineering)
 
-# Hvis virksomheden har søgt hjælp til strategi/emner som 
-      # forretningsidé, produkt osv.
-      (as.logical(Kundeportefølje) | as.logical(Forretningsmodel) | 
-         as.logical(Forretningsidé) | as.logical(Produktportefølje)) 
-      ~ "Strategi Udvikling",
-      
-# Hvis fokus har været på markedsføring, branding eller PR
-      (as.logical(Markedsføring) | as.logical(Branding) | 
-         as.logical(Kommunikation_og_PR)) ~ "Marketing og Kommunikation",
-
-# Hvis der er søgt hjælp til salg, eksport eller markedsposition
-      (as.logical(Salg) | as.logical(Eksport) | 
-         as.logical(Markedsposition)) ~ "Salg og Eksport",
-      
-# Hvis der har været fokus på ledelse, netværk eller organisation
-      (as.logical(Medarbejdere) | as.logical(Netværk) | 
-         as.logical(Samarbejdspartnere) | as.logical(Ejer_og_bestyrelse)) 
-                                            ~ "Organisation og Ledelse",
-      
-# Hvis det handler om økonomi, finansiering eller fonde
-      (as.logical(Økonomistyring) | as.logical(Finansiering) | 
-         as.logical(Kapitalfond) | as.logical(Vækstfonden) | 
-         as.logical(Innovationsfonden)) ~ "Økonomi og Finansiering",
-      
-# Hvis det handler om daglig drift, it-systemer eller forretningsgange
-      (as.logical(Leverance_og_projektstyring) | as.logical(IT_systemer) | 
-         as.logical(Faciliteter) | 
-         as.logical(Forretningsgange)) ~ "Drift og Systemer",
-      
-# Hvis fokus er på jura, ejerskifte mv.
-      (as.logical(Juridiske_forhold) | 
-         as.logical(Ejerskifte_og_generationsskifte)) ~ "Jura og Struktur",
-    
-# Hvis der er søgt støtte gennem offentlige ordninger
-      (as.logical(EU_Kontoret_i_DK_Interreg) | as.logical(Erhvervshuset) | 
-         as.logical(FN_1) | 
-         as.logical(Andre_nationale_ordninger)) ~ "Støtteordninger",
-      
-      # Tilføjelse af de nye kategorier
-      (as.logical(Uddannelse_kompetenceudvikling) | 
-         as.logical(Vidensordninger) | 
-         as.logical(IV_Vejledning) | 
-         as.logical(Virksomhedsbesøg_Virksomhed_under_3_år) | 
-         as.logical(I_Værkstedet) | 
-         as.logical(Klippekort_Udleveret) | 
-         as.logical(Væksthjul_Screening) | 
-         as.logical(Agro_Business_Park) | 
-         as.logical(Konsulent_virksomhed_uden_for_Kommunen_DK) | 
-         as.logical(Lokal_konsulent_eller_virksomhed) | 
-         as.logical(Indenrigsministeriet_The_Trade_Council) | 
-         as.logical(Produktudviklin)) ~ "Andre Hjælpeordninger",
-      
-      TRUE ~ "Ingen specifik hjælp"
-    )
-  ) |>
-  # Ryd op ved at fjerne de originale variabler der er brugt til grupperingen
+# Fjerner hjælpekolonnerne, da vi har lavet en variabel med kontakt eller ej
+feature_engineering <- feature_engineering |> 
   select(-c(
     Kundeportefølje, Forretningsmodel, Forretningsidé, Produktportefølje,
     Markedsføring, Branding, Kommunikation_og_PR,
@@ -782,13 +804,6 @@ feature_engineering <- feature_engineering |>
     Konsulent_virksomhed_uden_for_Kommunen_DK, Lokal_konsulent_eller_virksomhed, 
     Indenrigsministeriet_The_Trade_Council, Produktudviklin
   ))
-
-# Tjek resultatet
-# glimpse(feature_engineering)
-
-# Gemmer PNumber til senere brug (hvis vi kan gøre det, så vi ikke er nødt til
-# at have det med videre i modellerne)
-# pnumbers <- feature_engineering$PNumber
 
 # 4.9: Behold kun aktive virksomheder
 feature_engineering <- feature_engineering |> 
@@ -807,18 +822,12 @@ feature_engineering <- feature_engineering |>
   select(-BusinessCouncilMember)
 
 # 4.11: Konverter udvalgte kolonner til faktorer, 
-# som er nødvendigt for ML-modeller
-# En faktor er en kategorisk variabel – dvs. den indeholder en begrænset mængde 
-# unikke værdier (kategorier). # Eksempler på faktorer: postnumre, ja/nej, 
-# virksomhedsformer (ApS, A/S, IVS osv.)
-# I maskinlæring skal sådanne kolonner være faktorer, 
-# så algoritmerne forstår dem som kategorier og ikke som tekst.
 feature_engineering <- feature_engineering |> 
   mutate(
     CompanyTypeName = as.factor(CompanyTypeName),
     har_haft_kontakt = as.factor(har_haft_kontakt),
     deltaget_i_event = as.factor(deltaget_i_event),
-    hjælp_kategori = as.factor(hjælp_kategori),
+    #hjælp_kategori = as.factor(hjælp_kategori),
     PostalCode = as.factor(PostalCode),
     churn = as.factor(churn)
   )
@@ -1339,57 +1348,6 @@ ggplot(metrics_focus, aes(x = metric, y = wflow_id, fill = score)) +
   theme(plot.title = element_text(hjust = 0.5))
 
 ggsave("images/3_heatmap_pr_model.png", width = 7, height = 4, dpi = 300)
-
-
-# 9.4 Plot for xgboost og Random forest med de vigtigste variabler 
-# Hent tuning-resultater for rf og xgboost
-rf_result <- churn_results %>% extract_workflow_set_result("churn_recipe_rf")
-xgb_result <- churn_results %>% extract_workflow_set_result("churn_recipe_xgboost")
-
-# Hent workflow (før det er fit)
-rf_workflow <- churn_results %>% extract_workflow("churn_recipe_rf")
-xgb_workflow <- churn_results %>% extract_workflow("churn_recipe_xgboost")
-
-# Vælg bedste parametre og fit modellen
-best_rf <- rf_workflow %>%
-  finalize_workflow(select_best(rf_result, metric = "f_meas")) %>%
-  fit(data = churn_train)
-
-best_xgb <- xgb_workflow %>%
-  finalize_workflow(select_best(xgb_result, metric = "f_meas")) %>%
-  fit(data = churn_train)
-
-# Feature importance
-vip_rf <- vi(extract_fit_parsnip(best_rf)) %>% mutate(model = "Random Forest")
-vip_xgb <- vi(extract_fit_parsnip(best_xgb)) %>% mutate(model = "XGBoost")
-
-# Kombinér og vis kun top 10 vigtigste variabler pr. model
-vip_combined <- bind_rows(vip_rf, vip_xgb) %>%
-  group_by(model) %>%
-  slice_max(order_by = Importance, n = 10) %>%
-  ungroup() %>%
-  mutate(Variable = str_wrap(Variable, width = 25))
-
-# Plot med labels og tekstrotation optimeret
-ggplot(vip_combined, aes(x = reorder(Variable, Importance), y = Importance, fill = model)) +
-  geom_col(show.legend = FALSE) +
-  geom_text(aes(label = round(Importance, 2)), hjust = -0.1, size = 3) +
-  facet_wrap(~ model, scales = "free") +
-  coord_flip() +
-  labs(
-    title = "Top 10 vigtigste variabler pr. model",
-    x = "Variabel",
-    y = "Vigtighed"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-    strip.text = element_text(size = 12, face = "bold"),
-    axis.text.y = element_text(size = 9)
-  ) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.10))) #ektra space til labels
-
-ggsave("images/4_top_10_variabler_pr_model.png", width = 7, height = 4, dpi = 300)
 ```
 
 ```{r}
@@ -1488,7 +1446,7 @@ new_company <- tibble(
   CompanyTypeName = factor("Aktieselskab"),
   har_haft_kontakt = factor("Ja"),
   deltaget_i_event = factor("Nej"),
-  hjælp_kategori = factor("Strategi Udvikling"),
+  #hjælp_kategori = factor("Strategi Udvikling"),
   medlem_antal_år = 2,
   Branche_navn = factor("Fremstilling af maskiner og udstyr i.a.n."),
   MeetingLength = 180,
