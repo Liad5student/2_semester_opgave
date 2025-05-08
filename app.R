@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# 1.0 Indlæsning af pakker
+# 1.1 Indlæsning af pakker
 #-------------------------------------------------------------------------------
 library(shiny)           # Brugergrænseflade (UI) og serverlogik
 library(leaflet)         # Kortvisualisering
@@ -10,26 +10,11 @@ library(DT)              # Dynamiske datatabeller
 library(ggplot2)         # Visualisering med grafer
 library(tibble)          # Bruges til bl.a. simulation (kolonneorienterede datastrukturer)
 library(tidymodels)      # Modellering og machine learning framework
-library(plotly)          # Interaktive grafer
-library(ggforce)         # For geom_arc_bar
-library(auth0)           # Authentication og authorization
-library (shinyalert)     # Pop-up beskeder
-
-#-------------------------------------------------------------------------------
-# 1.1. Tjekker Renvironment og indlæser auto0-variabler
-#-------------------------------------------------------------------------------
-
-readRenviron("Renviron.sh")
-
-options(shiny.port = 8080)
-
-Sys.getenv("AUTH0_USER")
 
 #-------------------------------------------------------------------------------
 # 1.2 Indlæsning af datasæt og churn-model
 #-------------------------------------------------------------------------------
 full_results <- readRDS("data/full_results.rds")           # RDS-fil med medlems- og churndata
-event_list <- read.csv("data/events.csv", stringsAsFactors = FALSE)
 final_model <- readRDS("models/final_churn_model.rds")     # RDS-fil med trænet model
 
 #-------------------------------------------------------------------------------
@@ -46,28 +31,9 @@ postal_coords <- data.frame(
 #-------------------------------------------------------------------------------
 full_results$PostalCode <- as.character(full_results$PostalCode)
 postal_coords$PostalCode <- as.character(postal_coords$PostalCode)
-event_list$dato <- as.Date(event_list$dato)
 
 #-------------------------------------------------------------------------------
-# 1.5 Join datasæt og tildel risikokategorier
-#-------------------------------------------------------------------------------
-data_map <- full_results %>%
-  left_join(postal_coords, by = "PostalCode") %>%
-  mutate(
-    risk_category = case_when(
-      churn_prob > 0.75 ~ "High",
-      churn_prob > 0.5 ~ "Medium",
-      TRUE ~ "Low"
-    ),
-    risk_category = factor(risk_category, levels = c("High", "Medium", "Low")),
-    # Convert other columns to factors
-    CompanyTypeName = factor(CompanyTypeName),
-    Branche_navn = factor(Branche_navn),
-    hjælp_kategori = factor(hjælp_kategori),
-    PostalCode = factor(PostalCode)
-  )
-#-------------------------------------------------------------------------------
-# 1.6 BEREGNINGSFUNKTION: Medlemskabspris - Antal ansatte
+# 1.5 BEREGNINGSFUNKTION: Medlemskabspris - Antal ansatte
 #-------------------------------------------------------------------------------
 
 calculate_membership_fee <- function(n) {
@@ -82,1023 +48,652 @@ calculate_membership_fee <- function(n) {
     TRUE         ~ 15510
   )
 }
+#-------------------------------------------------------------------------------
+# 1.6 Join datasæt og tildel risikokategorier
+#-------------------------------------------------------------------------------
+data_map <- full_results %>%
+  left_join(postal_coords, by = "PostalCode") %>%
+  mutate(
+    risk_category = case_when(
+      churn_prob > 0.75 ~ "High",
+      churn_prob > 0.5 ~ "Medium",
+      TRUE ~ "Low"
+    ),
+    risk_category = factor(risk_category, levels = c("High", "Medium", "Low")),
+    
 
+    membership_fee = if_else(churn == 0, calculate_membership_fee(Employees), NA_real_)
+  )
 
 #-------------------------------------------------------------------------------
 # 2.1 Begyndelsen af UI - layout og styling
 #-------------------------------------------------------------------------------
 
 ui <- fluidPage(
-  #-------------------------------------------------------------------------------
-  # 2.2 CSS og Styling
-  #-------------------------------------------------------------------------------
-  # =====================================================
-  # 1.4 BRUGERDEFINERET CSS – TEMA, STIL & UI-KOMPONENTER
-  # =====================================================
-  tags$head(
-    tags$style(HTML("
 
-    /* =====================================================
-       BASISLAYOUT & TYPOGRAFI
-    ===================================================== */
-    body {
-      background: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      zoom: 0.8;
-    }
+#-------------------------------------------------------------------------------
+# 2.2 CSS og Styling
+#-------------------------------------------------------------------------------
+tags$head(
+  tags$style(HTML("
 
-    .small-paragraph {
-      font-size: 16px;
-      margin-top: 10px;
-    }
+body {
+  background:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  zoom:.8;
+}
 
-    /* =====================================================
-       OVERORDNET UI: TOPBAR, FANER & INDHOLD
-    ===================================================== */
-    .top-bar {
-      background: #ffffff;
-      font-family: 'Open Sans', sans-serif;
-      padding: 15px 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 2px solid #eeeeee;
-    }
+.small-paragraph {
+  font-size:16px;
+  margin-top:10px;
+}
 
-    .main_tabs {
-      background: linear-gradient(to bottom, #0e2f33 0%, #2a6c73 100%);
-      padding: 10px 2px;
-      color: #ffffff;
-      text-align: center;
-      margin-bottom: 2px;
-    }
+/* Topbar, faner & indhold*/
 
-    .main_tabs .tab-content {
-      background-color: #0e2f33;
-    }
+.top-bar {
+  padding:15px 30px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:2px solid #eee;
+}
 
-    .tab-content {
-      display: flex;
-      justify-content: flex-start;
-      margin-top: 25px;
-    }
+.main_tabs {
+  background:linear-gradient(to bottom,#0e2f33 0%,#2a6c73 100%);
+  padding:10px 2px;
+  text-align:center;
+  margin-bottom:2px;
+}
 
-    .nav-tabs {
-      background-color: transparent !important;
-      border: none !important;
-      margin: 0;
-      padding-left: 30px;
-    }
+.main_tabs .tab-content {
+  background:#0e2f33;
+}
 
-    .nav-tabs > li > a {
-      color: white !important;
-      font-weight: 500;
-      border: none !important;
-    }
+.tab-content {
+  display:flex;
+  justify-content:flex-start;
+  margin-top:25px;
+}
 
-    .nav-tabs > li.active > a,
-    .nav-tabs > li.active > a:focus,
-    .nav-tabs > li.active > a:hover {
-      background-color: transparent !important;
-      border: none !important;
-      border-bottom: 3px solid #7FC8A3 !important;
-      color: #ffffff !important;
-      font-weight: bold;
-    }
+.nav-tabs {
+  background:transparent!important;
+  border:none!important;
+  margin:0;
+  padding-left:30px;
+}
 
-    /* =====================================================
-       KNAPPER (generelle + gruppeknapper + brugerdefinerede)
-    ===================================================== */
-    .btn, .btn-primary, .btn-warning, .btn-danger {
-      background-color: #0e2f33 !important;
-      color: #ffffff !important;
-      font-weight: 500;
-      border: none;
-      border-radius: 5px;
-      padding: 6px 12px;
-    }
+.nav-tabs>li>a {
+  color:#fff!important;
+  font-weight:500;
+  border:none!important;
+}
 
-    .btn:hover {
-      background-color: #0e2f33 !important;
-    }
+.nav-tabs>li.active>a,
+.nav-tabs>li.active>a:focus,
+.nav-tabs>li.active>a:hover {
+  background:transparent!important;
+  border:none!important;
+  border-bottom:3px solid #7fc8a3!important;
+  color:#fff!important;
+  font-weight:bold;
+}
 
-    .btn-group .btn {
-      background-color: #e0e0e0 !important;
-      color: #333 !important;
-      border-radius: 5px !important;
-    }
 
-    .btn-group .btn.active,
-    .btn-group .btn:active,
-    .btn-group .btn:focus {
-      background-color: #0e2f33 !important;
-      color: #fff !important;
-      font-weight: 600;
-    }
+/* Knapper */
+  
+.btn:hover {
+  background:#0e2f33!important;
+}
 
-    .custom-btn {
-      background-color: #325e63 !important;
-      color: #ffffff !important;
-      font-weight: bold;
-      border: none;
-      border-radius: 10px;
-      padding: 20px 20px;
-      margin-top: 5px;
-      display: block;
-      width: 100%;
-      text-align: center;
-    }
+.btn-group .btn {
+  background:#e0e0e0!important;
+  color:#333!important;
+  border-radius:5px!important;
+}
 
-    /* =====================================================
-       INFOBOKSE OG DASHBOARD-ELEMENTER
-    ===================================================== */
-    .info-box-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin-bottom: 20px;
-      justify-content: flex-start;
-    }
+.btn-group .btn.active,
+.btn-group .btn:active,
+.btn-group .btn:focus {
+  background:#0e2f33!important;
+  color:#fff!important;
+  font-weight:600;
+}
 
-    .info-box {
-      flex: 1 1 calc(14.28% - 20px);
-      background-color: #325e63;
-      border-radius: 10px;
-      min-width: 180px;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
+.custom-btn {
+  background:#325e63!important;
+  color:#fff!important;
+  font-weight:700;
+  border:none;
+  border-radius:10px;
+  padding:20px;
+  margin-top:5px;
+  display:block;
+  width:100%;
+  text-align:center;
+}
 
-    .info-box h4 {
-      font-size: 13px;
-      color: #ffffff;
-      font-weight: normal;
-      margin-bottom: 6px;
-    }
-
-    .info-box p {
-      font-size: 18px;
-      font-weight: normal;
-      margin: 0;
-      color: #325e63;
-    }
-
-    .info-box2 {
-      background-color: #173234;
-      color: #ffffff;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-
-    .info-box3 {
-      background-color: #F5F5F5;
-      color: #173234;
-      padding: 10px 20px;
-      border-radius: 6px;
-      text-align: center;
-      font-weight: bold;
-      margin-bottom: 10px;
-      margin-top: 0px;
-      font-size: 26px;
-    }
-
-    .dashboard-wrapper {
-      padding-left: 40px;
-      padding-right: 40px;
-    }
-
-    /* =====================================================
-       SIDEPANELER & FILTRERING
-    ===================================================== */
-    .sidebarPanel {
-      background-color: #ffffff;
-      padding: 30px;
-      border-radius: 10px;
-      border-left: 10px solid #2a6c73;
-    }
-
-    .filter-box {
-      background-color: #ffffff;
-      color: #000000;
-      padding: 25px;
-      border-radius: 10px;
-      border: 1px solid #dddddd;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      margin-top: 20px;
-      text-align: left;
-    }
-
-    /* =====================================================
-       DROPDOWNS (bootstrap) & SLIDERS
-    ===================================================== */
-    .bootstrap-select .dropdown-toggle {
-      background-color: #0e2f33 !important;
-      color: #ffffff !important;
-      border-color: #0e2f33 !important;
-      font-weight: 500;
-      border-radius: 5px;
-      padding: 6px 12px;
-    }
-
-    .bootstrap-select .dropdown-toggle:focus {
-      border-color: #0e2f33 !important;
-      box-shadow: 0 0 0 0.15rem rgba(26, 78, 99, 0.5) !important;
-      outline: none !important;
-    }
-
-    .bootstrap-select .dropdown-toggle:hover {
-      background-color: #0e2f33 !important;
-    }
-
-    .irs-bar,
-    .irs-bar-edge,
-    .irs-single,
-    .irs-from,
-    .irs-to {
-      background-color: #0e2f33 !important;
-      border-color: #1f3e47 !important;
-    }
-
-    /* =====================================================
-       TABELVISNINGER (DT)
-    ===================================================== */
-    #dashboard_table,
-    #dashboard_table * {
-      color: white !important;
-    }
-
-    #dashboard_table,
-    .dataTables_wrapper {
-      height: 100%;
-      min-height: 100%;
-      width: 100% !important;
-    }
-
-    .dataTables_wrapper .dataTables_scrollBody {
-      max-height: none !important;
-    }
-
-    /* =====================================================
-       LEAFLET MAPS
-    ===================================================== */
-    .leaflet-container {
-      width: 70% !important;
-      margin-left: 0 !important;
-      color: white !important;
-    }
-
-    /* =====================================================
-       VIRKSOMHEDSDETALJER – KORTVISNING & RISIKO
-    ===================================================== */
-    .company-detail-card {
-      background: #ffffff;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      height: 100%;
-    }
-
-    .company-risk {
-      font-size: 40px;
-      font-weight: bold;
-      margin-top: 10px;
-      margin-bottom: 5px;
-    }
-
-    .company-risk-label {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .detail-button {
-      width: 100%;
-      margin-bottom: 10px;
-    }
-
-    .company-detail-title {
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #0e2f33;
-    }
+/* Infobokse*/
     
-    /* =====================================================
-       Simulation bokses og input med styling
-    ===================================================== */
-    .well {
-    min-height: 720px;
-    box-sizing: border-box;
-    }
+.info-box-container {
+  display:flex;
+  flex-wrap:wrap;
+  gap:15px;
+  margin-bottom:20px;
+  justify-content:flex-start;
+}
 
-  .input-params-box {
-    background: #f4f8f9;
-    padding: 15px 20px;
-    border-radius: 8px;
-    margin-top: 15px;
+.info-box {
+  flex:1 1 calc(14.28% - 20px);
+  background:#325e63;
+  border-radius:10px;
+  min-width:180px;
+  padding:20px;
+  text-align:center;
+  box-shadow:0 2px 5px rgba(0,0,0,.2);
+}
+
+.info-box h4,
+.info-box p {
+  font-weight:400;
+  margin:0;
+}
+
+.info-box h4 {
+  font-size:13px;
+  color:#fff;
+  margin-bottom:6px;
+}
+
+.info-box p {
+  font-size:18px;
+  color:#325e63;
+}
+
+.info-box2,
+.info-box3 {
+  text-align:center;
+  margin-bottom:10px;
+  border-radius:8px;
+}
+
+.info-box2 {
+  background:#173234;
+  color:#fff;
+  padding:12px;
+}
+
+.info-box3 {
+  background:#f5f5f5;
+  color:#173234;
+  padding:10px 20px;
+  border-radius:6px;
+  font-weight:700;
+  margin-top:0;
+  font-size:26px;
+}
+.info-box h2, .info-box2 h2 {
+  font-size: 32px;
+  line-height: 1;
+  margin-top: 10px;
+  margin-bottom: 0;
+  font-weight: bold;
+  min-height: 40px;
+}
+
+
+.dashboard-wrapper {
+  padding:0 40px;
+}
+
+
+/* Side filtering til venstre*/
+.sidebarPanel {
+  background:#fff;
+  padding:30px;
+  border-radius:10px;
+  border-left:10px solid #2a6c73;
+}
+
+.filter-box {
+  background:#fff;
+  color:#000;
+  padding:25px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  box-shadow:0 2px 5px rgba(0,0,0,.05);
+  margin-top:20px;
+  text-align:left;
+}
+
+/* Sliders */
+.bootstrap-select .dropdown-toggle {
+  background:#0e2f33!important;
+  color:#fff!important;
+  border:1px solid #0e2f33!important;
+  font-weight:500;
+  border-radius:5px;
+  padding:6px 12px;
+}
+
+.bootstrap-select .dropdown-toggle:focus {
+  box-shadow:0 0 0 .15rem rgba(26,78,99,.5)!important;
+  outline:none!important;
+}
+
+.bootstrap-select .dropdown-toggle:hover {
+  background:#0e2f33!important;
+}
+
+.irs-bar,
+.irs-bar-edge,
+.irs-single,
+.irs-from,
+.irs-to {
+  background:#0e2f33!important;
+  border-color:#1f3e47!important;
+}
+
+
+/* Tabelvisning*/
+
+#dashboard_table,
+#dashboard_table * {
+  color:#fff!important;
+}
+
+#dashboard_table,
+.dataTables_wrapper {
+  height:100%;
+  min-height:100%;
+  width:100%!important;
+}
+
+.dataTables_wrapper .dataTables_scrollBody {
+  max-height:none!important;
+}
+
+#dashboard_table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+#dashboard_table th {
+    white-space: nowrap !important;
   }
 
-  .risk-result-box {
-    background: #ffffff;
-    padding: 15px 20px;
-    border-radius: 8px;
-    margin-top: 20px;
-    text-align: center;
-  }
+
+"))
+),
+
   
-  .form-label {
-   color: #0e2f33 !important;
-   font-weight: 600;
-  }
-                    
-  .form-group {
-   margin-bottom: 15px;
-  }
-                    
-  .well .form-group label {
-   color: #0e2f33 !important;
-  }
-  
-  /* =====================================================
-       Funktioner til at åbne links i ny fane
-    ===================================================== */
-  
-  Shiny.addCustomMessageHandler('open_url', function(message) {
-      window.open(message, '_blank');
-    });
+#-------------------------------------------------------------------------------
+# 2.3 Top-bar
+#-------------------------------------------------------------------------------
+ 
+div(class = "top-bar",
     
-    Shiny.addCustomMessageHandler('disableMeeting', function(disable) {
-    var input = document.getElementById('sim_meeting_length');
-    if (input) {
-      input.disabled = disable;
-    }
-  });
-  
-  "))
-  ),
-  
-  #-------------------------------------------------------------------------------
-  # 2.3 Top-bar
-  #-------------------------------------------------------------------------------
-  div(class = "top-bar", style = "max-width: 1200px; margin: auto;",
-      div(style = "display: flex; align-items: center; justify-content: space-between; width: 100%;",
-          
-          #-------------------------------------------------------------------------------
-          # Logo: Business Viborg
-          #-------------------------------------------------------------------------------
-          div(style = "flex-shrink: 0;",
-              img(src = "businessviborgny.jpeg", height = "80px")
-          ),
-          
-          #-------------------------------------------------------------------------------
-          # Overskrift og beskrivelse
-          #-------------------------------------------------------------------------------
-          div(style = "text-align: center; flex-grow: 1;",
-              h2(strong("Velkommen til medlemsindsigt", 
-                        style = "font-size: 30px; margin: 0; color: #0e2f33;")),
-              p("Overvåg og analyser churn risiko blandt medlemmer",
-                style = "color: #88c5aa; font-size: 18px; margin: 0;")
-          ),
-          
-          #-------------------------------------------------------------------------------
-          # Til højre: Brugerinformation og søgefelt
-          #-------------------------------------------------------------------------------
-          div(style = "display: flex; flex-direction: column; align-items: flex-end;",
-              div(style = "display: flex; align-items: center; gap: 8px; margin-bottom: 5px;",
-                  icon("user"),
-                  span(textOutput("user_name"), style = "margin-left: 5px;"),
-                  logoutButton(label = "Log ud", style = "background-color: #dc3545; color: white; border: none;")
-              ),
-              textInput("search", NULL, placeholder = "Søg...", width = "200px")
-          )
-      )
-  ),
-  
-  #-------------------------------------------------------------------------------
-  # 2.5 Tabs og Indhold
-  #-------------------------------------------------------------------------------
-  div(class = "main_tabs",
-      # ---------------------------------------------
-      # FANEPANEL: Styrer navigationen mellem visninger
-      # ---------------------------------------------
-      tabsetPanel(
-        id = "main_tabs",  # Unik ID bruges til at spore valgt fane
-        
-        # ---------------------------------------------
-        # FANEPANEL: Dashboard 
-        # ---------------------------------------------
-        tabPanel("Dashboard",
-                 div(style = "padding: 30px 140px;",  
-                     fluidRow(
-                       
-                       
-                       div(class = "info-box-container",
-                           
-                           div(class = "info-box2", style = "background-color: #B43C37;", 
-                               icon("sign-out-alt", style = "font-size: 24px; color:#88c5aa margin-bottom: 10px;"),
-                               h4("Churned medlemmer"), 
-                               h2(textOutput("info_churned_members"))
-                           ),
-                           
-                           
-                           div(class = "info-box2", style = "background-color: #B43C37;", 
-                               icon("minus-circle", style = "font-size: 24px; color: #88c5aa margin-bottom: 10px;"),
-                               h4("Tab pga. churn"),
-                               h2("18.459,-")
-                           ),
-                           
-                           div(class = "info-box2", style = "background-color: #B43C37;", 
-                               icon("exclamation-triangle", style = "font-size: 24px; color: #88c5aa margin-bottom: 10px;"),
-                               h4("Potentiel churn"),
-                               h2(textOutput("info_high_risk_members"))
-                               
-                           ),
-                           
-                           div(class = "info-box2", style = "background-color: #B43C37;", 
-                               icon("exclamation-triangle", style = "font-size: 24px; color: #88c5aa margin-bottom: 10px;"),
-                               h4("Potentielt tab"),
-                               h2 ("75.000,-")
-                           ),
-                           
-                           div(class = "info-box2",
-                               icon("percent", style = "font-size: 24px; color: #88c5aa; margin-bottom: 10px;"),
-                               h4("GNS. risiko score"),
-                               h2(textOutput("info_avg_risk_score"))
-                           ),
-                           
-                           div(class = "info-box2",
-                               icon("clock", style = "font-size: 24px; color: #88c5aa; margin-bottom: 10px;"),
-                               h4("GNS. loyalitet (måneder)"),
-                               h2(textOutput("info_avg_loyalty"))
-                               
-                           ),
-                           
-                           
-                           
-                           div(class = "info-box2",
-                               icon("users", style = "font-size: 24px; color: #88c5aa; margin-bottom: 10px;"),
-                               h4("Antal medlemmer"),
-                               h2(textOutput("info_total_members"))
-                           ),
-                           
-                           div(class = "info-box2",
-                               icon("money-bill-wave", style = "font-size: 24px; color: #88c5aa; margin-bottom: 10px;"),
-                               h4("Indtjening om måneden", style = "color: white; font-size: 18px; margin-bottom: 10px;"),
-                               h2(textOutput("budget_box"), style = "color: white; font-size: 38px; font-weight: bold;")
-                           )
-                       )
-                     ),
-                     
-                     br(),
-                     
-                     fluidRow(
-                       column(4, div(style = "padding-left: 40px;", plotOutput("plot_churn_by_size", height = "450px", width = "500px"))),
-                       column(4, plotOutput("plot_risk_category", height = "450px", width = "500px")),
-                       column(4, plotOutput("plot_membership_years", height = "450px", width = "500px"))
-                     )
-                 )
-        ),
-        
-        # ---------------------------------------------
-        # FANEPANEL: Simulation
-        # ---------------------------------------------
-        tabPanel("Simulation",
-                 div(style = "padding: 30px 40px;",
-                     fluidRow(
-                       style = "max-width: 1200px; margin: 0 auto;",
-                       column(
-                         width = 6,
-                         wellPanel(
-                           style = "background: #ffffff; border-radius: 10px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);",
-                           h4("Simuler Churn for Ny Virksomhed", style = "color: #0e2f33; border-bottom: 2px solid #7FC8A3; padding-bottom: 10px; margin-bottom: 20px;"),
-                           
-                           # Input sections grouped visually
-                           div(style = "margin-bottom: 25px;",
-                               h5("Virksomhedsoplysninger", style = "color: #2a6c73; font-weight: 600;"),
-                               numericInput("sim_employees", "Antal ansatte:", value = 10, min = 1, max = 500, width = "100%"),
-                               pickerInput("sim_postal", "Postnummer:", choices = unique(data_map$PostalCode), width = "100%"),
-                               pickerInput("sim_company_type", "Virksomhedstype:", choices = unique(data_map$CompanyTypeName), width = "100%"),
-                               pickerInput("sim_branche", "Branche:", choices = unique(data_map$Branche_navn), width = "100%")
-                           ),
-                           
-                           div(style = "margin-bottom: 25px;",
-                               h5("Medlemskabshistorik", style = "color: #2a6c73; font-weight: 600;"),
-                               sliderInput("sim_member_years", "Medlemsantal år:", min = 0, max = 20, value = 2, width = "100%")
-                           ),
-                           
-                           div(style = "margin-bottom: 25px;",
-                               h5("Interaktionshistorik", style = "color: #2a6c73; font-weight: 600;"),
-                               radioGroupButtons("sim_contact", "Har haft kontakt:", 
-                                                 choices = c("Ja" = "Ja", "Nej" = "Nej"), 
-                                                 selected = "Ja", width = "100%"),
-                               radioGroupButtons("sim_event", "Deltaget i event:", 
-                                                 choices = c("Ja" = "Ja", "Nej" = "Nej"), 
-                                                 selected = "Nej", width = "100%"),
-                               numericInput("sim_meeting_length", "Mødelængde (minutter):", 
-                                            value = 60, min = 0, max = 300, width = "100%")
-                           ),
-                           
-                           div(style = "margin-bottom: 15px;",
-                               h5("Supportbehov", style = "color: #2a6c73; font-weight: 600;"),
-                               pickerInput("sim_help_category", "Hjælpekategori:", 
-                                           choices = unique(data_map$hjælp_kategori), width = "100%")
-                           ),
-                           
-                           actionButton("run_simulation", "Kør Simulation", 
-                                        style = "background-color: #2a6c73; color: white; font-weight: bold; border: none; padding: 10px 20px; border-radius: 5px; width: 100%; margin-top: 15px;",
-                                        icon = icon("play"))
-                         )
-                       ),
-                       
-                       column(
-                         width = 6,
-                         wellPanel(
-                           style = "background: #ffffff; border-radius: 10px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); height: 100%;",
-                           h4("Simuleringsresultat", style = "color: #0e2f33; border-bottom: 2px solid #7FC8A3; padding-bottom: 10px; margin-bottom: 20px;"),
-                           
-                           div(
-                             style = "text-align: center; margin: 20px 0;",
-                             htmlOutput("simulation_result"),
-                             plotOutput("simulation_gauge", height = "200px")
-                           ),
-                           
-                           hr(style = "border-top: 1px solid #eee; margin: 25px 0;")
-                         )
-                       )
-                     )
-                 )
-        ),
-        
-        # ---------------------------------------------
-        # FANEPANEL: Indsigt – Forbedret layout
-        # --------------------------------------------- 
-        tabPanel("Indsigt", 
-                 div(style = "padding: 30px 40px;", 
-                     fluidRow(
-                       
-                       
-                       
-                       # Venstre kolonne: Filtre
-                       column(3,
-                              div(class = "filter-box",
-                                  h5("Kære konsulent"),
-                                  h4(strong("Vælg dine indsigter")),
-                                  p("Brug værktøjerne nedenfor til at filtrere og analysere churn-risiko blandt virksomheder.",
-                                    style = "font-size: 14px;"),
-                                  
-                                  checkboxGroupInput("risk_categories", "Risikoniveau:",
-                                                     choices = c("Høj" = "High", "Mellem" = "Medium", "Lav" = "Low"),
-                                                     selected = c("High", "Medium", "Low")),
-                                  
-                                  pickerInput("postal_code", "Postnummer:",
-                                              choices = c("Vælg alle" = "ALL", sort(unique(as.character(data_map$PostalCode)))),
-                                              multiple = TRUE,
-                                              options = list(`actionsBox` = TRUE)),
-                                  
-                                  pickerInput("CompanyTypeName", "Virksomhedstype:",
-                                              choices = c("Vælg alle" = "ALL", sort(unique(as.character(data_map$CompanyTypeName)))),
-                                              multiple = TRUE,
-                                              options = list(`actionsBox` = TRUE)),
-                                  
-                                  pickerInput("Branche_navn", "Branche:",
-                                              choices = c("Vælg alle" = "ALL", sort(unique(as.character(data_map$Branche_navn)))),
-                                              multiple = TRUE,
-                                              options = list(`actionsBox` = TRUE)),
-                                  
-                                  sliderInput("churn_range", "Churn sandsynlighed (%):",
-                                              min = 0, max = 100, value = c(0, 100), step = 1),
-                                  
-                                  actionButton("reset_filters", "Nulstil filtre")
-                              )
-                       ),
-                       
-                       column(9,
-                              
-                              # Én række med 7 info-bokse til konsulenter (med inline styling)
-                              fluidRow(
-                                div(
-                                  style = "display: flex; flex-wrap: nowrap; justify-content: space-between; gap: 12px; width: 100%; margin-bottom: 10px;",
-                                  
-                                  div(style = "flex: 1; padding: 20px; background-color: #B43C37; color: white; border-radius: 10px; text-align: center;",
-                                      icon("phone-slash", style = "font-size: 24px; color: white; margin-bottom: 10px;"),
-                                      h4("Manglende kontakt"),
-                                      p("3 måneder"),
-                                      h2("412")
-                                      
-                                  ),
-                                  
-                                  div(style = "flex: 1; padding: 20px; background-color: #B43C37; color: white; border-radius: 10px; text-align: center;",
-                                      icon("medal", style = "font-size: 24px; color: white; margin-bottom: 10px;"),
-                                      h4("Manglende deltagelse"),
-                                      p("I næste event"),
-                                      h2("396")
-                                  ),
-                                  
-                                  div(style = "flex: 1; padding: 20px; background-color: #123940; color: white; border-radius: 10px; text-align: center;",
-                                      icon("building", style = "font-size: 24px; color: white; margin-bottom: 10px;"),
-                                      h4("Medlemsvirksomheder"),
-                                      h2("1933")
-                                      
-                                  ),
-                                  
-                                  div(style = "flex: 1; padding: 20px; background-color: #123940; color: white; border-radius: 10px; text-align: center;",
-                                      icon("medal", style = "font-size: 24px; color: white; margin-bottom: 10px;"),
-                                      h4("Top performer"),
-                                      p("Event"),
-                                      h2("Søren Andersen")
-                                  ),
-                                  
-                                  div(style = "flex: 1; padding: 20px; background-color: #123940; color: white; border-radius: 10px; text-align: center;",
-                                      icon("calendar-alt", style = "font-size: 24px; color: white; margin-bottom: 10px;"),
-                                      h4("Næste event"),
-                                      p("06-05-2025"),
-                                      h2("AL Kursus")
-                                      
-                                      
-                                  ),
-                                  
-                                  div(style = "flex: 1; padding: 20px; background-color: #123940; color: white; border-radius: 10px; text-align: center;",
-                                      icon("calendar-check", style = "font-size: 24px; color: white; margin-bottom: 10px;"),
-                                      h4("Eventdeltagere"),
-                                      p("Næste event"),
-                                      h2("86")
-                                  ),
-                                  
-                                  
-                                  div(style = "flex: 1; padding: 20px; background-color: #123940; color: white; border-radius: 10px; text-align: center;",
-                                      icon("phone", style = "font-size: 24px; color: white; margin-bottom: 10px;"),
-                                      h4("Opkald i dag"),
-                                      h2("17")
+# logo---------------------------------------------
+  div(style = "display: flex; align-items: center; gap: 15px;",
+        img(src = "businessviborgny.jpeg", height = "80px")
+    ),
+    
+# Overskrift---------------------------------------
+   div(style = "text-align: center; flex-grow: 1;",
+        h2(strong("Velkommen til medlemsindsigt", 
+                  style = "font-size: 30px; margin: 0; color: #0e2f33;")),
+        p("Overvåg og analyser churn risiko blandt medlemmer",
+          style = "color: #88c5aa; font-size: 18px; margin: 0;")
+),
+    
+# Søgefelt---------------------------------------------
+  div(style = "display: flex; align-items: center; gap: 10px;",
+    textInput("search", NULL, placeholder = "Søg...", width = "200px"),
+    tags$div(style = "width: 40px; height: 40px; background-color: #0e2f33;
+                      border-radius: 50%; display: flex; align-items: center;
+                      justify-content: center; color: white; font-size: 18px;",
+                 icon("user"))
+    )
+),
+ 
+#-------------------------------------------------------------------------------
+# 2.5 Tabs og Indhold
+#-------------------------------------------------------------------------------
+div(class = "main_tabs",
+    
+# Overordnet fane---------------------------------------------
+tabsetPanel(
+      id = "main_tabs",  # Unik ID bruges til at spore valgt fane
+      
+      
+
+tabPanel("Dashboard",
+               fluidRow(
+                 column(2, div(class = "filter-box",
+                               h3("Strategisk ledelsesoverblik"),
+                               h4(strong("Vigtige nøgletal")),
+                               p("Dashboardet giver et solidt, datadrevet fundament for strategiske beslutninger om medlemsudvikling og fastholdelse. Få indsigt i churn-risiko og økonomi.",
+                                 style = "font-size:14px;")
+                 )),
+                 column(10, div(class = "info-box-container",
+                                lapply(list(
+                                  c("sign-out-alt",       "Churned",         "Hele perioden",  "info_churned_members",     "#B43C37"),
+                                  c("minus-circle",       "Tab pga. churn",  "I måneden",      "churn_loss_box_churned",   "#B43C37"),
+                                  c("exclamation-triangle","Potentiel churn","Over 75% risiko","info_high_risk_members",   "#B43C37"),
+                                  c("exclamation-triangle","Potentielt tab", "I måneden",      "churn_loss_box",           "#B43C37"),
+                                  c("percent",            "Risiko score",    "Gennemsnitlig",  "info_avg_risk_score",      "#B43C37"),
+                                  c("clock",              "Loyalitet",       "Gennemsnitlig",  "info_avg_loyalty",         "#173234"),
+                                  c("users",              "Medlemmer",       "Antal Aktive",   "info_total_members1",       "#173234"),
+                                  c("money-bill-wave",    "Indtjening",      "Om måneden",     "budget_box",               "#173234"),
+                                  c("money-bill-wave",    "Indtjening",      "Om året",        "budget_box1",              "#173234")
+                                ), function(x)
+                                  div(class = "info-box2", style = paste0("background:", x[5], ";"),
+                                      icon(x[1], style = "font-size:24px;color:#88c5aa;margin-bottom:10px;"),
+                                      h4(x[2]), p(x[3]), h2(textOutput(x[4]))
                                   )
                                 )
-                              ),
-                              
-                              # DataTable
-                              div(style = "height: 750px; overflow-y: auto;",
-                                  DTOutput("dashboard_table", width = "100%")
-                              )
-                       )
-                       
-                       
-                       
-                     )
-                 )
-        ),
-        
-        # ---------------------------------------------
-        # FANEPANEL: Detaljer 
-        # ---------------------------------------------
-        
-        tabPanel("Detaljer",
-                 div(style = "padding: 30px 40px;",
-                     
-                     # Kun vis søgefelt hvis ingen virksomhed er valgt
-                     conditionalPanel(
-                       condition = "output.noCompanySelected",
-                       div(
-                         style = "margin-bottom: 20px;",
-                         textInput("search_pnumber", "Søg virksomhed via P-nummer:", "", width = "300px")
-                       )
-                     ),
-                     
-                     uiOutput("selected_company_details")
-                 )
-        ),
-        
-        # ---------------------------------------------
-        # FANEPANEL: Indsigt og analyse
-        # ---------------------------------------------
-        
-        tabPanel("Indsigt & Analyse",
-                 div(style = "padding: 20px;",
-                     
-                     # First row - two plots
-                     fluidRow(
-                       column(6, 
-                              div(style = "padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 30px;",
-                                  plotOutput("risk_distribution", height = "500px", width = "500px")
-                              )
+                 ))
+               ),
+               
+               br(),
+               fluidRow(
+                 column(4, div(style = "padding-left:40px;", plotOutput("simulation_factors", height = "450px"))),
+                 column(4, plotOutput("plot_risk_category", height = "450px")),
+                 column(4, plotOutput("company_type_churn", height = "450px"))
+               ),
+               
+               fluidRow(
+                 column(6, plotOutput("postal_code_summary", height = "450px")),
+                 column(6, plotOutput("plot_event_churn", height = "450px"))
+               ),
+               
+               fluidRow(
+                 column(12, plotOutput("help_needed_plot", height = "450px"))
+               )
+               
+      ),
+      
+      
+tabPanel("Simulation",
+              
+                   fluidRow(
+                     column(6, wellPanel(
+                       style = "background:#f8f9fa;border-radius:8px;padding:20px;color:#000;",
+                       h4("Simuler Churn", style = "color:#0e2f33;"),
+                       numericInput("sim_employees", "Antal ansatte:", 10, 1, 500),
+                       pickerInput("sim_postal", "Postnummer:", unique(data_map$PostalCode)),
+                       pickerInput("sim_company_type", "Virksomhedstype:", levels(data_map$CompanyTypeName)),
+                       radioGroupButtons("sim_contact", "Kontakt:", c("Ja" = "Ja", "Nej" = "Nej"), "Ja"),
+                       radioGroupButtons("sim_event", "Event:", c("Ja" = "Ja", "Nej" = "Nej"), "Nej"),
+                       pickerInput("sim_help_category", "Hjælpekategori:", levels(data_map$hjælp_kategori)),
+                       sliderInput("sim_member_years", "Medlemsår:", 0, 20, 2),
+                       pickerInput("sim_branche", "Branche:", levels(data_map$Branche_navn)),
+                       numericInput("sim_meeting_length", "Mødelængde (min):", 60, 0, 300),
+                       actionButton("run_simulation", "Kør simulation", class = "btn-primary", icon = icon("play"))
+                     )),
+                     column(6, wellPanel(
+                       style = "background:#fff;border-radius:8px;min-height:400px;padding:20px;color:#000;",
+                       h4("Resultat", style = "color:#0e2f33;"),
+                       div(style = "text-align:center;margin-top:30px;",
+                           htmlOutput("simulation_result"),
+                           plotOutput("simulation_gauge", height = "200px")
                        ),
-                       column(6, 
-                              div(style = "padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 30px;",
-                                  plotOutput("postal_code_summary", height = "500px", width = "500px")
-                              )
-                       )
-                     ),
-                     
-                     # Second row - two plots
-                     fluidRow(
-                       column(6, 
-                              div(style = "padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 30px;",
-                                  plotOutput("company_type_churn", height = "500px", width = "500px")
-                              )
-                       ),
-                       column(6, 
-                              div(style = "padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 30px;",
-                                  plotOutput("risk_category_distribution", height = "500px", width = "500px")
-                              )
-                       )
-                     ),
-                     
-                     # Third row - single centered plot
-                     fluidRow(
-                       column(12, align="center",
-                              div(style = "padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 1000px; margin: 0 auto;",
-                                  plotOutput("branche_churn_boxplot", height = "500px", width = "900px")
-                                  
-                                 )
-                              )
-                             )
-                 )
-              ),
-        
-        tabPanel("Events",
-                 div(style = "display: flex; align-items: center; gap: 10px;",
-                     tags$label("Vælg event:", style = "margin-bottom: 0; font-weight: bold;"),
-                     selectInput("event_selector", label = NULL,
-                                 choices = setNames(event_list$id, event_list$navn),
-                                 width = "250px")),
-                 
-                 uiOutput("event_details"),
-        )
-  
-   )
- ),
-  
-  # ----------------------------------------------------------------------------
-  # FOOTER: Info om Business Viborg + deres hjemmesiden
-  # ----------------------------------------------------------------------------
-  
- tags$footer(
-    style = "background-color: #0e2f33; color: white; text-align: center; padding: 20px; margin-top: 30px;",
-    tags$div(
-      style = "max-width: 900px; margin: auto;",
-      tags$h4("Om Business Viborg"),
-      tags$p("Business Viborg understøtter virksomheder i Viborg Kommune gennem netværk, rådgivning og vækstinitiativer."),
-      tags$p(
-        "Læs mere på: ",
-        tags$a(href = "https://www.businessviborg.dk", "www.businessviborg.dk", target = "_blank", style = "color: #88c5aa; text-decoration: none;")
-      )
-    )
+                       hr(), h5("Faktorers indflydelse:"),
+                       plotOutput("simulation_factors", height = "200px")
+                     ))
+                   )
+               
+      ),
+
+tabPanel("Indsigt", 
+         div(style = "padding: 2px 40px;", 
+             fluidRow(
+               column(3,
+                      div(style = "background-color: white; color: #000; padding: 20px; border-radius: 10px; text-align: left;",
+                      h5("Medlemskonsulent"),
+                      h3(strong("Vælg dine indsigter")),
+                      p("Brug værktøjerne nedenfor til at filtrere og analysere churn-risiko blandt virksomheder.", style = "font-size: 14px;"),
+                      checkboxGroupInput("risk_categories", "Risikoniveau:", 
+                                         choices = c("Høj" = "High", "Mellem" = "Medium", "Lav" = "Low"),
+                                         selected = c("High", "Medium", "Low")),
+                      pickerInput("postal_code", "Postnummer:", 
+                                  choices = c("Vælg alle" = "ALL", sort(unique(data_map$PostalCode))),
+                                  multiple = TRUE, options = list(actionsBox = TRUE)),
+                      pickerInput("CompanyTypeName", "Virksomhedstype:", 
+                                  choices = c("Vælg alle" = "ALL", sort(unique(as.character(data_map$CompanyTypeName)))),
+                                  multiple = TRUE, options = list(actionsBox = TRUE)),
+                      pickerInput("Branche_navn", "Branche:", 
+                                  choices = c("Vælg alle" = "ALL", sort(unique(as.character(data_map$Branche_navn)))),
+                                  multiple = TRUE, options = list(actionsBox = TRUE)),
+                      sliderInput("churn_range", "Churn sandsynlighed (%):", 0, 100, c(0, 100)),
+                      )
+               ),
+               
+               column(9,
+                      fluidRow(
+                        column(9,
+                               div(style = "display:flex; flex-wrap:nowrap; gap:12px; margin-bottom:10px;",
+                                   lapply(list(
+                                     list(icon="phone-slash", title="Manglende kontakt", text="Aktive virksomheder", output="info_no_contact", bg="#B43C37"),
+                                     list(icon="medal", title="Manglende deltagelse", text="I event", output="info_no_event", bg="#B43C37"),
+                                     list(icon="building", title="Medlemmer", text="Antal aktive", output="info_total_members2", bg="#123940"),
+                                     list(icon="calendar-alt", title="Næste event", text="06-05-2025", output=NULL, value="AL Kursus", bg="#123940"),
+                                     list(icon="calendar-check", title="Eventdeltagere", text="Næste event", output=NULL, value="86", bg="#123940"),
+                                     list(icon="phone", title="Opkald i dag", text="Aktive virksomheder", output="info_calls_today", bg="#123940")
+                                   ), function(x) {
+                                     div(style = paste0("flex:1; padding:20px; background-color:", x$bg, "; color:white; border-radius:10px; text-align:center;"),
+                                         icon(x$icon, style = "font-size:24px; color:white; margin-bottom:10px;"),
+                                         h4(x$title), p(x$text),
+                                         if (!is.null(x$output)) h2(textOutput(x$output)) else h2(x$value)
+                                     )
+                                   })
+                               )
+                        ),
+                        column(3,
+                               div(style = "background:#f8f9fa; padding:20px; border-radius:10px;",
+                                   h4("Churn-drivere", style = "color:#0e2f33;"),
+                                   plotOutput("simulation_factors", height = "150px")
+                               )
+                        )
+                      ),
+                      div(style = "height:750px;  overflow-y:auto;",
+                          DTOutput("dashboard_table", width = "100%")
+                      )
+               )
+             )
+         )
+)
+
+
+# Afslutning på UI -------------------------------------------------------------
+ 
   )
-#-------------------------------------------------------------------------------
-# Afslutning på UI 
-#------------------------------------------------------------------------------- 
- )
+)
+)
+
 #-------------------------------------------------------------------------------
 # 3.1 Begyndelse på serverfunktion 
 #-------------------------------------------------------------------------------
 
- server <- function(input, output, session) {
+server <- function(input, output, session) {
   
-  # ---------------------------------------------
-  # Mørkt thema - kort 
-  # ---------------------------------------------
-  dark_theme <- theme(
-    panel.background = element_rect(fill = "#0e2f33"),
-    plot.background = element_rect(fill = "#0e2f33", color = NA),
-    panel.grid.major = element_line(color = "#1c4a50"),
-    panel.grid.minor = element_blank(),
-    axis.text = element_text(color = "white"),
-    axis.title = element_text(color = "white"),
-    plot.title = element_text(color = "white", face = "bold"),
-    legend.background = element_rect(fill = "#0e2f33"),
-    legend.text = element_text(color = "white"),
-    legend.title = element_text(color = "white")
-  )
+#Dashboard ---------------------------------------------------------------------
   
-  # ---------------------------------------------
-  # Søger efter medlemsvirksomhed 
-  # ---------------------------------------------
-  searched_company <- reactive({
-    req(input$search_pnumber)
-    pnum <- as.numeric(input$search_pnumber)
-    data_map %>% filter(PNumber == pnum)
+# Viser samlet antal unikke aktive medlemmer (ikke churnede)
+
+  output$info_total_members1 <- renderText({
+    length(unique(data_map$PNumber[data_map$churn == 0]))
   })
   
-  # ---------------------------------------------
-  # Filtrerer data baseret på inputfiltre fra UI
-  # ---------------------------------------------
-  filtered_data <- reactive({
-    data <- data_map %>%
-      filter(churn_prob * 100 >= input$churn_range[1], churn_prob * 100 <= input$churn_range[2]) %>%
-      filter(risk_category %in% input$risk_categories) %>%
-      filter(churn == 0)
-    
-    
-    # Filtrér på postnumre hvis ikke "Vælg alle"
-    if (!is.null(input$postal_code) && !("ALL" %in% input$postal_code)) {
-      data <- data %>% filter(PostalCode %in% input$postal_code)
-    }
-    
-    # Filtrér på virksomhedstype
-    if (!is.null(input$CompanyTypeName) && !("ALL" %in% input$CompanyTypeName)) {
-      data <- data %>% filter(CompanyTypeName %in% input$CompanyTypeName)
-    }
-    
-    # Filtrér på branche
-    if (!is.null(input$Branche_navn) && !("ALL" %in% input$Branche_navn)) {
-      data <- data %>% filter(Branche_navn %in% input$Branche_navn)
-    }
-    
-    # Debug-print i konsollen
-    print(paste("Antal rækker i filtered_data:", nrow(data)))
-    
-    data
-  })
-  
-  #-----------------------------------------------
-  #Reactive funktion til at vise eventdetaljer
-  #-----------------------------------------------
-  
-  next_event <- reactive({
-    req(nrow(event_list) > 0)
-    event_list %>% arrange(dato) %>% slice(1)
-  })
-  
-  selected_event_detail <- reactive({
-    req(input$selected_event_detail)
-    event_list %>% filter(id == input$selected_event_detail)
-  })
-  
-  selected_company <- reactive({
-    selected_row <- input$dashboard_table_rows_selected
-    if (length(selected_row)) {
-      return(filtered_data()[selected_row, ])
-    } else if (input$search_pnumber != "") {
-      return(searched_company())
-    } else {
-      return(NULL)
-    }
-  })
-  
-  
-  # ---------------------------------------------
-  # Viser samlet antal unikke medlemmer (P-numre)
-  # ---------------------------------------------
-  output$info_total_members <- renderText({
-    length(unique(data_map$PNumber))
-  })
-  
-  # ---------------------------------------------
-  # Antal medlemmer der er churnet
-  # ---------------------------------------------
+# Antal medlemmer der er churnet
+
   output$info_churned_members <- renderText({
-    sum(filtered_data()$churn == 1, na.rm = TRUE)
+    sum(data_map$churn == 1, na.rm = TRUE)
   })
   
-  # ---------------------------------------------
-  # Antal medlemmer med churn-risiko over 75 %
-  # ---------------------------------------------
-  output$info_high_risk_members <- renderText({
-    sum(filtered_data()$churn_prob > 0.75, na.rm = TRUE)
-  })
   
-  # ---------------------------------------------
-  # Gennemsnitlig churn-risiko (i procent)
-  # ---------------------------------------------
-  output$info_avg_risk_score <- renderText({
-    paste0(floor(mean(filtered_data()$churn_prob, na.rm = TRUE) * 1000) / 10, "%")
-    })
-  
-  # ---------------------------------------------
-  # Gennemsnitlig loyalitet i måneder
-  # ---------------------------------------------
-  output$info_avg_loyalty <- renderText({
-    round(mean(filtered_data()$medlem_antal_år, na.rm = TRUE) * 12, 1) %>% paste("mdr")
-  })
-  
-  # ---------------------------------------------
-  # Beregnet medlemsbudget i millioner kroner
-  # ---------------------------------------------
-  output$info_budget <- renderText({
-    df <- filtered_data()
-    budget <- sum(calculate_membership_fee(df$Employees), na.rm = TRUE)
-    paste0("Kr. ", format(round(budget / 1e6, 1), decimal.mark = ","), " mio.")
-  })
-  
-  # ---------------------------------------------
-  # Antal virksomheder uden kontakt
-  # ---------------------------------------------
-  output$info_contact_missing <- renderText({
-    sum(filtered_data()$har_haft_kontakt == "Nej", na.rm = TRUE) %>% paste("virksomheder")
-  })
-  
-  # ---------------------------------------------
-  # Vises i indtjeningsboks – samme som info_budget
-  # ---------------------------------------------
-  output$budget_box <- renderText({
-    df <- filtered_data()
-    budget <- sum(calculate_membership_fee(df$Employees), na.rm = TRUE)
-    paste0("Kr. ", format(round(budget / 1e6, 1), decimal.mark = ","), " mio.")
-  })
-  
-  # ---------------------------------------------
-  # Leaflet-kort med farvede cirkler pr. virksomhed
-  # ---------------------------------------------
-  output$map <- renderLeaflet({
-    df <- filtered_data()
-    risk_pal <- colorFactor(
-      palette = c("darkred", "yellow", "darkgreen"),
-      levels = c("High", "Medium", "Low")
-    )
+  # Beregner det faktiske tab pga. churnede medlemmer med churn_prob > 75%
+  output$churn_loss_box_churned <- renderText({
+    df <- data_map %>% 
+      filter(churn == 1, churn_prob > 75)
     
-    leaflet(df) %>%
-      addProviderTiles(providers$CartoDB.DarkMatter) %>%
-      addCircleMarkers(
-        lng = ~lng,
-        lat = ~lat,
-        radius = ~churn_prob * 10,
-        color = ~risk_pal(risk_category),
-        fillOpacity = 0.8,
-        stroke = TRUE,
-        weight = 1,
-        label = ~paste0(
-          "Member ID: ", PNumber, "<br>",
-          "Postal Code: ", PostalCode, "<br>",
-          "Churn Risk: ", round(churn_prob * 100, 1), "%<br>",
-          "Category: ", risk_category
+    loss <- sum(calculate_membership_fee(df$Employees), na.rm = TRUE)
+    
+    paste0(format(round(loss, 0), big.mark = ".", decimal.mark = ","))  # vis i hele kroner
+  })
+  
+  
+
+# Antal medlemmer med churn-risiko over 75 %, men som ikke er churnet
+
+  output$info_high_risk_members <- renderText({
+    sum(data_map$churn == 0 & data_map$churn_prob > 0.75, na.rm = TRUE)
+  })
+  
+
+# Gennemsnitlig churn-risiko for aktive medlemmer (0–100%)
+
+  output$info_avg_risk_score <- renderText({
+    active <- subset(data_map, churn == 0 & !is.na(churn_prob))
+    if (nrow(active) == 0) return("0%")
+    
+    avg <- mean(pmin(pmax(active$churn_prob, 0), 100))  # begræns til [0,100]
+    paste0(round(avg, 1), "%")
+  })
+  
+  
+# Gennemsnitlig loyalitet i måneder
+
+  output$info_avg_loyalty <- renderText({
+    round(mean(data_map$medlem_antal_år, na.rm = TRUE), 1) %>% paste("år")
+  })
+  
+# Beregner det samlede månedelig medlemsbudget for aktive medlemmer (ikke churnede)
+  output$budget_box <- renderText({
+    df <- data_map %>% filter(churn == 0)
+    budget <- sum(calculate_membership_fee(df$Employees), na.rm = TRUE)
+    paste0(format(round(budget / 1e6, 1), decimal.mark = ","), " mio.")
+  })
+
+# Beregner det årlige medlemsbudget baseret på aktive medlemmer (ikke churnede)
+
+  output$budget_box1 <- renderText({
+    active_members <- data_map %>% filter(churn == 0)
+    annual_budget <- sum(calculate_membership_fee(active_members$Employees), na.rm = TRUE) * 12
+    paste0( format(round(annual_budget / 1e6, 1), decimal.mark = ","), " mio.")
+  })
+  
+# Beregner det potentielle tab for high-risk medlemmer (churn_prob > 75%, ikke churnet)
+
+  output$churn_loss_box <- renderText({
+    df <- data_map %>% filter(churn == 0, churn_prob > 0.75)
+    loss <- sum(calculate_membership_fee(df$Employees), na.rm = TRUE)
+    paste0( format(round(loss, 0), big.mark = ".", decimal.mark = ","))  # vis i hele kroner
+  })
+  
+  
+# Indsigt-----------------------------------------------------------------------
+  
+# Tabel over virksomeheder
+  output$dashboard_table <- renderDT({
+    req(input$risk_categories)
+    
+    filtered_data <- data_map %>%
+      filter(churn == 0) %>%
+      mutate(
+        risk_level = case_when(
+          churn_prob > 75 ~ "High",
+          churn_prob > 50 ~ "Medium",
+          TRUE ~ "Low"
         )
       ) %>%
-      setView(lng = 10.0, lat = 56.0, zoom = 7.5) %>%
-      addLegend(
-        position = "bottomright",
-        pal = risk_pal,
-        values = ~risk_category,
-        title = "Churn Risiko",
-        opacity = 1
-      )
-  })
-  
-  # ---------------------------------------------
-  # Simpel datavisning af filtrerede data
-  # ---------------------------------------------
-  output$data_table <- renderDT({
-    datatable(filtered_data())
-  })
-  
-  # ---------------------------------------------
-  # Dashboard-tabel med udvalgte kolonner og styling
-  # ---------------------------------------------
-  output$dashboard_table <- renderDT({
-    filtered_data() %>%
-      select(PNumber, CompanyTypeName, Branche_navn, PostalCode, churn_prob) %>%
-      mutate(churn_prob = scales::percent(churn_prob, accuracy = 0.1)) %>%
-      arrange(desc(churn_prob)) %>%
-      datatable(
-        options = list(
-          pageLength = 10,
-          autoWidth = TRUE,
-          searching = FALSE,
-          lengthChange = FALSE
+      filter(
+        # Risikoniveau
+        risk_level %in% input$risk_categories,
+        
+        # Postnummer
+        if ("ALL" %in% input$postal_code || is.null(input$postal_code)) TRUE else PostalCode %in% input$postal_code,
+        
+        # Virksomhedstype
+        if ("ALL" %in% input$CompanyTypeName || is.null(input$CompanyTypeName)) TRUE else CompanyTypeName %in% input$CompanyTypeName,
+        
+        # Branche
+        if ("ALL" %in% input$Branche_navn || is.null(input$Branche_navn)) TRUE else Branche_navn %in% input$Branche_navn,
+        
+        # Churn-range (%)
+        churn_prob >= input$churn_range[1],
+        churn_prob <= input$churn_range[2]
+      ) %>%
+      select(PNumber, CompanyTypeName, Branche_navn, PostalCode, churn_prob, membership_fee ) %>%
+      arrange(desc(churn_prob))
+    
+    datatable(
+      filtered_data %>%
+        rename(
+          "P-nummer" = PNumber,
+          "Virksomhedstype" = CompanyTypeName,
+          "Branche" = Branche_navn,
+          "Postnummer" = PostalCode,
+          "Churn-risiko (%)" = churn_prob,
+          "Medlemskab i måneden (kr)" = membership_fee
         ),
-        rownames = TRUE,
-        selection = "single"
-      )
+      options = list(
+        pageLength = 9,
+        autoWidth = TRUE,
+        searching = FALSE,
+        lengthChange = FALSE
+      ),
+      rownames = FALSE,
+      selection = "single"
+    )
+    
   })
   
-  # ---------------------------------------------
-  # Download-handler: Eksportér filtrerede data som CSV
-  # ---------------------------------------------
-  output$download_data <- downloadHandler(
-    filename = function() { paste("churn_data_", Sys.Date(), ".csv", sep = "") },
-    content = function(file) { write.csv(filtered_data(), file, row.names = FALSE) }
-  )
   
-  # ---------------------------------------------
-  # Farveskema til risikokategorier i grafer
-  # ---------------------------------------------
-  risk_pal <- c(
-    "Low" = "#2ca02c",      # grøn
-    "Medium" = "#ffcc00",   # gul
-    "High" = "#d62728"      # rød
-  )
+
+#Box øverst
   
-  # ---------------------------------------------
-  # Plot: Histogram over churn sandsynlighed
-  # ---------------------------------------------
-  output$risk_distribution <- renderPlot({
-    df <- filtered_data()
-    ggplot(df, aes(x = churn_prob, fill = risk_category)) +
-      geom_histogram(binwidth = 0.1, position = "identity", alpha = 0.6, color = "black") +
-      scale_fill_manual(values = risk_pal) +
-      labs(
-        title = "Fordeling af churn-sandsynlighed efter risikokategori",
-        x = "Churn-sandsynlighed",
-        y = "Antal virksomheder",
-        fill = "Risikokategori"
-      ) +
-      theme_minimal(base_size = 13)
+  # Viser samlet antal unikke aktive medlemmer (ikke churnede)
+  
+  output$info_total_members2 <- renderText({
+    length(unique(data_map$PNumber[data_map$churn == 0]))
   })
   
-  # ---------------------------------------------
-  # Plot: Gennemsnitlig churn pr. postnummer
-  # ---------------------------------------------
+  # Manglende kontakt (kun for aktive medlemmer)
+  output$info_no_contact <- renderText({
+    sum(data_map$churn == 0 & tolower(data_map$har_haft_kontakt) == "nej", na.rm = TRUE)
+  })
+  
+  # Manglende deltagelse (kun for aktive medlemmer)
+  output$info_no_event <- renderText({
+    sum(data_map$churn == 0 & tolower(data_map$deltaget_i_event) == "nej", na.rm = TRUE)
+  })
+  
+  
+  # Næste event (dummy – ingen eventdatoer i data_map)
+  output$info_next_event <- renderText({
+    "AL Kursus" 
+  })
+  
+  # Eventdeltagere (dummy – mangler felt i data_map)
+  output$info_event_participants <- renderText({
+    "36" 
+  })
+  
+  # Opkald i dag (dummy)
+  output$info_calls_today <- renderText({
+    "17"  
+  })
+  
+
+#Plot--------------------------------------------------------------------------
+  
+
+#Plot: Gennemsnitlig churn pr. postnummer
+  
   output$postal_code_summary <- renderPlot({
-    df <- filtered_data()
-    df %>%
+    data_map %>%
       group_by(PostalCode) %>%
       summarise(avg_churn = mean(churn_prob), n = n()) %>%
       mutate(
@@ -1124,12 +719,11 @@ ui <- fluidPage(
       theme(plot.margin = margin(10, 30, 10, 10))
   })
   
-  # ---------------------------------------------
-  # Plot: Gennemsnitlig churn pr. virksomhedstype
-  # ---------------------------------------------
+  
+# Plot: Gennemsnitlig churn pr. virksomhedstype
+  
   output$company_type_churn <- renderPlot({
-    df <- filtered_data()
-    df %>%
+    data_map %>%
       group_by(CompanyTypeName) %>%
       summarise(avg_churn = mean(churn_prob), n = n()) %>%
       mutate(
@@ -1153,33 +747,11 @@ ui <- fluidPage(
       dark_theme
   })
   
-  
-  # ---------------------------------------------
-  # Plot: Mest repræsenterede brancher (Top 10)
-  # ---------------------------------------------
-  output$branche_distribution <- renderPlot({
-    df <- filtered_data()
-    
-    df %>%
-      count(Branche_navn, sort = TRUE) %>%
-      top_n(10) %>%
-      ggplot(aes(x = reorder(Branche_navn, n), y = n)) +
-      geom_col(fill = "#325e63") +
-      coord_flip() +
-      labs(title = "Top 10 brancher blandt filtrerede virksomheder",
-           x = "Branche",
-           y = "Antal virksomheder") +
-      theme_minimal(base_size = 13) +
-      dark_theme
-  })
-  
-  # ---------------------------------------------
-  # Plot: Hjælpekategorier virksomheder har brug for
-  # ---------------------------------------------
+ 
+# Plot: Hjælpekategorier virksomheder har brug for
+
   output$help_needed_plot <- renderPlot({
-    df <- filtered_data()
-    
-    df %>%
+    data_map %>%
       count(hjælp_kategori, sort = TRUE) %>%
       top_n(10) %>%
       ggplot(aes(x = reorder(hjælp_kategori, n), y = n)) +
@@ -1192,27 +764,12 @@ ui <- fluidPage(
       dark_theme
   })
   
-  # ---------------------------------------------
-  # Plot: Churn-risiko fordelt på virksomhedsstørrelse
-  # ---------------------------------------------
-  output$plot_churn_by_size <- renderPlot({
-    df <- filtered_data()
-    df$size_group <- cut(df$Employees, breaks = c(0, 1, 4, 9, 24, 49, Inf),
-                         labels = c("0–1", "2–4", "5–9", "10–24", "25–49", "50+"))
-    
-    ggplot(df, aes(x = size_group, y = churn_prob)) +
-      stat_summary(fun = mean, geom = "bar", fill = "#7FC8A3") +
-      labs(title = "Churn-risiko fordelt på virksomhedsstørrelse",
-           x = "Antal ansatte", y = "Churn-risiko (gns.)") +
-      scale_y_continuous(labels = scales::percent) +
-      dark_theme
-  })
   
-  # ---------------------------------------------
-  # Plot: Antal virksomheder pr. risikokategori
-  # ---------------------------------------------
+
+# Plot: Antal virksomheder pr. risikokategori
+
   output$plot_risk_category <- renderPlot({
-    df <- filtered_data()
+    data_map %>%
     ggplot(df, aes(x = risk_category, fill = risk_category)) +
       geom_bar() +
       scale_fill_manual(values = c("Low" = "#5cb85c", "Medium" = "#f0ad4e", "High" = "#d9534f")) +
@@ -1220,483 +777,117 @@ ui <- fluidPage(
       dark_theme
   })
   
-  # ---------------------------------------------
-  # Plot: Medlemskabets længde (histogram)
-  # ---------------------------------------------
-  output$plot_membership_years <- renderPlot({
-    df <- filtered_data()
-    ggplot(df, aes(x = medlem_antal_år)) +
-      geom_histogram(binwidth = 1, fill = "#7FC8A3", color = "black") +
-      labs(title = "Fordeling af medlemslængde", x = "År", y = "Antal virksomheder") +
-      dark_theme
-  })
   
-  # ---------------------------------------------
-  # Plot: Antal virksomheder i hver risikokategori
-  # ---------------------------------------------
-  output$risk_category_distribution <- renderPlot({
-    df <- filtered_data()
-    df %>%
-      count(risk_category) %>%
-      ggplot(aes(x = reorder(risk_category, n), y = n, fill = risk_category)) +
-      geom_col(show.legend = FALSE) +
-      geom_text(aes(label = n), vjust = -0.3) +
-      labs(
-        title = "Fordeling af virksomheder efter risikokategori",
-        x = "Risikokategori",
-        y = "Antal virksomheder"
-      ) +
-      scale_fill_manual(values = risk_pal) +
-      theme_minimal(base_size = 13)
-  })
-  
-  # ---------------------------------------------
-  # Plot: Churn-sandsynlighed fordelt på brancher (boxplot)
-  # ---------------------------------------------
-  output$branche_churn_boxplot <- renderPlot({
-    df <- filtered_data()
-    ggplot(df, aes(x = reorder(Branche_navn, churn_prob, FUN = median), y = churn_prob)) +
-      geom_boxplot(fill = "darkgreen") +
-      scale_y_continuous(labels = scales::percent) +
-      coord_flip() +
-      labs(
-        title = "Churn-sandsynlighed fordelt på brancher",
-        x = "Branche",
-        y = "Churn (%)"
-      ) +
-      theme_minimal(base_size = 13)
-  })
-  
-  
-  # ---------------------------------------------
-  # Nulstil alle filtre når knappen trykkes
-  # ---------------------------------------------
-  observeEvent(input$reset_filters, {
-    updateSliderInput(session, "churn_range", value = c(0, 1))
-    updateCheckboxGroupButtons(session, "risk_categories", selected = c("High", "Medium", "Low"))
-    updateRadioGroupButtons(session, "view_by", selected = "all")
-    updatePickerInput(session, "postal_code", selected = character(0))
-    updateSelectizeInput(session, "member_id", selected = "")
-  })
-  
-  # ---------------------------------------------
-  # Vælg alle postnumre ved klik på "vælg alle"
-  # ---------------------------------------------
-  observeEvent(input$select_all_postal, {
-    updatePickerInput(
-      session,
-      inputId = "postal_code",
-      selected = unique(data_map$PostalCode))
-  })
-  
-  # ---------------------------------------------
-  # Skift til "Detaljer"-fanen ved valg i dashboard-tabel
-  # ---------------------------------------------
-  observeEvent(input$dashboard_table_rows_selected, {
-    updateTabsetPanel(session, "main_tabs", selected = "Detaljer")
-  })
-  
-  # ---------------------------------------------
-  # Tabelvisning: Top-medlemmer sorteret efter churn-prob
-  # ---------------------------------------------
+# Tabelvisning: Top-medlemmer sorteret efter churn-prob
+
   output$top_members_list <- renderDT({
-    filtered_data() %>%
+    data_map %>%
       mutate(churn_prob = scales::percent(churn_prob, accuracy = 0.1)) %>%
       arrange(desc(churn_prob)) %>%
       select(PNumber, CompanyTypeName, PostalCode, churn_prob) %>%
       datatable(options = list(pageLength = 10), rownames = FALSE)
   })
-  
-  # ---------------------------------------------
-  # Kortvisning: Markør for valgt virksomhed
-  # ---------------------------------------------
-  output$company_map <- renderLeaflet({
-    selected_row <- input$dashboard_table_rows_selected
-    if (length(selected_row)) {
-      d <- filtered_data()[selected_row, ]
-      
-      if (!is.na(d$lat) && !is.na(d$lng)) {
-        leaflet() %>%
-          addProviderTiles(providers$CartoDB.Positron) %>%
-          addMarkers(lng = d$lng, lat = d$lat,
-                     popup = paste0("<strong>", d$CompanyName, "</strong><br>Postnr: ", d$PostalCode)) %>%
-          setView(lng = d$lng, lat = d$lat, zoom = 11)
-      } else {
-        leaflet() %>%
-          addProviderTiles(providers$CartoDB.Positron)
-      }
-    }
-  })
-  
-  # ---------------------------------------------
-  # Tabel: Oversigt over filtrerede virksomheder
-  # ---------------------------------------------
+
+
+# Tabel: Oversigt over filtrerede virksomheder
+
   output$filtered_list <- renderDT({
-    filtered_data() %>%
+    data_map %>%
       select(PNumber, CompanyTypeName, PostalCode, churn_prob) %>%
       mutate(churn_prob = scales::percent(churn_prob, accuracy = 0.1)) %>%
       arrange(desc(churn_prob)) %>%
       datatable(options = list(pageLength = 10), rownames = FALSE)
   })
   
-  # ---------------------------------------------
-  # Viser detaljeret virksomhedsinformation
-  # Baseret på enten valgt række i tabel eller søgning på P-nummer
-  # ---------------------------------------------
-  output$selected_company_details <- renderUI({
-    selected_row <- input$dashboard_table_rows_selected
-    data_to_show <- NULL
-    
-    # Hent virksomhed fra tabel eller søgning
-    if (length(selected_row)) {
-      data_to_show <- filtered_data()[selected_row, ]
-    } else if (input$search_pnumber != "") {
-      data_to_show <- searched_company()
-    }
-    
-    # Hvis gyldige data findes, vis detaljer
-    if (!is.null(data_to_show) && nrow(data_to_show) > 0) {
-      d <- data_to_show[1, ]
-      
-      # Beregn nøgletal og visuel styling
-      churn_prob <- d$churn_prob
-      fee <- calculate_membership_fee(d$Employees)
-      risk <- ifelse(churn_prob > 0.75, "Høj risiko",
-                     ifelse(churn_prob > 0.5, "Mellem risiko", "Lav risiko"))
-      risk_color <- ifelse(churn_prob > 0.75, "#d9534f",
-                           ifelse(churn_prob > 0.5, "#f0ad4e", "#5cb85c"))
-      
-      event_reduction <- churn_prob * 0.65
-      contact_reduction <- churn_prob * 0.7
-      tabspotentiale <- fee
-      
-      # ---------------------------------------------
-      # UI-opbygning af virksomhedskort med 3 kolonner
-      # ---------------------------------------------
-      div(style = "zoom: 0.7;",
-          fluidRow(
-            
-            # -----------------------------------------
-            # KOLONNE 1: Stamdata, medlemskab, kontaktlog
-            # -----------------------------------------
-            h3("Virksomhedsprofil", style = "background-color: #fff5cc; color: #0e2f33; padding: 10px 2px; text-align:center;"),
-            column(4,
-                   div(class = "company-detail-card",
-                       
-                       div(class = "info-box3", "Information"),
-                       
-                       # Stamdata – venstrestillet
-                       div(class = "info-box2",  style = "background-color: #123940; border-radius: 10px; padding: 20px;",
-                           h3("Information om medlemsvirksomheden", style = "color: white; font-weight: bold; margin-bottom: 20px; text-align: center;"),
-                           
-                           tags$table(style = "width: 100%; color: white; font-size: 23px; line-height: 1.8;",
-                                      tags$tr(
-                                        tags$td(style = "font-weight: 600; padding-right: 20px; width: 40%;", "Pnummer:"),
-                                        tags$td(d$PNumber)
-                                      ),
-                                      tags$tr(
-                                        tags$td(style = "font-weight: 600; padding-right: 20px;", "Virksomhedstype:"),
-                                        tags$td(d$CompanyTypeName)
-                                      ),
-                                      tags$tr(
-                                        tags$td(style = "font-weight: 600; padding-right: 20px;", "Branche:"),
-                                        tags$td(d$Branche_navn)
-                                      ),
-                                      tags$tr(
-                                        tags$td(style = "font-weight: 600; padding-right: 20px;", "Antal ansatte:"),
-                                        tags$td(d$Employees)
-                                      ),
-                                      tags$tr(
-                                        tags$td(style = "font-weight: 600; padding-right: 20px;", "Medlemskab:"),
-                                        tags$td(paste(d$medlem_antal_år, "år"))
-                                      ),
-                                      tags$tr(
-                                        tags$td(style = "font-weight: 600; padding-right: 20px;", "Bidrag/måned:"),
-                                        tags$td(paste0("Kr. ", format(fee, big.mark = ".", decimal.mark = ",")))
-                                      )
-                           )
-                       ),
-                       
-                       # Kontakt og Hjælp – venstrestillet
-                       div(class = "info-box2",
-                           h3("Kontakt & Hjælp", style = "color: white; font-weight: bold; margin-bottom: 20px; text-align: center;"),
-                           
-                           tags$table(style = "width: 100%; color: white; font-size: 23px; line-height: 1.8;",
-                                      tags$tr(
-                                        tags$td(style = "font-weight: 600; padding-right: 20px; width: 40%;", "Hjælp:"),
-                                        tags$td(d$hjælp_kategori)
-                                      ),
-                                      tags$tr(
-                                        tags$td(style = "font-weight: 600; padding-right: 20px;", "Konsulent:"),
-                                        tags$td("Marie Sørensen")
-                                      ),
-                                      tags$tr(
-                                        tags$td(style = "font-weight: 600; padding-right: 20px;", "01/03/2025:"),
-                                        tags$td("Opfølgning sendt.")
-                                      ),
-                                      tags$tr(
-                                        tags$td(style = "font-weight: 600; padding-right: 20px;", "15/01/2025:"),
-                                        tags$td("Tilbagemelding mangler.")
-                                      )
-                           )
-                       )
-                   )
-            ),
-            
-            
-            
-            # -----------------------------------------
-            # KOLONNE 2: Strategiske handlinger og CTA
-            # -----------------------------------------
-            column(4,
-                   div(class = "company-detail-card",
-                       
-                       div(class = "info-box3", "Strategiske tiltag"),
-                       
-                       # CTA: Invitation til event
-                       div(class = "info-box2",
-                           h2("Inviter til event"),
-                           
-                           selectInput("selected_event_detail", "Vælg event:",
-                                       choices = setNames(event_list$id, event_list$navn),
-                                       selected = event_list$id[1]),
-                           
-                           actionButton("send_event_invite", "Send invitation",
-                                        style = "background-color: #88c5aa !important; 
-                          color: #0e2f33 !important; 
-                          width:100%; 
-                          margin-top:10px; 
-                          font-weight: bold;")
-                       ),
-                       
-                       
-                       # CTA: Kontaktmuligheder
-                       div(class = "info-box2",
-                           h2("Kontakt virksomheden"),
-                           actionButton("call_now", "Ring op", 
-                                        style = "background-color: #88c5aa !important; color: #0e2f33 !important; width:100%; margin-bottom:5px; font-weight: bold;"),
-                           actionButton("send_email", "Send mail",
-                                        style = "background-color: #88c5aa !important; color: #0e2f33 !important; width:100%; margin-bottom:5px; font-weight: bold;"),
-                           actionButton("book_meeting", "Book meeting",
-                                        style = "background-color: #88c5aa !important; color: #0e2f33 !important; width:100%; margin-bottom:5px; font-weight: bold;")
-                       ),
-                       
-                       # CTA: Dynamiske anbefalinger (ul med conditional logik)
-                       div(class = "info-box2",
-                           h2("Call-to-action", style = "color: #88c5aa font-size: 20px; margin-bottom: 15px;"),
-                           h4("Anbefalinger"),
-                           tags$ul(style = "text-align: left; padding-left: 20px; font-size: 15px;",
-                                   
-                                   # Tilpasning baseret på hjælpekategori
-                                   if (!is.na(d$hjælp_kategori) && d$hjælp_kategori != "" && !grepl("ingen", tolower(d$hjælp_kategori))) {
-                                     tags$li(style = "margin-bottom: 10px;",
-                                             strong("Målret indsatsen:"), 
-                                             paste0("Virksomheden har angivet behov for hjælp til ", tolower(d$hjælp_kategori),
-                                                    ". Tilbyd sparring og peg på relevante netværksevents.")
-                                     )
-                                   } else {
-                                     tags$li(style = "margin-bottom: 10px;",
-                                             strong("Åbn samtalen:"), 
-                                             "Spørg ind til aktuelle udfordringer og tilbyd uforpligtende rådgivning. Ofte kan vi matche dem med relevante tilbud."
-                                     )
-                                   },
-                                   
-                                   # Branchebaseret forslag
-                                   tags$li(style = "margin-bottom: 10px;",
-                                           strong("Branchefokus:"),
-                                           paste0(
-                                             case_when(
-                                               grepl("Bygge", d$Branche_navn, ignore.case = TRUE) ~ "Peg på tilbud om bæredygtighed, grøn omstilling og rekruttering i byggebranchen.",
-                                               grepl("Handel", d$Branche_navn, ignore.case = TRUE) ~ "Tal om synlighed, digitalisering og konkurrenceevne i detailhandlen.",
-                                               grepl("IT|Kommunikation", d$Branche_navn, ignore.case = TRUE) ~ "Foreslå dialog om digital vækst, netværk og SMV Digital støtte.",
-                                               grepl("Produktion", d$Branche_navn, ignore.case = TRUE) ~ "Fremhæv sparring om automatisering, effektiv drift og grøn produktion.",
-                                               grepl("Finans|Rådgivning", d$Branche_navn, ignore.case = TRUE) ~ "Tal om forretningsudvikling, markedstilgang og partnerskaber.",
-                                               grepl("Service", d$Branche_navn, ignore.case = TRUE) ~ "Drøft kundeloyalitet, medarbejderfastholdelse og synlighed i servicesektoren.",
-                                               TRUE ~ "Vis hvordan lignende virksomheder har fået værdi af netværk, events og personlig sparring."
-                                             )
-                                           )
-                                   ),
-                                   
-                                   # Kontaktstatus
-                                   if (!is.na(d$har_haft_kontakt) && d$har_haft_kontakt == "Nej") {
-                                     tags$li(style = "margin-bottom: 10px;",
-                                             strong("Genstart dialogen:"),
-                                             "Der har ikke været kontakt det seneste år – læg op til et kort, uforpligtende møde."
-                                     )
-                                   },
-                                   
-                                   # Eventdeltagelse
-                                   if (!is.na(d$deltaget_i_event) && d$deltaget_i_event == "Nej") {
-                                     tags$li(style = "margin-bottom: 10px;",
-                                             strong("Invitér til deltagelse:"),
-                                             "De har ikke deltaget i events – foreslå noget relevant og giv en hurtig forklaring på værdien."
-                                     )
-                                   },
-                                   
-                                   # Generelle CTA'er
-                                   tags$li(style = "margin-bottom: 10px;",
-                                           strong("Gør det konkret:"),
-                                           "Foreslå et opkald, møde eller deltagelse i næste event – gør det nemt at sige ja."),
-                                   tags$li(style = "margin-bottom: 10px;",
-                                           strong("Understreg medlemsfordele:"),
-                                           "Forklar kort hvordan rådgivning, netværk og tilbud kan hjælpe dem her og nu.")
-                           )
-                       ),
-                       
-                       # Ekstra: Lignende events
-                       div(class = "info-box2",
-                           h2("Lignende virksomheder deltog i",
-                              style = "color: #ffffff; font-size: 20px; margin-bottom: 15px;"),
-                           tags$ul(style = "text-align: left; padding-left: 20px; font-size: 15px;",
-                                   tags$li(style = "margin-bottom: 10px;", "Webinar: Grøn omstilling"),
-                                   tags$li(style = "margin-bottom: 10px;", "Netværksmøde: SMV Digital"),
-                                   tags$li(style = "margin-bottom: 10px;", "1-1 sparring: Strategi og vækst")
-                           )
-                       )
-                   )
-            ),
-            
-            # -----------------------------------------
-            # KOLONNE 3: Analyse og kortvisning
-            # -----------------------------------------
-            column(4,
-                   
-                   # Advarsel om manglende eventdeltagelse
-                   if (d$deltaget_i_event == "Nej") {
-                     div(style = "background-color: #fff5cc; color: #ffffff; padding: 15px 20px; 
-                      border-left: 10px solid #f0ad4e; border-radius: 10px; 
-                      margin-bottom: 15px; font-size: 16px;",
-                         HTML("<strong><i class='fa fa-exclamation-triangle'></i> Anbefaling</strong><br>
-                      <span style='color:#444;'>Tag kontakt snarest – virksomheden har ikke deltaget i et event de sidste 12 måneder.</span>")
-                     )
-                   },
-                   
-                   div(class = "company-detail-card",
-                       div(class = "info-box3", "Churn Analyse"),
-                       
-                       div(class = "info-box2", style = "background-color: #B43C37;", 
-                           p("Tabspotentiale i måneden:"),
-                           h2(paste0("Kr. ", format(tabspotentiale, big.mark = ".", decimal.mark = ",")))),
-                       
-                       plotOutput("gauge_company_detail", height = "220px"),
-                       
-                       div(style = "text-align:center; margin-top: -10px;",
-                           h4(paste0(round(churn_prob * 100, 1), "% – ", risk),
-                              style = paste0("color:", risk_color, "; font-weight:bold; font-size: 18px;")),
-                           
-                           div(
-                             class = "info-box2",
-                             style = "background-color: #ffffff; color: #0e2f33; padding: 15px 20px;",
-                             h3(paste("Virksomheden er", ifelse(d$Employees > 50, "mellemstor", "lille"),
-                                      "og har", ifelse(d$har_haft_kontakt == "Nej", "ikke", "haft"),
-                                      "været i kontakt det seneste år. Der er", tolower(risk), "for frafald, men stort potentiale."))
-                           )
-                       ),
-                       
-                       leafletOutput("company_map", height = "220px")
-                   )
-            )
-          )
-      )
-    } else {
-      # Hvis intet er valgt eller fundet
-      h4("Vælg en virksomhed i tabellen i 'Indsigt'-fanen for at se detaljer.")
-    }
-  })
-  
-  output$event_details <- renderUI({
-    req(input$event_selector)
-    evt <- event_list %>% filter(id == input$event_selector)
-    
-    tagList(
-      h4(evt$navn),
-      p(strong("Dato:"), format(evt$dato, "%d.%m.%Y")),
-      p(strong("Tidspunkt:"), evt$tidspunkt),
-      p(strong("Sted:"), evt$sted),
-      p(strong("Ledige pladser:"), evt$pladser),
-      p(strong("Beskrivelse:"), evt$beskrivelse)
-    )
-  })
-  
-  # -----------------------------------------------
-  # Popup-beskeder ved klik på knapper i detaljer
-  # -----------------------------------------------
-  
-  observeEvent(input$send_event_invite, {
-    d <- selected_company()
-    req(d)
-    evt <- event_list %>% filter(id == input$event_selector)
-    
-    shinyalert(
-      title = "Invitation sendt",
-      text = paste0("Virksomheden (", d$CompanyTypeName, 
-                    ") er inviteret til:\n\n", evt$navn, "\n",
-                    format(evt$dato, "%d.%m.%Y"), " kl. ", evt$tidspunkt, "\n",
-                    "Sted: ", evt$sted),
-      type = "success"
-    )
+
+# Plot: Gennemsnitlig churn ved eventdeltagelse
+
+  output$plot_event_churn <- renderPlot({
+    df <- data_map
+    df$deltaget_i_event <- factor(df$deltaget_i_event)
+    df %>%
+      group_by(deltaget_i_event) %>%
+      summarise(avg = mean(churn_prob)) %>%
+      ggplot(aes(x = deltaget_i_event, y = avg, fill = deltaget_i_event)) +
+      geom_col() +
+      labs(title = "Eventdeltagelse vs. Churn", x = "", y = "Churn") +
+      theme_minimal() +
+      guides(fill = FALSE)
   })
   
   
-  observeEvent(input$book_meeting, {
-    shinyalert(
-      title = "Møde-booking",
-      text = "Vi giver konsulenten besked om at kontakte virksomheden.",
-      type = "info"
-    )
-  })
-  
-  observeEvent(input$call_now, {
-    shinyalert(
-      title = "Opkald på vej",
-      text = "Vi giver konsulenten besked om at kontakte virksomheden.",
-      type = "info"
-    )
-  })
-  
-  observeEvent(input$send_mail, {
-    d <- selected_company()
-    req(d)
-    email_adresse <- "kontakt@firma.dk"  # ← Udskift med rigtig email, fx `d$email`
-    subject <- URLencode("Invitation til event")
-    body <- URLencode(paste0("Hej ", d$CompanyTypeName, ",\n\nVi inviterer jer til næste event..."))
-    
-    mailto_link <- paste0("mailto:", email_adresse, "?subject=", subject, "&body=", body)
-    
-    session$sendCustomMessage(type = 'open_url', message = mailto_link)
-  })
-  
-  # ---------------------------------------------
-  # Plot: Simuleret churn-trend for valgt virksomhed
-  # Viser udvikling over de sidste 12 måneder
-  # ---------------------------------------------
-  output$churn_trend_plot <- renderPlot({
-    selected_row <- input$dashboard_table_rows_selected
-    if (length(selected_row)) {
-      d <- filtered_data()[selected_row, ]
-      set.seed(1)
-      churn_history <- runif(12, min = d$churn_prob * 0.8, max = d$churn_prob * 1.1)
-      months <- format(seq(Sys.Date() - months(11), by = "month", length.out = 12), "%b")
-      churn_df <- data.frame(Month = factor(months, levels = months), Churn = churn_history)
-      
-      ggplot(churn_df, aes(x = Month, y = Churn)) +
-        geom_line(color = "black", size = 1.2) +
-        ylim(0, 1) +
-        theme_minimal() +
-        labs(title = NULL, y = NULL, x = NULL) +
-        theme(
-          axis.text = element_text(size = 10),
-          axis.title = element_blank(),
-          panel.grid.minor = element_blank(),
-          plot.margin = margin(5, 5, 5, 5)
+# Plot: Viser hvilke faktorer der påvirker churn i simulation
+
+  output$simulation_factors <- renderPlot({
+    if (input$run_simulation > 0) {
+      isolate({
+        var_imp <- tibble(
+          factor = c("Medlemsvarighed", "Event-deltagelse", "Kontakt", "Branche", "Ansatte"),
+          importance = c(0.3, 0.25, 0.2, 0.15, 0.1)
         )
+        
+        ggplot(var_imp, aes(x = reorder(factor, importance), y = importance)) +
+          geom_col(fill = "#0e2f33", width = 0.7) +
+          coord_flip() +
+          labs(x = "", y = "Relativ betydning") +
+          theme_minimal() +
+          scale_y_continuous(labels = scales::percent_format(accuracy = 1))
+      })
     }
   })
   
-  # ---------------------------------------------
-  # Reactive: Samler inputs til en ny simuleret virksomhed
-  # Bruges ved klik på "Kør Simulation"
-  # ---------------------------------------------
+
+#Simuliation-------------------------------------------------------------------- 
+  
+#  Viser churn-resultat fra simulation
+
+  output$simulation_result <- renderUI({
+    if (input$run_simulation > 0) {
+      isolate({
+        new_company <- tibble(
+          Employees = input$sim_employees,
+          PostalCode = factor(input$sim_postal, levels = levels(data_map$PostalCode)),
+          CompanyTypeName = factor(input$sim_company_type, levels = levels(data_map$CompanyTypeName)),
+          har_haft_kontakt = factor(input$sim_contact, levels = c("Ja", "Nej")),
+          deltaget_i_event = factor(input$sim_event, levels = c("Ja", "Nej")),
+          hjælp_kategori = factor(input$sim_help_category, levels = levels(data_map$hjælp_kategori)),
+          medlem_antal_år = input$sim_member_years,
+          Branche_navn = factor(input$sim_branche, levels = levels(data_map$Branche_navn)),
+          MeetingLength = input$sim_meeting_length,
+          PNumber = 99999999
+        )
+        
+        # Forudsig churn sandsynlighed
+        prediction <- predict(final_model, new_data = new_company(), type = "prob")
+        churn_prob <- prediction$.pred_1
+        risk_category <- ifelse(churn_prob > 0.75, "Høj",
+                                ifelse(churn_prob > 0.5, "Medium", "Lav"))
+        
+        color <- ifelse(risk_category == "Høj", "#d9534f",
+                        ifelse(risk_category == "Medium", "#f0ad4e", "#5cb85c"))
+        
+        div(
+          style = "margin-bottom: 30px;",
+          h3(paste0("Churn-sandsynlighed: ", round(churn_prob * 100, 1), "%"), 
+             style = paste0("color: ", color, "; text-align: center;")),
+          h4(paste0("Risikokategori: ", risk_category), 
+             style = "text-align: center; font-weight: bold;"),
+          p("Baseret på indtastede parametre", style = "text-align: center; font-style: italic;")
+        )
+        
+      })
+    } else {
+      # Hvis simulation endnu ikke er kørt
+      div(
+        style = "text-align: center; padding-top: 50px; color: #666;",
+        icon("sliders-h", style = "font-size: 50px; margin-bottom: 20px;"),
+        h4("Indtast parametre og klik på 'Kør Simulation'")
+      )
+    }
+  })
+  
+# Reactive: Samler inputs til en ny simuleret virksomhed.
+
   new_company <- reactive({
     tibble(
       Employees = input$sim_employees,
@@ -1711,207 +902,9 @@ ui <- fluidPage(
       PNumber = 99999999
     )
   })
-  
-  # ---------------------------------------------
-  # UI-output: Resultat af simulationen
-  # Viser churn-sandsynlighed og risikokategori
-  # ---------------------------------------------
-  output$simulation_result <- renderUI({
-    if (input$run_simulation > 0) {
-      isolate({
-        prediction <- predict(final_model, new_data = new_company(), type = "prob")
-        churn_prob <- prediction$.pred_1
-        
-        risk_category <- ifelse(churn_prob > 0.75, "High",
-                                ifelse(churn_prob > 0.5, "Medium", "Low"))
-        color <- case_when(
-          risk_category == "High"   ~ "#d9534f",
-          risk_category == "Medium" ~ "#f0ad4e",
-          TRUE                      ~ "#5cb85c"
-        )
-        icon_name <- case_when(
-          risk_category == "High"   ~ "exclamation-triangle",
-          risk_category == "Medium" ~ "exclamation-circle",
-          TRUE                      ~ "check-circle"
-        )
-        
-        div(
-          class = "risk-result-box",
-          style = "margin-top: 20px; text-align: center;, color: #0e2f33;",
-          h3(paste0("Churn-sandsynlighed: ", round(churn_prob * 100, 1), "%"), 
-             style = paste0("color: ", color, "; font-weight: bold;")),
-          h4(paste("Risikokategori:", risk_category),
-             icon(icon_name, class = "fa-2x", style = paste0("color: ", color)))
-        )
-      })
-    } else {
-      div(
-        style = "text-align: center; padding-top: 50px; color: #2a6c73;",
-        icon("sliders-h", style = "font-size: 50px; margin-bottom: 20px;"),
-        h4("Indtast parametre og klik på 'Kør Simulation'")
-      )
-    }
-  })
-  
-  observeEvent(input$sim_contact, {
-    if (input$sim_contact == "Nej") {
-      updateNumericInput(session, "sim_meeting_length", value = 0)
-      session$sendCustomMessage("disableMeeting", TRUE)
-    } else {
-      session$sendCustomMessage("disableMeeting", FALSE)
-    }
-  })
-  
-  # ---------------------------------------------
-  # Plot: Boxplot over churn pr. branche
-  # ---------------------------------------------
-  output$plot_branch_churn <- renderPlot({
-    df <- filtered_data()
-    ggplot(df, aes(x = Branche_navn, y = churn_prob)) +
-      geom_boxplot(fill = "#7FC8A3") +
-      coord_flip() +
-      labs(title = "Branche vs. Churn", x = "", y = "Churn") +
-      theme_minimal()
-  })
-  
-  # ---------------------------------------------
-  # Plot: Gennemsnitlig churn ved eventdeltagelse
-  # ---------------------------------------------
-  output$plot_event_churn <- renderPlot({
-    df <- filtered_data()
-    df$deltaget_i_event <- factor(df$deltaget_i_event)
-    df %>%
-      group_by(deltaget_i_event) %>%
-      summarise(avg = mean(churn_prob)) %>%
-      ggplot(aes(x = deltaget_i_event, y = avg, fill = deltaget_i_event)) +
-      geom_col() +
-      labs(title = "Eventdeltagelse vs. Churn", x = "", y = "Churn") +
-      theme_minimal() +
-      guides(fill = FALSE)
-  })
-  
-  # ---------------------------------------------
-  # Plot: Scatter + smooth for churn ift. antal ansatte
-  # ---------------------------------------------
-  output$plot_employee_churn <- renderPlot({
-    df <- filtered_data()
-    ggplot(df, aes(x = Employees, y = churn_prob)) +
-      geom_point(alpha = 0.5) +
-      geom_smooth(method = "loess") +
-      labs(title = "Ansatte vs. Churn", x = "Antal ansatte", y = "Churn") +
-      theme_minimal()
-  })
-  
-  # ---------------------------------------------
-  # Plot: Gauge til visning af churn-risiko efter simulation
-  # ---------------------------------------------
-  output$simulation_gauge <- renderPlot({
-    if (input$run_simulation > 0) {
-      isolate({
-        new_company_data <- new_company()
-        prediction <- predict(final_model, new_data = new_company(), type = "prob")
-        churn_prob <- prediction$.pred_1
-        
-        ggplot() +
-          geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0.5, r = 1,
-                           start = 0, end = 2*pi, fill = "lightgrey")) +
-          geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0.5, r = 1,
-                           start = 0, end = 2*pi * churn_prob, 
-                           fill = ifelse(churn_prob > 0.75, "#d9534f",
-                                         ifelse(churn_prob > 0.5, "#f0ad4e", "#5cb85c")))) +
-          geom_text(aes(x = 0, y = 0, 
-                        label = paste0(round(churn_prob * 100, 1), "%")),
-                    size = 8, fontface = "bold") +
-          coord_fixed() +
-          theme_void() +
-          theme(legend.position = "none") +
-          scale_fill_identity()
-      })
-    }
-  })
-  
-  # ---------------------------------------------
-  # Plot: Simuleret churn-trend over 12 måneder (søjlediagram)
-  # ---------------------------------------------
-  output$churn_trend_plot <- renderPlot({
-    selected_row <- input$dashboard_table_rows_selected
-    if (length(selected_row)) {
-      d <- filtered_data()[selected_row, ]
-      churn_prob <- d$churn_prob
-      
-      set.seed(1)
-      churn_history <- runif(12, min = churn_prob * 0.8, max = churn_prob * 1.1)
-      months <- format(seq(Sys.Date() - months(11), by = "month", length.out = 12), "%b")
-      churn_df <- data.frame(Month = factor(months, levels = months), Churn = churn_history)
-      
-      ggplot(churn_df, aes(x = Month, y = Churn * 100, fill = Churn)) +
-        geom_col(width = 0.6) +
-        scale_y_continuous(labels = function(x) paste0(round(x), "%")) +
-        scale_fill_gradient(low = "#5cb85c", high = "#d9534f") +
-        labs(title = "Simuleret churn over 12 måneder", x = NULL, y = "Churn (%)") +
-        theme_minimal(base_size = 13) +
-        theme(
-          legend.position = "none",
-          axis.text.x = element_text(angle = 45, hjust = 1),
-          plot.margin = margin(5, 15, 5, 5)
-        )
-    }
-  })
-  
-  # ---------------------------------------------
-  # Leaflet: Kortvisning med markør for valgt virksomhed
-  # ---------------------------------------------
-  output$company_map <- renderLeaflet({
-    selected_row <- input$dashboard_table_rows_selected
-    if (length(selected_row)) {
-      d <- filtered_data()[selected_row, ]
-      
-      leaflet() %>%
-        addTiles() %>%
-        setView(lng = d$lng, lat = d$lat, zoom = 12) %>%
-        addMarkers(
-          lng = d$lng,
-          lat = d$lat,
-          popup = paste("<strong>", d$CompanyTypeName, "</strong><br>", d$Branche_navn)
-        )
-    }
-  })
-  
-  # ---------------------------------------------
-  # Plotly: Gauge til visning af churn-risiko (virksomhedsdetalje)
-  # ---------------------------------------------
-  output$gauge_company_detail <- renderPlot({
-    selected_row <- input$dashboard_table_rows_selected
-    if (length(selected_row)) {
-      selected_pnum <- filtered_data()[selected_row, ]$PNumber
-      d <- data_map %>% filter(PNumber == selected_pnum)
-      churn_prob <- round(d$churn_prob, 3)  # keep it as decimal
-      
-      risk_color <- ifelse(churn_prob > 0.75, "#d9534f",
-                           ifelse(churn_prob > 0.5, "#f0ad4e", "#5cb85c"))
-      
-      ggplot(data.frame(x = 1, y = churn_prob), aes(x = "", y = y)) +
-        geom_bar(stat = "identity", width = 1, fill = risk_color) +
-        geom_bar(aes(y = 1 - y), stat = "identity", width = 1, fill = "lightgrey", position = position_stack(reverse = TRUE)) +
-        coord_polar("y") +
-        theme_void() +
-        geom_text(aes(label = paste0(round(churn_prob * 100, 1), "%")), x = 1.3, y = 0.5, size = 8, fontface = "bold", color = "#0e2f33")
-    }
-  })
-  
-  # ---------------------------------------------
-  # Reactive: Angiver om der er valgt en virksomhed i tabellen
-  # Bruges til conditionalPanel i UI (f.eks. vis søgefelt)
-  # ---------------------------------------------
-  output$noCompanySelected <- reactive({
-    is.null(input$dashboard_table_rows_selected) || length(input$dashboard_table_rows_selected) == 0
-  })
-  
-    outputOptions(output, "noCompanySelected", suspendWhenHidden = FALSE)
-    
 }
 
 #-------------------------------------------------------------------------------
 # 4. Kørsel af Shiny-app
 #-------------------------------------------------------------------------------
-auth0::shinyAppAuth0(ui, server)
+shinyApp(ui, server)
