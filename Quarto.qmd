@@ -699,94 +699,6 @@ feature_engineering <- feature_engineering |>
 feature_engineering <- feature_engineering |>
   mutate(deltaget_i_event = if_else(as.numeric(EventLength) > 0, "Ja", "Nej"))
 
-# # 4.8: Skaber kategorier der viser virksomhedens behov for hjælp
-# # Her grupperes TRUE/FALSE-kolonner i temaer som Strategi, Jura, Økonomi osv.
-#   # Den viser, hvilken overordnet type hjælp virksomheden har modtaget.
-# 
-# feature_engineering <- feature_engineering |>
-#   # Sørg for at konvertere kolonnerne til logiske værdier (TRUE/FALSE)
-#   mutate(across(matches("^\\d+_1"), ~ .x != "FALSE" & .x != "Tom")) |>
-#   mutate(
-#     
-# # Opretter en enkelt variabel, der kategoriserer virksomheden baseret på de 
-#     # 8 områder
-#     hjælp_kategori = case_when(
-# 
-# # Hvis virksomheden har søgt hjælp til strategi/emner som 
-#       # forretningsidé, produkt osv.
-#       (as.logical(Kundeportefølje) | as.logical(Forretningsmodel) | 
-#          as.logical(Forretningsidé) | as.logical(Produktportefølje)) 
-#       ~ "Strategi Udvikling",
-#       
-# # Hvis fokus har været på markedsføring, branding eller PR
-#       (as.logical(Markedsføring) | as.logical(Branding) | 
-#          as.logical(Kommunikation_og_PR)) ~ "Marketing og Kommunikation",
-# 
-# # Hvis der er søgt hjælp til salg, eksport eller markedsposition
-#       (as.logical(Salg) | as.logical(Eksport) | 
-#          as.logical(Markedsposition)) ~ "Salg og Eksport",
-#       
-# # Hvis der har været fokus på ledelse, netværk eller organisation
-#       (as.logical(Medarbejdere) | as.logical(Netværk) | 
-#          as.logical(Samarbejdspartnere) | as.logical(Ejer_og_bestyrelse)) 
-#                                             ~ "Organisation og Ledelse",
-#       
-# # Hvis det handler om økonomi, finansiering eller fonde
-#       (as.logical(Økonomistyring) | as.logical(Finansiering) | 
-#          as.logical(Kapitalfond) | as.logical(Vækstfonden) | 
-#          as.logical(Innovationsfonden)) ~ "Økonomi og Finansiering",
-#       
-# # Hvis det handler om daglig drift, it-systemer eller forretningsgange
-#       (as.logical(Leverance_og_projektstyring) | as.logical(IT_systemer) | 
-#          as.logical(Faciliteter) | 
-#          as.logical(Forretningsgange)) ~ "Drift og Systemer",
-#       
-# # Hvis fokus er på jura, ejerskifte mv.
-#       (as.logical(Juridiske_forhold) | 
-#          as.logical(Ejerskifte_og_generationsskifte)) ~ "Jura og Struktur",
-#     
-# # Hvis der er søgt støtte gennem offentlige ordninger
-#       (as.logical(EU_Kontoret_i_DK_Interreg) | as.logical(Erhvervshuset) | 
-#          as.logical(FN_1) | 
-#          as.logical(Andre_nationale_ordninger)) ~ "Støtteordninger",
-#       
-#       # Tilføjelse af de nye kategorier
-#       (as.logical(Uddannelse_kompetenceudvikling) | 
-#          as.logical(Vidensordninger) | 
-#          as.logical(IV_Vejledning) | 
-#          as.logical(Virksomhedsbesøg_Virksomhed_under_3_år) | 
-#          as.logical(I_Værkstedet) | 
-#          as.logical(Klippekort_Udleveret) | 
-#          as.logical(Væksthjul_Screening) | 
-#          as.logical(Agro_Business_Park) | 
-#          as.logical(Konsulent_virksomhed_uden_for_Kommunen_DK) | 
-#          as.logical(Lokal_konsulent_eller_virksomhed) | 
-#          as.logical(Indenrigsministeriet_The_Trade_Council) | 
-#          as.logical(Produktudviklin)) ~ "Andre Hjælpeordninger",
-#       
-#       TRUE ~ "Ingen specifik hjælp"
-#     )
-#   ) |>
-#   # Ryd op ved at fjerne de originale variabler der er brugt til grupperingen
-#   select(-c(
-#     Kundeportefølje, Forretningsmodel, Forretningsidé, Produktportefølje,
-#     Markedsføring, Branding, Kommunikation_og_PR,
-#     Salg, Eksport, Markedsposition,
-#     Medarbejdere, Netværk, Samarbejdspartnere, Ejer_og_bestyrelse,
-#     Økonomistyring, Finansiering, Kapitalfond, Vækstfonden, Innovationsfonden,
-#     Leverance_og_projektstyring, IT_systemer, Faciliteter, Forretningsgange,
-#     Juridiske_forhold, Ejerskifte_og_generationsskifte,
-#     EU_Kontoret_i_DK_Interreg, Erhvervshuset, FN_1, Andre_nationale_ordninger,
-#     Uddannelse_kompetenceudvikling, Vidensordninger, IV_Vejledning, 
-#     Virksomhedsbesøg_Virksomhed_under_3_år, I_Værkstedet, 
-#     Klippekort_Udleveret, Væksthjul_Screening, Agro_Business_Park, 
-#     Konsulent_virksomhed_uden_for_Kommunen_DK, Lokal_konsulent_eller_virksomhed, 
-#     Indenrigsministeriet_The_Trade_Council, Produktudviklin
-#   ))
-
-# Tjek resultatet
-# glimpse(feature_engineering)
-
 # Fjerner hjælpekolonnerne, da vi har lavet en variabel med kontakt eller ej
 feature_engineering <- feature_engineering |> 
   select(-c(
@@ -1623,5 +1535,7 @@ saveRDS(full_results, "full_results.rds")
 # ------------------------------------------------------------------------------
 # 12 Churn dashboard til Business Viborg
 # ------------------------------------------------------------------------------
+
+
 ```
 
