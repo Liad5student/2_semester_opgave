@@ -93,7 +93,7 @@ pacman::p_load(
 
 {\large \textbf{Afleveringsdato: 9. maj 2025}}\\
 \vfill
-\text{Antal tegn: 90.696}
+\text{Antal tegn: 95.470}
 
 \end{center}
 \end{titlepage}
