@@ -5,7 +5,7 @@ account: maria-cristiana-maxim
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 14675607
-bundleId: 10252705
+bundleId: 10252934
 url: https://maria-cristiana-maxim.shinyapps.io/churnapp/
 version: 1
 asMultiple: FALSE
