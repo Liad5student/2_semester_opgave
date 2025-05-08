@@ -1,5 +1,5 @@
 pacman::p_load(shiny,leaflet,dplyr,readr,shinyWidgets,
-  DT,ggplot2,tibble,tidymodels,auth0,ggforce, scales)
+  DT,ggplot2,tibble,tidymodels,auth0,ggforce,scales)
 
 readRenviron("Renviron.sh")
 options(shiny.port = 8080)
