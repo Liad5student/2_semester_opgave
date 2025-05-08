@@ -20,17 +20,7 @@ Sys.getenv("AUTH0_USER")
 full_results <- readRDS("data/full_results.rds")          
 final_model <- readRDS("models/final_churn_model.rds")     
 
-# 1.3 Koordinater til postnumre
-postal_coords <- data.frame(
-  PostalCode = c(8800, 8850, 8830, 7470, 8840, 7800, 8831, 8832, 9632, 7850, 9620, 9500, 8860),
-  lat = c(56.451, 56.532, 56.447, 56.489, 56.472, 56.475, 56.448, 56.449, 56.907, 56.573, 56.824, 57.226, 56.611),
-  lng = c(9.404, 8.486, 9.186, 9.000, 8.662, 9.156, 9.163, 9.171, 9.287, 9.156, 9.388, 9.388, 8.954)
-)
-
-# 1.4 Postnumre er i karakterformat 
-full_results$PostalCode <- as.character(full_results$PostalCode)
-postal_coords$PostalCode <- as.character(postal_coords$PostalCode)
-
+unique(full_results$PostalCode)
 
 # 1.5 Medlemskabspris - Antal ansatte
 calculate_membership_fee <- function(n) {
@@ -48,7 +38,6 @@ calculate_membership_fee <- function(n) {
 
 # 1.6 Join datasæt 
 data_map <- full_results %>%
-  left_join(postal_coords, by = "PostalCode") %>%
   mutate(
     risk_category = case_when(
       churn_prob > 0.75 ~ "High",
