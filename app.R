@@ -7,7 +7,7 @@ Sys.getenv("AUTH0_USER")
 
 # 1.2 Datasæt og churn-model
 full_results <- readRDS("data/full_results.rds")          
-final_model <- readRDS("final_churn_model.rds") 
+final_model <- readRDS("model/final_churn_model.rds") 
 
 # 1.5 Medlemskabspris - Antal ansatte
 calculate_membership_fee <- function(n) {
