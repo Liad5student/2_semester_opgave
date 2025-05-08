@@ -296,7 +296,8 @@ div(class = "top-bar",
     tags$div(style = "width: 40px; height: 40px; background-color: #0e2f33;
                       border-radius: 50%; display: flex; align-items: center;
                       justify-content: center; color: white; font-size: 18px;",
-                 icon("user"))
+             logoutButton(label = "Log ud", style = "background-color: #dc3545; color: white; border: none;"),
+             icon("user"))
     )
 ),
  
@@ -835,4 +836,4 @@ server <- function(input, output, session) {
   })
 }
 # 4. Kørsel af Shiny-app
-shinyApp(ui, server)
+auth0::shinyAppAuth0(ui, server)
