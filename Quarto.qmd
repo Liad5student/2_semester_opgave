@@ -93,7 +93,7 @@ pacman::p_load(
 
 {\large \textbf{Afleveringsdato: 9. maj 2025}}\\
 \vfill
-\text{Antal tegn: 95.470}
+\text{Antal tegn: 95.478}
 
 \end{center}
 \end{titlepage}
@@ -280,7 +280,7 @@ Disse variable udgør tilsammen et stærkt grundlag for at forstå churn-mekanis
 
 For at operationalisere modellen i medlemsarbejdet er alle aktive virksomheder blevet klassificeret i fire risikokategorier baseret på deres sandsynlighed for churn. Som det fremgår af figuren nedenfor, har hovedparten af medlemsbasen en lav eller minimal risiko for udmeldelse, mens en mindre andel er vurderet til at være i moderat eller høj risiko. Denne fordeling giver medlemskonsulenterne et konkret udgangspunkt for at prioritere deres indsats og målrette dialogen mod virksomheder i risikozonen.
 
-![Fordeling af churn-risiko blandt aktive medlemmer baseret på modelprediktioner. Kategorierne “høj risiko” og "moderat risiko" rummer 38 virksomheder. De udgør et vigtigt proaktivt fokuspunkt.](images/9_churn_risikokategorier_aktive.png){ width=80% fig-align="center" }
+![Fordeling af churn-risiko blandt aktive medlemmer baseret på modelprediktioner. Kategorierne “høj risiko” og "moderat risiko" rummer 30 virksomheder. De udgør et vigtigt proaktivt fokuspunkt.](images/9_churn_risikokategorier_aktive.png){ width=80% fig-align="center" }
 
 # Anvendelse af dashboard i medlemsarbejdet
 
@@ -318,7 +318,8 @@ Transparens er i denne sammenhæng ikke blot et juridisk krav, men også et midd
 ## Pseudonymisering og identifikationsrisici
 
 Selvom datasættet, som analysen baseres på, er pseudonymiseret for dataanalytikerne, betyder det ikke, at oplysningerne er anonyme i GDPR-forstand. Business Viborgs medarbejdere har adgang til nøgleoplysninger såsom medlemsnummer, virksomhedsnavn eller kontaktpersoner, som gør det muligt at identificere de registrerede. Dette understreger, at databehandlingen fortsat er omfattet af alle GDPR-krav. Der skal derfor træffes passende forholdsregler for at sikre, at oplysningerne ikke anvendes til andre formål uden nyt behandlingsgrundlag og ikke utilsigtet afslører følsom information om specifikke virksomheder.
-Datasikkerhed og organisatorisk ansvar
+
+### Datasikkerhed og organisatorisk ansvar
 Business Viborg er som dataansvarlig forpligtet til at beskytte personoplysninger mod uautoriseret adgang, tab, ændring eller misbrug. I henhold til artikel 24 og 32 i GDPR skal organisationen iværksætte både tekniske og organisatoriske sikkerhedsforanstaltninger. Det inkluderer brug af adgangsstyring, kryptering, logning af datatilgange, opdaterede sikkerhedspolitikker og uddannelse af personale i datasikkerhed. Derudover skal der foreligge databehandleraftaler, hvis eksterne samarbejdspartnere inddrages i projektet. Manglende sikkerhed kan ikke alene få juridiske konsekvenser, men også underminere den tillid, som projektet skal baseres på.
 
 ## Etiske overvejelser og ansvarlig dataanvendelse
@@ -331,7 +332,7 @@ Ledelsen i Business Viborg har desuden et særligt ansvar for at sikre, at model
 
 Ifølge GDPR artikel 5, stk. 1, litra e, må personoplysninger ikke opbevares længere end nødvendigt til det formål, de er indsamlet til. Når et medlem melder sig ud, er det normale formål – f.eks. kommunikation, arrangementer eller medlemsservice – ikke længere aktuelt.
 
-Men der kan være lovlige grunde til at opbevare dem i en periode
+Men der kan være lovlige grunde til at opbevare dem i en periode - 
 Business Viborg må godt gemme data i en vis periode efter udmeldelse, hvis de har et sagligt og dokumenteret formål, f.eks.:
 
   -	Bogføring og regnskab – fx fakturaer, betalinger osv. må gerne opbevares i op til 5 år (jf. Bogføringsloven).
